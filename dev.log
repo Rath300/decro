@@ -1,0 +1,3508 @@
+
+> decro@1.0.0 dev
+> next dev
+
+  ▲ Next.js 13.5.11
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env
+
+ ✓ Ready in 1528.8s
+ ○ Compiling /feed/page ...
+ ⨯ ./src/components/SiteHeader.tsx
+Error: 
+  [31mx[0m the n[?25h
+eRouter` is defined multiple times
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m 1[0m | 'use client'
+ [2m 2[0m | 
+ [2m 3[0m | import { useRouter } from 'next/navigation'
+    : [31;1m         ^^^^|^^^^[0m
+    :              [31;1m`-- [31;1mprevious definition of `useRouter` here[0m[0m
+ [2m 4[0m | import { useAuth } from '@/context/auth-context'
+ [2m 5[0m | 
+ [2m 6[0m | interface Props {
+ [2m 7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m 8[0m | }
+ [2m 9[0m | 
+ [2m10[0m | export function SiteHeader({ active }: Props) {
+ [2m11[0m |   const router = useRouter()
+ [2m12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m13[0m | 
+ [2m14[0m |   const tabs = [
+ [2m15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m19[0m |   ] as const
+ [2m20[0m | 
+ [2m21[0m |   return (
+ [2m22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m25[0m |           {/* Left: Brand + Logout */}
+ [2m26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m27[0m |             <button
+ [2m28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m30[0m |             >
+ [2m31[0m |               Log out
+ [2m32[0m |             </button>
+ [2m33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m34[0m |           </div>
+ [2m35[0m | 
+ [2m36[0m |           {/* Center: Tabs */}
+ [2m37[0m |           <nav className="justify-self-center pb-0">
+ [2m38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m39[0m |               {tabs.map(tab => (
+ [2m40[0m |                 <button
+ [2m41[0m |                   key={tab.id}
+ [2m42[0m |                   onClick={() => router.push(tab.href)}
+ [2m43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m45[0m |                   }`}
+ [2m46[0m |                 >
+ [2m47[0m |                   {tab.label}
+ [2m48[0m |                 </button>
+ [2m49[0m |               ))}
+ [2m50[0m |             </div>
+ [2m51[0m |           </nav>
+ [2m52[0m | 
+ [2m53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m55[0m |             <button
+ [2m56[0m |               onClick={() => router.push('/create')}
+ [2m57[0m |               aria-label="Create Post"
+ [2m58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m59[0m |             >
+ [2m60[0m |               <svg
+ [2m61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m62[0m |                 viewBox="0 0 24 24"
+ [2m63[0m |                 fill="none"
+ [2m64[0m |                 stroke="currentColor"
+ [2m65[0m |                 strokeWidth="2"
+ [2m66[0m |                 className="h-3.5 w-3.5"
+ [2m67[0m |               >
+ [2m68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m69[0m |               </svg>
+ [2m70[0m |             </button>
+ [2m71[0m |             <button
+ [2m72[0m |               onClick={() => router.push('/feedback')}
+ [2m73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m74[0m |             >
+ [2m75[0m |               Feedback
+ [2m76[0m |             </button>
+ [2m77[0m |             {isAuthenticated ? (
+ [2m78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m79[0m |                 {user?.name || user?.email}
+ [2m80[0m |               </span>
+ [2m81[0m |             ) : (
+ [2m82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m83[0m |                 Sign In
+ [2m84[0m |               </button>
+ [2m85[0m |             )}
+ [2m86[0m |           </div>
+ [2m87[0m |         </div>
+ [2m88[0m |       </div>
+ [2m89[0m |     </header>
+ [2m90[0m |   )
+ [2m91[0m | }
+ [2m92[0m | 
+ [2m93[0m | export default SiteHeader
+ [2m94[0m | 
+ [2m95[0m | 
+ [2m96[0m | import { useRouter } from 'next/navigation'
+    : [33;1m         ^^^^|^^^^[0m
+    :              [33;1m`-- [33;1m`useRouter` redefined here[0m[0m
+ [2m97[0m | import { useAuth } from '@/context/auth-context'
+ [2m98[0m | 
+ [2m99[0m | interface Props {
+    `----
+
+  [31mx[0m the name `useAuth` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m  1[0m | 'use client'
+ [2m  2[0m | 
+ [2m  3[0m | import { useRouter } from 'next/navigation'
+ [2m  4[0m | import { useAuth } from '@/context/auth-context'
+     : [31;1m         ^^^|^^^[0m
+     :             [31;1m`-- [31;1mprevious definition of `useAuth` here[0m[0m
+ [2m  5[0m | 
+ [2m  6[0m | interface Props {
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+     : [33;1m         ^^^|^^^[0m
+     :             [33;1m`-- [33;1m`useAuth` redefined here[0m[0m
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+     `----
+
+  [31mx[0m the name `SiteHeader` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:7:1]
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+     : [31;1m                ^^^^^|^^^^[0m
+     :                      [31;1m`-- [31;1mprevious definition of `SiteHeader` here[0m[0m
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+     : [33;1m                ^^^^^|^^^^[0m
+     :                      [33;1m`-- [33;1m`SiteHeader` redefined here[0m[0m
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+     `----
+
+  [31mx[0m the name `default` is exported multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:90:1]
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+     : [31;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [31;1m`-- [31;1mprevious exported here[0m[0m
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m106[0m | 
+ [2m107[0m |   const tabs = [
+ [2m108[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m109[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m110[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m111[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m112[0m |   ] as const
+ [2m113[0m | 
+ [2m114[0m |   return (
+ [2m115[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m116[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m117[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m118[0m |           {/* Left: Brand + Logout */}
+ [2m119[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m120[0m |             <button
+ [2m121[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m122[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m123[0m |             >
+ [2m124[0m |               Log out
+ [2m125[0m |             </button>
+ [2m126[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m127[0m |           </div>
+ [2m128[0m | 
+ [2m129[0m |           {/* Center: Tabs */}
+ [2m130[0m |           <nav className="justify-self-center pb-0">
+ [2m131[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m132[0m |               {tabs.map(tab => (
+ [2m133[0m |                 <button
+ [2m134[0m |                   key={tab.id}
+ [2m135[0m |                   onClick={() => router.push(tab.href)}
+ [2m136[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m137[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m138[0m |                   }`}
+ [2m139[0m |                 >
+ [2m140[0m |                   {tab.label}
+ [2m141[0m |                 </button>
+ [2m142[0m |               ))}
+ [2m143[0m |             </div>
+ [2m144[0m |           </nav>
+ [2m145[0m | 
+ [2m146[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m147[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m148[0m |             <button
+ [2m149[0m |               onClick={() => router.push('/create')}
+ [2m150[0m |               aria-label="Create Post"
+ [2m151[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m152[0m |             >
+ [2m153[0m |               <svg
+ [2m154[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m155[0m |                 viewBox="0 0 24 24"
+ [2m156[0m |                 fill="none"
+ [2m157[0m |                 stroke="currentColor"
+ [2m158[0m |                 strokeWidth="2"
+ [2m159[0m |                 className="h-3.5 w-3.5"
+ [2m160[0m |               >
+ [2m161[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m162[0m |               </svg>
+ [2m163[0m |             </button>
+ [2m164[0m |             <button
+ [2m165[0m |               onClick={() => router.push('/feedback')}
+ [2m166[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m167[0m |             >
+ [2m168[0m |               Feedback
+ [2m169[0m |             </button>
+ [2m170[0m |             {isAuthenticated ? (
+ [2m171[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m172[0m |                 {user?.name || user?.email}
+ [2m173[0m |               </span>
+ [2m174[0m |             ) : (
+ [2m175[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m176[0m |                 Sign In
+ [2m177[0m |               </button>
+ [2m178[0m |             )}
+ [2m179[0m |           </div>
+ [2m180[0m |         </div>
+ [2m181[0m |       </div>
+ [2m182[0m |     </header>
+ [2m183[0m |   )
+ [2m184[0m | }
+ [2m185[0m | 
+ [2m186[0m | export default SiteHeader
+     : [33;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [33;1m`-- [33;1mexported more than once[0m[0m
+ [2m187[0m | 
+     `----
+
+Error: 
+  [36m>[0m Exported identifiers must be unique
+
+Import trace for requested module:
+./src/components/SiteHeader.tsx
+./src/components/feed-page.tsx
+ ⨯ ./src/components/SiteHeader.tsx
+Error: 
+  [31mx[0m the name `useRouter` is defined multiple times
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m 1[0m | 'use client'
+ [2m 2[0m | 
+ [2m 3[0m | import { useRouter } from 'next/navigation'
+    : [31;1m         ^^^^|^^^^[0m
+    :              [31;1m`-- [31;1mprevious definition of `useRouter` here[0m[0m
+ [2m 4[0m | import { useAuth } from '@/context/auth-context'
+ [2m 5[0m | 
+ [2m 6[0m | interface Props {
+ [2m 7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m 8[0m | }
+ [2m 9[0m | 
+ [2m10[0m | export function SiteHeader({ active }: Props) {
+ [2m11[0m |   const router = useRouter()
+ [2m12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m13[0m | 
+ [2m14[0m |   const tabs = [
+ [2m15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m19[0m |   ] as const
+ [2m20[0m | 
+ [2m21[0m |   return (
+ [2m22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m25[0m |           {/* Left: Brand + Logout */}
+ [2m26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m27[0m |             <button
+ [2m28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m30[0m |             >
+ [2m31[0m |               Log out
+ [2m32[0m |             </button>
+ [2m33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m34[0m |           </div>
+ [2m35[0m | 
+ [2m36[0m |           {/* Center: Tabs */}
+ [2m37[0m |           <nav className="justify-self-center pb-0">
+ [2m38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m39[0m |               {tabs.map(tab => (
+ [2m40[0m |                 <button
+ [2m41[0m |                   key={tab.id}
+ [2m42[0m |                   onClick={() => router.push(tab.href)}
+ [2m43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m45[0m |                   }`}
+ [2m46[0m |                 >
+ [2m47[0m |                   {tab.label}
+ [2m48[0m |                 </button>
+ [2m49[0m |               ))}
+ [2m50[0m |             </div>
+ [2m51[0m |           </nav>
+ [2m52[0m | 
+ [2m53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m55[0m |             <button
+ [2m56[0m |               onClick={() => router.push('/create')}
+ [2m57[0m |               aria-label="Create Post"
+ [2m58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m59[0m |             >
+ [2m60[0m |               <svg
+ [2m61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m62[0m |                 viewBox="0 0 24 24"
+ [2m63[0m |                 fill="none"
+ [2m64[0m |                 stroke="currentColor"
+ [2m65[0m |                 strokeWidth="2"
+ [2m66[0m |                 className="h-3.5 w-3.5"
+ [2m67[0m |               >
+ [2m68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m69[0m |               </svg>
+ [2m70[0m |             </button>
+ [2m71[0m |             <button
+ [2m72[0m |               onClick={() => router.push('/feedback')}
+ [2m73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m74[0m |             >
+ [2m75[0m |               Feedback
+ [2m76[0m |             </button>
+ [2m77[0m |             {isAuthenticated ? (
+ [2m78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m79[0m |                 {user?.name || user?.email}
+ [2m80[0m |               </span>
+ [2m81[0m |             ) : (
+ [2m82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m83[0m |                 Sign In
+ [2m84[0m |               </button>
+ [2m85[0m |             )}
+ [2m86[0m |           </div>
+ [2m87[0m |         </div>
+ [2m88[0m |       </div>
+ [2m89[0m |     </header>
+ [2m90[0m |   )
+ [2m91[0m | }
+ [2m92[0m | 
+ [2m93[0m | export default SiteHeader
+ [2m94[0m | 
+ [2m95[0m | 
+ [2m96[0m | import { useRouter } from 'next/navigation'
+    : [33;1m         ^^^^|^^^^[0m
+    :              [33;1m`-- [33;1m`useRouter` redefined here[0m[0m
+ [2m97[0m | import { useAuth } from '@/context/auth-context'
+ [2m98[0m | 
+ [2m99[0m | interface Props {
+    `----
+
+  [31mx[0m the name `useAuth` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m  1[0m | 'use client'
+ [2m  2[0m | 
+ [2m  3[0m | import { useRouter } from 'next/navigation'
+ [2m  4[0m | import { useAuth } from '@/context/auth-context'
+     : [31;1m         ^^^|^^^[0m
+     :             [31;1m`-- [31;1mprevious definition of `useAuth` here[0m[0m
+ [2m  5[0m | 
+ [2m  6[0m | interface Props {
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+     : [33;1m         ^^^|^^^[0m
+     :             [33;1m`-- [33;1m`useAuth` redefined here[0m[0m
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+     `----
+
+  [31mx[0m the name `SiteHeader` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:7:1]
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+     : [31;1m                ^^^^^|^^^^[0m
+     :                      [31;1m`-- [31;1mprevious definition of `SiteHeader` here[0m[0m
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+     : [33;1m                ^^^^^|^^^^[0m
+     :                      [33;1m`-- [33;1m`SiteHeader` redefined here[0m[0m
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+     `----
+
+  [31mx[0m the name `default` is exported multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:90:1]
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+     : [31;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [31;1m`-- [31;1mprevious exported here[0m[0m
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m106[0m | 
+ [2m107[0m |   const tabs = [
+ [2m108[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m109[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m110[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m111[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m112[0m |   ] as const
+ [2m113[0m | 
+ [2m114[0m |   return (
+ [2m115[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m116[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m117[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m118[0m |           {/* Left: Brand + Logout */}
+ [2m119[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m120[0m |             <button
+ [2m121[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m122[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m123[0m |             >
+ [2m124[0m |               Log out
+ [2m125[0m |             </button>
+ [2m126[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m127[0m |           </div>
+ [2m128[0m | 
+ [2m129[0m |           {/* Center: Tabs */}
+ [2m130[0m |           <nav className="justify-self-center pb-0">
+ [2m131[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m132[0m |               {tabs.map(tab => (
+ [2m133[0m |                 <button
+ [2m134[0m |                   key={tab.id}
+ [2m135[0m |                   onClick={() => router.push(tab.href)}
+ [2m136[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m137[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m138[0m |                   }`}
+ [2m139[0m |                 >
+ [2m140[0m |                   {tab.label}
+ [2m141[0m |                 </button>
+ [2m142[0m |               ))}
+ [2m143[0m |             </div>
+ [2m144[0m |           </nav>
+ [2m145[0m | 
+ [2m146[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m147[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m148[0m |             <button
+ [2m149[0m |               onClick={() => router.push('/create')}
+ [2m150[0m |               aria-label="Create Post"
+ [2m151[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m152[0m |             >
+ [2m153[0m |               <svg
+ [2m154[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m155[0m |                 viewBox="0 0 24 24"
+ [2m156[0m |                 fill="none"
+ [2m157[0m |                 stroke="currentColor"
+ [2m158[0m |                 strokeWidth="2"
+ [2m159[0m |                 className="h-3.5 w-3.5"
+ [2m160[0m |               >
+ [2m161[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m162[0m |               </svg>
+ [2m163[0m |             </button>
+ [2m164[0m |             <button
+ [2m165[0m |               onClick={() => router.push('/feedback')}
+ [2m166[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m167[0m |             >
+ [2m168[0m |               Feedback
+ [2m169[0m |             </button>
+ [2m170[0m |             {isAuthenticated ? (
+ [2m171[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m172[0m |                 {user?.name || user?.email}
+ [2m173[0m |               </span>
+ [2m174[0m |             ) : (
+ [2m175[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m176[0m |                 Sign In
+ [2m177[0m |               </button>
+ [2m178[0m |             )}
+ [2m179[0m |           </div>
+ [2m180[0m |         </div>
+ [2m181[0m |       </div>
+ [2m182[0m |     </header>
+ [2m183[0m |   )
+ [2m184[0m | }
+ [2m185[0m | 
+ [2m186[0m | export default SiteHeader
+     : [33;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [33;1m`-- [33;1mexported more than once[0m[0m
+ [2m187[0m | 
+     `----
+
+Error: 
+  [36m>[0m Exported identifiers must be unique
+
+Import trace for requested module:
+./src/components/SiteHeader.tsx
+./src/components/feed-page.tsx
+ ⨯ ./src/components/SiteHeader.tsx
+Error: 
+  [31mx[0m the name `useRouter` is defined multiple times
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m 1[0m | 'use client'
+ [2m 2[0m | 
+ [2m 3[0m | import { useRouter } from 'next/navigation'
+    : [31;1m         ^^^^|^^^^[0m
+    :              [31;1m`-- [31;1mprevious definition of `useRouter` here[0m[0m
+ [2m 4[0m | import { useAuth } from '@/context/auth-context'
+ [2m 5[0m | 
+ [2m 6[0m | interface Props {
+ [2m 7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m 8[0m | }
+ [2m 9[0m | 
+ [2m10[0m | export function SiteHeader({ active }: Props) {
+ [2m11[0m |   const router = useRouter()
+ [2m12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m13[0m | 
+ [2m14[0m |   const tabs = [
+ [2m15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m19[0m |   ] as const
+ [2m20[0m | 
+ [2m21[0m |   return (
+ [2m22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m25[0m |           {/* Left: Brand + Logout */}
+ [2m26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m27[0m |             <button
+ [2m28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m30[0m |             >
+ [2m31[0m |               Log out
+ [2m32[0m |             </button>
+ [2m33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m34[0m |           </div>
+ [2m35[0m | 
+ [2m36[0m |           {/* Center: Tabs */}
+ [2m37[0m |           <nav className="justify-self-center pb-0">
+ [2m38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m39[0m |               {tabs.map(tab => (
+ [2m40[0m |                 <button
+ [2m41[0m |                   key={tab.id}
+ [2m42[0m |                   onClick={() => router.push(tab.href)}
+ [2m43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m45[0m |                   }`}
+ [2m46[0m |                 >
+ [2m47[0m |                   {tab.label}
+ [2m48[0m |                 </button>
+ [2m49[0m |               ))}
+ [2m50[0m |             </div>
+ [2m51[0m |           </nav>
+ [2m52[0m | 
+ [2m53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m55[0m |             <button
+ [2m56[0m |               onClick={() => router.push('/create')}
+ [2m57[0m |               aria-label="Create Post"
+ [2m58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m59[0m |             >
+ [2m60[0m |               <svg
+ [2m61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m62[0m |                 viewBox="0 0 24 24"
+ [2m63[0m |                 fill="none"
+ [2m64[0m |                 stroke="currentColor"
+ [2m65[0m |                 strokeWidth="2"
+ [2m66[0m |                 className="h-3.5 w-3.5"
+ [2m67[0m |               >
+ [2m68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m69[0m |               </svg>
+ [2m70[0m |             </button>
+ [2m71[0m |             <button
+ [2m72[0m |               onClick={() => router.push('/feedback')}
+ [2m73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m74[0m |             >
+ [2m75[0m |               Feedback
+ [2m76[0m |             </button>
+ [2m77[0m |             {isAuthenticated ? (
+ [2m78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m79[0m |                 {user?.name || user?.email}
+ [2m80[0m |               </span>
+ [2m81[0m |             ) : (
+ [2m82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m83[0m |                 Sign In
+ [2m84[0m |               </button>
+ [2m85[0m |             )}
+ [2m86[0m |           </div>
+ [2m87[0m |         </div>
+ [2m88[0m |       </div>
+ [2m89[0m |     </header>
+ [2m90[0m |   )
+ [2m91[0m | }
+ [2m92[0m | 
+ [2m93[0m | export default SiteHeader
+ [2m94[0m | 
+ [2m95[0m | 
+ [2m96[0m | import { useRouter } from 'next/navigation'
+    : [33;1m         ^^^^|^^^^[0m
+    :              [33;1m`-- [33;1m`useRouter` redefined here[0m[0m
+ [2m97[0m | import { useAuth } from '@/context/auth-context'
+ [2m98[0m | 
+ [2m99[0m | interface Props {
+    `----
+
+  [31mx[0m the name `useAuth` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m  1[0m | 'use client'
+ [2m  2[0m | 
+ [2m  3[0m | import { useRouter } from 'next/navigation'
+ [2m  4[0m | import { useAuth } from '@/context/auth-context'
+     : [31;1m         ^^^|^^^[0m
+     :             [31;1m`-- [31;1mprevious definition of `useAuth` here[0m[0m
+ [2m  5[0m | 
+ [2m  6[0m | interface Props {
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+     : [33;1m         ^^^|^^^[0m
+     :             [33;1m`-- [33;1m`useAuth` redefined here[0m[0m
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+     `----
+
+  [31mx[0m the name `SiteHeader` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:7:1]
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+     : [31;1m                ^^^^^|^^^^[0m
+     :                      [31;1m`-- [31;1mprevious definition of `SiteHeader` here[0m[0m
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+     : [33;1m                ^^^^^|^^^^[0m
+     :                      [33;1m`-- [33;1m`SiteHeader` redefined here[0m[0m
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+     `----
+
+  [31mx[0m the name `default` is exported multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:90:1]
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+     : [31;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [31;1m`-- [31;1mprevious exported here[0m[0m
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m106[0m | 
+ [2m107[0m |   const tabs = [
+ [2m108[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m109[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m110[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m111[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m112[0m |   ] as const
+ [2m113[0m | 
+ [2m114[0m |   return (
+ [2m115[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m116[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m117[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m118[0m |           {/* Left: Brand + Logout */}
+ [2m119[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m120[0m |             <button
+ [2m121[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m122[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m123[0m |             >
+ [2m124[0m |               Log out
+ [2m125[0m |             </button>
+ [2m126[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m127[0m |           </div>
+ [2m128[0m | 
+ [2m129[0m |           {/* Center: Tabs */}
+ [2m130[0m |           <nav className="justify-self-center pb-0">
+ [2m131[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m132[0m |               {tabs.map(tab => (
+ [2m133[0m |                 <button
+ [2m134[0m |                   key={tab.id}
+ [2m135[0m |                   onClick={() => router.push(tab.href)}
+ [2m136[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m137[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m138[0m |                   }`}
+ [2m139[0m |                 >
+ [2m140[0m |                   {tab.label}
+ [2m141[0m |                 </button>
+ [2m142[0m |               ))}
+ [2m143[0m |             </div>
+ [2m144[0m |           </nav>
+ [2m145[0m | 
+ [2m146[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m147[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m148[0m |             <button
+ [2m149[0m |               onClick={() => router.push('/create')}
+ [2m150[0m |               aria-label="Create Post"
+ [2m151[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m152[0m |             >
+ [2m153[0m |               <svg
+ [2m154[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m155[0m |                 viewBox="0 0 24 24"
+ [2m156[0m |                 fill="none"
+ [2m157[0m |                 stroke="currentColor"
+ [2m158[0m |                 strokeWidth="2"
+ [2m159[0m |                 className="h-3.5 w-3.5"
+ [2m160[0m |               >
+ [2m161[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m162[0m |               </svg>
+ [2m163[0m |             </button>
+ [2m164[0m |             <button
+ [2m165[0m |               onClick={() => router.push('/feedback')}
+ [2m166[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m167[0m |             >
+ [2m168[0m |               Feedback
+ [2m169[0m |             </button>
+ [2m170[0m |             {isAuthenticated ? (
+ [2m171[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m172[0m |                 {user?.name || user?.email}
+ [2m173[0m |               </span>
+ [2m174[0m |             ) : (
+ [2m175[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m176[0m |                 Sign In
+ [2m177[0m |               </button>
+ [2m178[0m |             )}
+ [2m179[0m |           </div>
+ [2m180[0m |         </div>
+ [2m181[0m |       </div>
+ [2m182[0m |     </header>
+ [2m183[0m |   )
+ [2m184[0m | }
+ [2m185[0m | 
+ [2m186[0m | export default SiteHeader
+     : [33;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [33;1m`-- [33;1mexported more than once[0m[0m
+ [2m187[0m | 
+     `----
+
+Error: 
+  [36m>[0m Exported identifiers must be unique
+
+Import trace for requested module:
+./src/components/SiteHeader.tsx
+./src/components/feed-page.tsx
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/shreyansh/Desktop/Decro/.next/cache/webpack/client-development-fallback/0.pack.gz_' -> '/Users/shreyansh/Desktop/Decro/.next/cache/webpack/client-development-fallback/0.pack.gz'
+ ⨯ ./src/components/SiteHeader.tsx
+Error: 
+  [31mx[0m the name `useRouter` is defined multiple times
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m 1[0m | 'use client'
+ [2m 2[0m | 
+ [2m 3[0m | import { useRouter } from 'next/navigation'
+    : [31;1m         ^^^^|^^^^[0m
+    :              [31;1m`-- [31;1mprevious definition of `useRouter` here[0m[0m
+ [2m 4[0m | import { useAuth } from '@/context/auth-context'
+ [2m 5[0m | 
+ [2m 6[0m | interface Props {
+ [2m 7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m 8[0m | }
+ [2m 9[0m | 
+ [2m10[0m | export function SiteHeader({ active }: Props) {
+ [2m11[0m |   const router = useRouter()
+ [2m12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m13[0m | 
+ [2m14[0m |   const tabs = [
+ [2m15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m19[0m |   ] as const
+ [2m20[0m | 
+ [2m21[0m |   return (
+ [2m22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m25[0m |           {/* Left: Brand + Logout */}
+ [2m26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m27[0m |             <button
+ [2m28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m30[0m |             >
+ [2m31[0m |               Log out
+ [2m32[0m |             </button>
+ [2m33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m34[0m |           </div>
+ [2m35[0m | 
+ [2m36[0m |           {/* Center: Tabs */}
+ [2m37[0m |           <nav className="justify-self-center pb-0">
+ [2m38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m39[0m |               {tabs.map(tab => (
+ [2m40[0m |                 <button
+ [2m41[0m |                   key={tab.id}
+ [2m42[0m |                   onClick={() => router.push(tab.href)}
+ [2m43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m45[0m |                   }`}
+ [2m46[0m |                 >
+ [2m47[0m |                   {tab.label}
+ [2m48[0m |                 </button>
+ [2m49[0m |               ))}
+ [2m50[0m |             </div>
+ [2m51[0m |           </nav>
+ [2m52[0m | 
+ [2m53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m55[0m |             <button
+ [2m56[0m |               onClick={() => router.push('/create')}
+ [2m57[0m |               aria-label="Create Post"
+ [2m58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m59[0m |             >
+ [2m60[0m |               <svg
+ [2m61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m62[0m |                 viewBox="0 0 24 24"
+ [2m63[0m |                 fill="none"
+ [2m64[0m |                 stroke="currentColor"
+ [2m65[0m |                 strokeWidth="2"
+ [2m66[0m |                 className="h-3.5 w-3.5"
+ [2m67[0m |               >
+ [2m68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m69[0m |               </svg>
+ [2m70[0m |             </button>
+ [2m71[0m |             <button
+ [2m72[0m |               onClick={() => router.push('/feedback')}
+ [2m73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m74[0m |             >
+ [2m75[0m |               Feedback
+ [2m76[0m |             </button>
+ [2m77[0m |             {isAuthenticated ? (
+ [2m78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m79[0m |                 {user?.name || user?.email}
+ [2m80[0m |               </span>
+ [2m81[0m |             ) : (
+ [2m82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m83[0m |                 Sign In
+ [2m84[0m |               </button>
+ [2m85[0m |             )}
+ [2m86[0m |           </div>
+ [2m87[0m |         </div>
+ [2m88[0m |       </div>
+ [2m89[0m |     </header>
+ [2m90[0m |   )
+ [2m91[0m | }
+ [2m92[0m | 
+ [2m93[0m | export default SiteHeader
+ [2m94[0m | 
+ [2m95[0m | 
+ [2m96[0m | import { useRouter } from 'next/navigation'
+    : [33;1m         ^^^^|^^^^[0m
+    :              [33;1m`-- [33;1m`useRouter` redefined here[0m[0m
+ [2m97[0m | import { useAuth } from '@/context/auth-context'
+ [2m98[0m | 
+ [2m99[0m | interface Props {
+    `----
+
+  [31mx[0m the name `useAuth` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m  1[0m | 'use client'
+ [2m  2[0m | 
+ [2m  3[0m | import { useRouter } from 'next/navigation'
+ [2m  4[0m | import { useAuth } from '@/context/auth-context'
+     : [31;1m         ^^^|^^^[0m
+     :             [31;1m`-- [31;1mprevious definition of `useAuth` here[0m[0m
+ [2m  5[0m | 
+ [2m  6[0m | interface Props {
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+     : [33;1m         ^^^|^^^[0m
+     :             [33;1m`-- [33;1m`useAuth` redefined here[0m[0m
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+     `----
+
+  [31mx[0m the name `SiteHeader` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:7:1]
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+     : [31;1m                ^^^^^|^^^^[0m
+     :                      [31;1m`-- [31;1mprevious definition of `SiteHeader` here[0m[0m
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+     : [33;1m                ^^^^^|^^^^[0m
+     :                      [33;1m`-- [33;1m`SiteHeader` redefined here[0m[0m
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+     `----
+
+  [31mx[0m the name `default` is exported multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:90:1]
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+     : [31;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [31;1m`-- [31;1mprevious exported here[0m[0m
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m106[0m | 
+ [2m107[0m |   const tabs = [
+ [2m108[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m109[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m110[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m111[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m112[0m |   ] as const
+ [2m113[0m | 
+ [2m114[0m |   return (
+ [2m115[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m116[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m117[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m118[0m |           {/* Left: Brand + Logout */}
+ [2m119[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m120[0m |             <button
+ [2m121[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m122[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m123[0m |             >
+ [2m124[0m |               Log out
+ [2m125[0m |             </button>
+ [2m126[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m127[0m |           </div>
+ [2m128[0m | 
+ [2m129[0m |           {/* Center: Tabs */}
+ [2m130[0m |           <nav className="justify-self-center pb-0">
+ [2m131[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m132[0m |               {tabs.map(tab => (
+ [2m133[0m |                 <button
+ [2m134[0m |                   key={tab.id}
+ [2m135[0m |                   onClick={() => router.push(tab.href)}
+ [2m136[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m137[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m138[0m |                   }`}
+ [2m139[0m |                 >
+ [2m140[0m |                   {tab.label}
+ [2m141[0m |                 </button>
+ [2m142[0m |               ))}
+ [2m143[0m |             </div>
+ [2m144[0m |           </nav>
+ [2m145[0m | 
+ [2m146[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m147[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m148[0m |             <button
+ [2m149[0m |               onClick={() => router.push('/create')}
+ [2m150[0m |               aria-label="Create Post"
+ [2m151[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m152[0m |             >
+ [2m153[0m |               <svg
+ [2m154[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m155[0m |                 viewBox="0 0 24 24"
+ [2m156[0m |                 fill="none"
+ [2m157[0m |                 stroke="currentColor"
+ [2m158[0m |                 strokeWidth="2"
+ [2m159[0m |                 className="h-3.5 w-3.5"
+ [2m160[0m |               >
+ [2m161[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m162[0m |               </svg>
+ [2m163[0m |             </button>
+ [2m164[0m |             <button
+ [2m165[0m |               onClick={() => router.push('/feedback')}
+ [2m166[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m167[0m |             >
+ [2m168[0m |               Feedback
+ [2m169[0m |             </button>
+ [2m170[0m |             {isAuthenticated ? (
+ [2m171[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m172[0m |                 {user?.name || user?.email}
+ [2m173[0m |               </span>
+ [2m174[0m |             ) : (
+ [2m175[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m176[0m |                 Sign In
+ [2m177[0m |               </button>
+ [2m178[0m |             )}
+ [2m179[0m |           </div>
+ [2m180[0m |         </div>
+ [2m181[0m |       </div>
+ [2m182[0m |     </header>
+ [2m183[0m |   )
+ [2m184[0m | }
+ [2m185[0m | 
+ [2m186[0m | export default SiteHeader
+     : [33;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [33;1m`-- [33;1mexported more than once[0m[0m
+ [2m187[0m | 
+     `----
+
+Error: 
+  [36m>[0m Exported identifiers must be unique
+
+Import trace for requested module:
+./src/components/SiteHeader.tsx
+./src/components/feed-page.tsx
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ETIMEDOUT: connection timed out, read
+ ⨯ ./src/components/SiteHeader.tsx
+Error: 
+  [31mx[0m the name `useRouter` is defined multiple times
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m 1[0m | 'use client'
+ [2m 2[0m | 
+ [2m 3[0m | import { useRouter } from 'next/navigation'
+    : [31;1m         ^^^^|^^^^[0m
+    :              [31;1m`-- [31;1mprevious definition of `useRouter` here[0m[0m
+ [2m 4[0m | import { useAuth } from '@/context/auth-context'
+ [2m 5[0m | 
+ [2m 6[0m | interface Props {
+ [2m 7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m 8[0m | }
+ [2m 9[0m | 
+ [2m10[0m | export function SiteHeader({ active }: Props) {
+ [2m11[0m |   const router = useRouter()
+ [2m12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m13[0m | 
+ [2m14[0m |   const tabs = [
+ [2m15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m19[0m |   ] as const
+ [2m20[0m | 
+ [2m21[0m |   return (
+ [2m22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m25[0m |           {/* Left: Brand + Logout */}
+ [2m26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m27[0m |             <button
+ [2m28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m30[0m |             >
+ [2m31[0m |               Log out
+ [2m32[0m |             </button>
+ [2m33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m34[0m |           </div>
+ [2m35[0m | 
+ [2m36[0m |           {/* Center: Tabs */}
+ [2m37[0m |           <nav className="justify-self-center pb-0">
+ [2m38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m39[0m |               {tabs.map(tab => (
+ [2m40[0m |                 <button
+ [2m41[0m |                   key={tab.id}
+ [2m42[0m |                   onClick={() => router.push(tab.href)}
+ [2m43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m45[0m |                   }`}
+ [2m46[0m |                 >
+ [2m47[0m |                   {tab.label}
+ [2m48[0m |                 </button>
+ [2m49[0m |               ))}
+ [2m50[0m |             </div>
+ [2m51[0m |           </nav>
+ [2m52[0m | 
+ [2m53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m55[0m |             <button
+ [2m56[0m |               onClick={() => router.push('/create')}
+ [2m57[0m |               aria-label="Create Post"
+ [2m58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m59[0m |             >
+ [2m60[0m |               <svg
+ [2m61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m62[0m |                 viewBox="0 0 24 24"
+ [2m63[0m |                 fill="none"
+ [2m64[0m |                 stroke="currentColor"
+ [2m65[0m |                 strokeWidth="2"
+ [2m66[0m |                 className="h-3.5 w-3.5"
+ [2m67[0m |               >
+ [2m68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m69[0m |               </svg>
+ [2m70[0m |             </button>
+ [2m71[0m |             <button
+ [2m72[0m |               onClick={() => router.push('/feedback')}
+ [2m73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m74[0m |             >
+ [2m75[0m |               Feedback
+ [2m76[0m |             </button>
+ [2m77[0m |             {isAuthenticated ? (
+ [2m78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m79[0m |                 {user?.name || user?.email}
+ [2m80[0m |               </span>
+ [2m81[0m |             ) : (
+ [2m82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m83[0m |                 Sign In
+ [2m84[0m |               </button>
+ [2m85[0m |             )}
+ [2m86[0m |           </div>
+ [2m87[0m |         </div>
+ [2m88[0m |       </div>
+ [2m89[0m |     </header>
+ [2m90[0m |   )
+ [2m91[0m | }
+ [2m92[0m | 
+ [2m93[0m | export default SiteHeader
+ [2m94[0m | 
+ [2m95[0m | 
+ [2m96[0m | import { useRouter } from 'next/navigation'
+    : [33;1m         ^^^^|^^^^[0m
+    :              [33;1m`-- [33;1m`useRouter` redefined here[0m[0m
+ [2m97[0m | import { useAuth } from '@/context/auth-context'
+ [2m98[0m | 
+ [2m99[0m | interface Props {
+    `----
+
+  [31mx[0m the name `useAuth` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m  1[0m | 'use client'
+ [2m  2[0m | 
+ [2m  3[0m | import { useRouter } from 'next/navigation'
+ [2m  4[0m | import { useAuth } from '@/context/auth-context'
+     : [31;1m         ^^^|^^^[0m
+     :             [31;1m`-- [31;1mprevious definition of `useAuth` here[0m[0m
+ [2m  5[0m | 
+ [2m  6[0m | interface Props {
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+     : [33;1m         ^^^|^^^[0m
+     :             [33;1m`-- [33;1m`useAuth` redefined here[0m[0m
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+     `----
+
+  [31mx[0m the name `SiteHeader` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:7:1]
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+     : [31;1m                ^^^^^|^^^^[0m
+     :                      [31;1m`-- [31;1mprevious definition of `SiteHeader` here[0m[0m
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+     : [33;1m                ^^^^^|^^^^[0m
+     :                      [33;1m`-- [33;1m`SiteHeader` redefined here[0m[0m
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+     `----
+
+  [31mx[0m the name `default` is exported multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:90:1]
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+     : [31;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [31;1m`-- [31;1mprevious exported here[0m[0m
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m106[0m | 
+ [2m107[0m |   const tabs = [
+ [2m108[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m109[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m110[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m111[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m112[0m |   ] as const
+ [2m113[0m | 
+ [2m114[0m |   return (
+ [2m115[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m116[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m117[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m118[0m |           {/* Left: Brand + Logout */}
+ [2m119[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m120[0m |             <button
+ [2m121[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m122[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m123[0m |             >
+ [2m124[0m |               Log out
+ [2m125[0m |             </button>
+ [2m126[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m127[0m |           </div>
+ [2m128[0m | 
+ [2m129[0m |           {/* Center: Tabs */}
+ [2m130[0m |           <nav className="justify-self-center pb-0">
+ [2m131[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m132[0m |               {tabs.map(tab => (
+ [2m133[0m |                 <button
+ [2m134[0m |                   key={tab.id}
+ [2m135[0m |                   onClick={() => router.push(tab.href)}
+ [2m136[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m137[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m138[0m |                   }`}
+ [2m139[0m |                 >
+ [2m140[0m |                   {tab.label}
+ [2m141[0m |                 </button>
+ [2m142[0m |               ))}
+ [2m143[0m |             </div>
+ [2m144[0m |           </nav>
+ [2m145[0m | 
+ [2m146[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m147[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m148[0m |             <button
+ [2m149[0m |               onClick={() => router.push('/create')}
+ [2m150[0m |               aria-label="Create Post"
+ [2m151[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m152[0m |             >
+ [2m153[0m |               <svg
+ [2m154[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m155[0m |                 viewBox="0 0 24 24"
+ [2m156[0m |                 fill="none"
+ [2m157[0m |                 stroke="currentColor"
+ [2m158[0m |                 strokeWidth="2"
+ [2m159[0m |                 className="h-3.5 w-3.5"
+ [2m160[0m |               >
+ [2m161[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m162[0m |               </svg>
+ [2m163[0m |             </button>
+ [2m164[0m |             <button
+ [2m165[0m |               onClick={() => router.push('/feedback')}
+ [2m166[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m167[0m |             >
+ [2m168[0m |               Feedback
+ [2m169[0m |             </button>
+ [2m170[0m |             {isAuthenticated ? (
+ [2m171[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m172[0m |                 {user?.name || user?.email}
+ [2m173[0m |               </span>
+ [2m174[0m |             ) : (
+ [2m175[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m176[0m |                 Sign In
+ [2m177[0m |               </button>
+ [2m178[0m |             )}
+ [2m179[0m |           </div>
+ [2m180[0m |         </div>
+ [2m181[0m |       </div>
+ [2m182[0m |     </header>
+ [2m183[0m |   )
+ [2m184[0m | }
+ [2m185[0m | 
+ [2m186[0m | export default SiteHeader
+     : [33;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [33;1m`-- [33;1mexported more than once[0m[0m
+ [2m187[0m | 
+     `----
+
+Error: 
+  [36m>[0m Exported identifiers must be unique
+
+Import trace for requested module:
+./src/components/SiteHeader.tsx
+./src/components/feed-page.tsx
+ ⨯ ./src/components/SiteHeader.tsx
+Error: 
+  [31mx[0m the name `useRouter` is defined multiple times
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m 1[0m | 'use client'
+ [2m 2[0m | 
+ [2m 3[0m | import { useRouter } from 'next/navigation'
+    : [31;1m         ^^^^|^^^^[0m
+    :              [31;1m`-- [31;1mprevious definition of `useRouter` here[0m[0m
+ [2m 4[0m | import { useAuth } from '@/context/auth-context'
+ [2m 5[0m | 
+ [2m 6[0m | interface Props {
+ [2m 7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m 8[0m | }
+ [2m 9[0m | 
+ [2m10[0m | export function SiteHeader({ active }: Props) {
+ [2m11[0m |   const router = useRouter()
+ [2m12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m13[0m | 
+ [2m14[0m |   const tabs = [
+ [2m15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m19[0m |   ] as const
+ [2m20[0m | 
+ [2m21[0m |   return (
+ [2m22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m25[0m |           {/* Left: Brand + Logout */}
+ [2m26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m27[0m |             <button
+ [2m28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m30[0m |             >
+ [2m31[0m |               Log out
+ [2m32[0m |             </button>
+ [2m33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m34[0m |           </div>
+ [2m35[0m | 
+ [2m36[0m |           {/* Center: Tabs */}
+ [2m37[0m |           <nav className="justify-self-center pb-0">
+ [2m38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m39[0m |               {tabs.map(tab => (
+ [2m40[0m |                 <button
+ [2m41[0m |                   key={tab.id}
+ [2m42[0m |                   onClick={() => router.push(tab.href)}
+ [2m43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m45[0m |                   }`}
+ [2m46[0m |                 >
+ [2m47[0m |                   {tab.label}
+ [2m48[0m |                 </button>
+ [2m49[0m |               ))}
+ [2m50[0m |             </div>
+ [2m51[0m |           </nav>
+ [2m52[0m | 
+ [2m53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m55[0m |             <button
+ [2m56[0m |               onClick={() => router.push('/create')}
+ [2m57[0m |               aria-label="Create Post"
+ [2m58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m59[0m |             >
+ [2m60[0m |               <svg
+ [2m61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m62[0m |                 viewBox="0 0 24 24"
+ [2m63[0m |                 fill="none"
+ [2m64[0m |                 stroke="currentColor"
+ [2m65[0m |                 strokeWidth="2"
+ [2m66[0m |                 className="h-3.5 w-3.5"
+ [2m67[0m |               >
+ [2m68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m69[0m |               </svg>
+ [2m70[0m |             </button>
+ [2m71[0m |             <button
+ [2m72[0m |               onClick={() => router.push('/feedback')}
+ [2m73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m74[0m |             >
+ [2m75[0m |               Feedback
+ [2m76[0m |             </button>
+ [2m77[0m |             {isAuthenticated ? (
+ [2m78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m79[0m |                 {user?.name || user?.email}
+ [2m80[0m |               </span>
+ [2m81[0m |             ) : (
+ [2m82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m83[0m |                 Sign In
+ [2m84[0m |               </button>
+ [2m85[0m |             )}
+ [2m86[0m |           </div>
+ [2m87[0m |         </div>
+ [2m88[0m |       </div>
+ [2m89[0m |     </header>
+ [2m90[0m |   )
+ [2m91[0m | }
+ [2m92[0m | 
+ [2m93[0m | export default SiteHeader
+ [2m94[0m | 
+ [2m95[0m | 
+ [2m96[0m | import { useRouter } from 'next/navigation'
+    : [33;1m         ^^^^|^^^^[0m
+    :              [33;1m`-- [33;1m`useRouter` redefined here[0m[0m
+ [2m97[0m | import { useAuth } from '@/context/auth-context'
+ [2m98[0m | 
+ [2m99[0m | interface Props {
+    `----
+
+  [31mx[0m the name `useAuth` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m  1[0m | 'use client'
+ [2m  2[0m | 
+ [2m  3[0m | import { useRouter } from 'next/navigation'
+ [2m  4[0m | import { useAuth } from '@/context/auth-context'
+     : [31;1m         ^^^|^^^[0m
+     :             [31;1m`-- [31;1mprevious definition of `useAuth` here[0m[0m
+ [2m  5[0m | 
+ [2m  6[0m | interface Props {
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+     : [33;1m         ^^^|^^^[0m
+     :             [33;1m`-- [33;1m`useAuth` redefined here[0m[0m
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+     `----
+
+  [31mx[0m the name `SiteHeader` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:7:1]
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+     : [31;1m                ^^^^^|^^^^[0m
+     :                      [31;1m`-- [31;1mprevious definition of `SiteHeader` here[0m[0m
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+     : [33;1m                ^^^^^|^^^^[0m
+     :                      [33;1m`-- [33;1m`SiteHeader` redefined here[0m[0m
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+     `----
+
+  [31mx[0m the name `default` is exported multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:90:1]
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+     : [31;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [31;1m`-- [31;1mprevious exported here[0m[0m
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m106[0m | 
+ [2m107[0m |   const tabs = [
+ [2m108[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m109[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m110[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m111[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m112[0m |   ] as const
+ [2m113[0m | 
+ [2m114[0m |   return (
+ [2m115[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m116[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m117[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m118[0m |           {/* Left: Brand + Logout */}
+ [2m119[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m120[0m |             <button
+ [2m121[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m122[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m123[0m |             >
+ [2m124[0m |               Log out
+ [2m125[0m |             </button>
+ [2m126[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m127[0m |           </div>
+ [2m128[0m | 
+ [2m129[0m |           {/* Center: Tabs */}
+ [2m130[0m |           <nav className="justify-self-center pb-0">
+ [2m131[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m132[0m |               {tabs.map(tab => (
+ [2m133[0m |                 <button
+ [2m134[0m |                   key={tab.id}
+ [2m135[0m |                   onClick={() => router.push(tab.href)}
+ [2m136[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m137[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m138[0m |                   }`}
+ [2m139[0m |                 >
+ [2m140[0m |                   {tab.label}
+ [2m141[0m |                 </button>
+ [2m142[0m |               ))}
+ [2m143[0m |             </div>
+ [2m144[0m |           </nav>
+ [2m145[0m | 
+ [2m146[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m147[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m148[0m |             <button
+ [2m149[0m |               onClick={() => router.push('/create')}
+ [2m150[0m |               aria-label="Create Post"
+ [2m151[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m152[0m |             >
+ [2m153[0m |               <svg
+ [2m154[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m155[0m |                 viewBox="0 0 24 24"
+ [2m156[0m |                 fill="none"
+ [2m157[0m |                 stroke="currentColor"
+ [2m158[0m |                 strokeWidth="2"
+ [2m159[0m |                 className="h-3.5 w-3.5"
+ [2m160[0m |               >
+ [2m161[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m162[0m |               </svg>
+ [2m163[0m |             </button>
+ [2m164[0m |             <button
+ [2m165[0m |               onClick={() => router.push('/feedback')}
+ [2m166[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m167[0m |             >
+ [2m168[0m |               Feedback
+ [2m169[0m |             </button>
+ [2m170[0m |             {isAuthenticated ? (
+ [2m171[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m172[0m |                 {user?.name || user?.email}
+ [2m173[0m |               </span>
+ [2m174[0m |             ) : (
+ [2m175[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m176[0m |                 Sign In
+ [2m177[0m |               </button>
+ [2m178[0m |             )}
+ [2m179[0m |           </div>
+ [2m180[0m |         </div>
+ [2m181[0m |       </div>
+ [2m182[0m |     </header>
+ [2m183[0m |   )
+ [2m184[0m | }
+ [2m185[0m | 
+ [2m186[0m | export default SiteHeader
+     : [33;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [33;1m`-- [33;1mexported more than once[0m[0m
+ [2m187[0m | 
+     `----
+
+Error: 
+  [36m>[0m Exported identifiers must be unique
+
+Import trace for requested module:
+./src/components/SiteHeader.tsx
+./src/components/feed-page.tsx
+ ⨯ ./src/app/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[12].oneOf[12].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[12].oneOf[12].use[3]!./src/app/globals.css
+Error: ETIMEDOUT: connection timed out, read
+    at async Promise.all (index 15)
+Import trace for requested module:
+./src/app/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[12].oneOf[12].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[12].oneOf[12].use[3]!./src/app/globals.css
+./src/app/globals.css
+ ⨯ ./src/components/SiteHeader.tsx
+Error: 
+  [31mx[0m the name `useRouter` is defined multiple times
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m 1[0m | 'use client'
+ [2m 2[0m | 
+ [2m 3[0m | import { useRouter } from 'next/navigation'
+    : [31;1m         ^^^^|^^^^[0m
+    :              [31;1m`-- [31;1mprevious definition of `useRouter` here[0m[0m
+ [2m 4[0m | import { useAuth } from '@/context/auth-context'
+ [2m 5[0m | 
+ [2m 6[0m | interface Props {
+ [2m 7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m 8[0m | }
+ [2m 9[0m | 
+ [2m10[0m | export function SiteHeader({ active }: Props) {
+ [2m11[0m |   const router = useRouter()
+ [2m12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m13[0m | 
+ [2m14[0m |   const tabs = [
+ [2m15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m19[0m |   ] as const
+ [2m20[0m | 
+ [2m21[0m |   return (
+ [2m22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m25[0m |           {/* Left: Brand + Logout */}
+ [2m26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m27[0m |             <button
+ [2m28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m30[0m |             >
+ [2m31[0m |               Log out
+ [2m32[0m |             </button>
+ [2m33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m34[0m |           </div>
+ [2m35[0m | 
+ [2m36[0m |           {/* Center: Tabs */}
+ [2m37[0m |           <nav className="justify-self-center pb-0">
+ [2m38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m39[0m |               {tabs.map(tab => (
+ [2m40[0m |                 <button
+ [2m41[0m |                   key={tab.id}
+ [2m42[0m |                   onClick={() => router.push(tab.href)}
+ [2m43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m45[0m |                   }`}
+ [2m46[0m |                 >
+ [2m47[0m |                   {tab.label}
+ [2m48[0m |                 </button>
+ [2m49[0m |               ))}
+ [2m50[0m |             </div>
+ [2m51[0m |           </nav>
+ [2m52[0m | 
+ [2m53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m55[0m |             <button
+ [2m56[0m |               onClick={() => router.push('/create')}
+ [2m57[0m |               aria-label="Create Post"
+ [2m58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m59[0m |             >
+ [2m60[0m |               <svg
+ [2m61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m62[0m |                 viewBox="0 0 24 24"
+ [2m63[0m |                 fill="none"
+ [2m64[0m |                 stroke="currentColor"
+ [2m65[0m |                 strokeWidth="2"
+ [2m66[0m |                 className="h-3.5 w-3.5"
+ [2m67[0m |               >
+ [2m68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m69[0m |               </svg>
+ [2m70[0m |             </button>
+ [2m71[0m |             <button
+ [2m72[0m |               onClick={() => router.push('/feedback')}
+ [2m73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m74[0m |             >
+ [2m75[0m |               Feedback
+ [2m76[0m |             </button>
+ [2m77[0m |             {isAuthenticated ? (
+ [2m78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m79[0m |                 {user?.name || user?.email}
+ [2m80[0m |               </span>
+ [2m81[0m |             ) : (
+ [2m82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m83[0m |                 Sign In
+ [2m84[0m |               </button>
+ [2m85[0m |             )}
+ [2m86[0m |           </div>
+ [2m87[0m |         </div>
+ [2m88[0m |       </div>
+ [2m89[0m |     </header>
+ [2m90[0m |   )
+ [2m91[0m | }
+ [2m92[0m | 
+ [2m93[0m | export default SiteHeader
+ [2m94[0m | 
+ [2m95[0m | 
+ [2m96[0m | import { useRouter } from 'next/navigation'
+    : [33;1m         ^^^^|^^^^[0m
+    :              [33;1m`-- [33;1m`useRouter` redefined here[0m[0m
+ [2m97[0m | import { useAuth } from '@/context/auth-context'
+ [2m98[0m | 
+ [2m99[0m | interface Props {
+    `----
+
+  [31mx[0m the name `useAuth` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m  1[0m | 'use client'
+ [2m  2[0m | 
+ [2m  3[0m | import { useRouter } from 'next/navigation'
+ [2m  4[0m | import { useAuth } from '@/context/auth-context'
+     : [31;1m         ^^^|^^^[0m
+     :             [31;1m`-- [31;1mprevious definition of `useAuth` here[0m[0m
+ [2m  5[0m | 
+ [2m  6[0m | interface Props {
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+     : [33;1m         ^^^|^^^[0m
+     :             [33;1m`-- [33;1m`useAuth` redefined here[0m[0m
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+     `----
+
+  [31mx[0m the name `SiteHeader` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:7:1]
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+     : [31;1m                ^^^^^|^^^^[0m
+     :                      [31;1m`-- [31;1mprevious definition of `SiteHeader` here[0m[0m
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+     : [33;1m                ^^^^^|^^^^[0m
+     :                      [33;1m`-- [33;1m`SiteHeader` redefined here[0m[0m
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+     `----
+
+  [31mx[0m the name `default` is exported multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:90:1]
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+     : [31;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [31;1m`-- [31;1mprevious exported here[0m[0m
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m106[0m | 
+ [2m107[0m |   const tabs = [
+ [2m108[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m109[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m110[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m111[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m112[0m |   ] as const
+ [2m113[0m | 
+ [2m114[0m |   return (
+ [2m115[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m116[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m117[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m118[0m |           {/* Left: Brand + Logout */}
+ [2m119[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m120[0m |             <button
+ [2m121[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m122[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m123[0m |             >
+ [2m124[0m |               Log out
+ [2m125[0m |             </button>
+ [2m126[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m127[0m |           </div>
+ [2m128[0m | 
+ [2m129[0m |           {/* Center: Tabs */}
+ [2m130[0m |           <nav className="justify-self-center pb-0">
+ [2m131[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m132[0m |               {tabs.map(tab => (
+ [2m133[0m |                 <button
+ [2m134[0m |                   key={tab.id}
+ [2m135[0m |                   onClick={() => router.push(tab.href)}
+ [2m136[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m137[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m138[0m |                   }`}
+ [2m139[0m |                 >
+ [2m140[0m |                   {tab.label}
+ [2m141[0m |                 </button>
+ [2m142[0m |               ))}
+ [2m143[0m |             </div>
+ [2m144[0m |           </nav>
+ [2m145[0m | 
+ [2m146[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m147[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m148[0m |             <button
+ [2m149[0m |               onClick={() => router.push('/create')}
+ [2m150[0m |               aria-label="Create Post"
+ [2m151[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m152[0m |             >
+ [2m153[0m |               <svg
+ [2m154[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m155[0m |                 viewBox="0 0 24 24"
+ [2m156[0m |                 fill="none"
+ [2m157[0m |                 stroke="currentColor"
+ [2m158[0m |                 strokeWidth="2"
+ [2m159[0m |                 className="h-3.5 w-3.5"
+ [2m160[0m |               >
+ [2m161[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m162[0m |               </svg>
+ [2m163[0m |             </button>
+ [2m164[0m |             <button
+ [2m165[0m |               onClick={() => router.push('/feedback')}
+ [2m166[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m167[0m |             >
+ [2m168[0m |               Feedback
+ [2m169[0m |             </button>
+ [2m170[0m |             {isAuthenticated ? (
+ [2m171[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m172[0m |                 {user?.name || user?.email}
+ [2m173[0m |               </span>
+ [2m174[0m |             ) : (
+ [2m175[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m176[0m |                 Sign In
+ [2m177[0m |               </button>
+ [2m178[0m |             )}
+ [2m179[0m |           </div>
+ [2m180[0m |         </div>
+ [2m181[0m |       </div>
+ [2m182[0m |     </header>
+ [2m183[0m |   )
+ [2m184[0m | }
+ [2m185[0m | 
+ [2m186[0m | export default SiteHeader
+     : [33;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [33;1m`-- [33;1mexported more than once[0m[0m
+ [2m187[0m | 
+     `----
+
+Error: 
+  [36m>[0m Exported identifiers must be unique
+
+Import trace for requested module:
+./src/components/SiteHeader.tsx
+./src/components/feed-page.tsx
+ ⨯ ./src/components/SiteHeader.tsx
+Error: 
+  [31mx[0m the name `useRouter` is defined multiple times
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m 1[0m | 'use client'
+ [2m 2[0m | 
+ [2m 3[0m | import { useRouter } from 'next/navigation'
+    : [31;1m         ^^^^|^^^^[0m
+    :              [31;1m`-- [31;1mprevious definition of `useRouter` here[0m[0m
+ [2m 4[0m | import { useAuth } from '@/context/auth-context'
+ [2m 5[0m | 
+ [2m 6[0m | interface Props {
+ [2m 7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m 8[0m | }
+ [2m 9[0m | 
+ [2m10[0m | export function SiteHeader({ active }: Props) {
+ [2m11[0m |   const router = useRouter()
+ [2m12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m13[0m | 
+ [2m14[0m |   const tabs = [
+ [2m15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m19[0m |   ] as const
+ [2m20[0m | 
+ [2m21[0m |   return (
+ [2m22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m25[0m |           {/* Left: Brand + Logout */}
+ [2m26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m27[0m |             <button
+ [2m28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m30[0m |             >
+ [2m31[0m |               Log out
+ [2m32[0m |             </button>
+ [2m33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m34[0m |           </div>
+ [2m35[0m | 
+ [2m36[0m |           {/* Center: Tabs */}
+ [2m37[0m |           <nav className="justify-self-center pb-0">
+ [2m38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m39[0m |               {tabs.map(tab => (
+ [2m40[0m |                 <button
+ [2m41[0m |                   key={tab.id}
+ [2m42[0m |                   onClick={() => router.push(tab.href)}
+ [2m43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m45[0m |                   }`}
+ [2m46[0m |                 >
+ [2m47[0m |                   {tab.label}
+ [2m48[0m |                 </button>
+ [2m49[0m |               ))}
+ [2m50[0m |             </div>
+ [2m51[0m |           </nav>
+ [2m52[0m | 
+ [2m53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m55[0m |             <button
+ [2m56[0m |               onClick={() => router.push('/create')}
+ [2m57[0m |               aria-label="Create Post"
+ [2m58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m59[0m |             >
+ [2m60[0m |               <svg
+ [2m61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m62[0m |                 viewBox="0 0 24 24"
+ [2m63[0m |                 fill="none"
+ [2m64[0m |                 stroke="currentColor"
+ [2m65[0m |                 strokeWidth="2"
+ [2m66[0m |                 className="h-3.5 w-3.5"
+ [2m67[0m |               >
+ [2m68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m69[0m |               </svg>
+ [2m70[0m |             </button>
+ [2m71[0m |             <button
+ [2m72[0m |               onClick={() => router.push('/feedback')}
+ [2m73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m74[0m |             >
+ [2m75[0m |               Feedback
+ [2m76[0m |             </button>
+ [2m77[0m |             {isAuthenticated ? (
+ [2m78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m79[0m |                 {user?.name || user?.email}
+ [2m80[0m |               </span>
+ [2m81[0m |             ) : (
+ [2m82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m83[0m |                 Sign In
+ [2m84[0m |               </button>
+ [2m85[0m |             )}
+ [2m86[0m |           </div>
+ [2m87[0m |         </div>
+ [2m88[0m |       </div>
+ [2m89[0m |     </header>
+ [2m90[0m |   )
+ [2m91[0m | }
+ [2m92[0m | 
+ [2m93[0m | export default SiteHeader
+ [2m94[0m | 
+ [2m95[0m | 
+ [2m96[0m | import { useRouter } from 'next/navigation'
+    : [33;1m         ^^^^|^^^^[0m
+    :              [33;1m`-- [33;1m`useRouter` redefined here[0m[0m
+ [2m97[0m | import { useAuth } from '@/context/auth-context'
+ [2m98[0m | 
+ [2m99[0m | interface Props {
+    `----
+
+  [31mx[0m the name `useAuth` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:1:1]
+ [2m  1[0m | 'use client'
+ [2m  2[0m | 
+ [2m  3[0m | import { useRouter } from 'next/navigation'
+ [2m  4[0m | import { useAuth } from '@/context/auth-context'
+     : [31;1m         ^^^|^^^[0m
+     :             [31;1m`-- [31;1mprevious definition of `useAuth` here[0m[0m
+ [2m  5[0m | 
+ [2m  6[0m | interface Props {
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+     : [33;1m         ^^^|^^^[0m
+     :             [33;1m`-- [33;1m`useAuth` redefined here[0m[0m
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+     `----
+
+  [31mx[0m the name `SiteHeader` is defined multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:7:1]
+ [2m  7[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m  8[0m | }
+ [2m  9[0m | 
+ [2m 10[0m | export function SiteHeader({ active }: Props) {
+     : [31;1m                ^^^^^|^^^^[0m
+     :                      [31;1m`-- [31;1mprevious definition of `SiteHeader` here[0m[0m
+ [2m 11[0m |   const router = useRouter()
+ [2m 12[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m 13[0m | 
+ [2m 14[0m |   const tabs = [
+ [2m 15[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m 16[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m 17[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m 18[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m 19[0m |   ] as const
+ [2m 20[0m | 
+ [2m 21[0m |   return (
+ [2m 22[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m 23[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m 24[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m 25[0m |           {/* Left: Brand + Logout */}
+ [2m 26[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m 27[0m |             <button
+ [2m 28[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m 29[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m 30[0m |             >
+ [2m 31[0m |               Log out
+ [2m 32[0m |             </button>
+ [2m 33[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m 34[0m |           </div>
+ [2m 35[0m | 
+ [2m 36[0m |           {/* Center: Tabs */}
+ [2m 37[0m |           <nav className="justify-self-center pb-0">
+ [2m 38[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m 39[0m |               {tabs.map(tab => (
+ [2m 40[0m |                 <button
+ [2m 41[0m |                   key={tab.id}
+ [2m 42[0m |                   onClick={() => router.push(tab.href)}
+ [2m 43[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m 44[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m 45[0m |                   }`}
+ [2m 46[0m |                 >
+ [2m 47[0m |                   {tab.label}
+ [2m 48[0m |                 </button>
+ [2m 49[0m |               ))}
+ [2m 50[0m |             </div>
+ [2m 51[0m |           </nav>
+ [2m 52[0m | 
+ [2m 53[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m 54[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m 55[0m |             <button
+ [2m 56[0m |               onClick={() => router.push('/create')}
+ [2m 57[0m |               aria-label="Create Post"
+ [2m 58[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m 59[0m |             >
+ [2m 60[0m |               <svg
+ [2m 61[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m 62[0m |                 viewBox="0 0 24 24"
+ [2m 63[0m |                 fill="none"
+ [2m 64[0m |                 stroke="currentColor"
+ [2m 65[0m |                 strokeWidth="2"
+ [2m 66[0m |                 className="h-3.5 w-3.5"
+ [2m 67[0m |               >
+ [2m 68[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m 69[0m |               </svg>
+ [2m 70[0m |             </button>
+ [2m 71[0m |             <button
+ [2m 72[0m |               onClick={() => router.push('/feedback')}
+ [2m 73[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m 74[0m |             >
+ [2m 75[0m |               Feedback
+ [2m 76[0m |             </button>
+ [2m 77[0m |             {isAuthenticated ? (
+ [2m 78[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m 79[0m |                 {user?.name || user?.email}
+ [2m 80[0m |               </span>
+ [2m 81[0m |             ) : (
+ [2m 82[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m 83[0m |                 Sign In
+ [2m 84[0m |               </button>
+ [2m 85[0m |             )}
+ [2m 86[0m |           </div>
+ [2m 87[0m |         </div>
+ [2m 88[0m |       </div>
+ [2m 89[0m |     </header>
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+     : [33;1m                ^^^^^|^^^^[0m
+     :                      [33;1m`-- [33;1m`SiteHeader` redefined here[0m[0m
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+     `----
+
+  [31mx[0m the name `default` is exported multiple times
+     ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/components/SiteHeader.tsx[0m:90:1]
+ [2m 90[0m |   )
+ [2m 91[0m | }
+ [2m 92[0m | 
+ [2m 93[0m | export default SiteHeader
+     : [31;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [31;1m`-- [31;1mprevious exported here[0m[0m
+ [2m 94[0m | 
+ [2m 95[0m | 
+ [2m 96[0m | import { useRouter } from 'next/navigation'
+ [2m 97[0m | import { useAuth } from '@/context/auth-context'
+ [2m 98[0m | 
+ [2m 99[0m | interface Props {
+ [2m100[0m |   active: 'feed' | 'spotlight' | 'explore' | 'portfolios' | 'profile'
+ [2m101[0m | }
+ [2m102[0m | 
+ [2m103[0m | export function SiteHeader({ active }: Props) {
+ [2m104[0m |   const router = useRouter()
+ [2m105[0m |   const { isAuthenticated, user, signOut } = useAuth()
+ [2m106[0m | 
+ [2m107[0m |   const tabs = [
+ [2m108[0m |     { id: 'feed', label: 'Feed', href: '/feed' },
+ [2m109[0m |     { id: 'spotlight', label: 'Spotlight', href: '/spotlight' },
+ [2m110[0m |     { id: 'explore', label: 'Subgroup', href: '/subgroup' },
+ [2m111[0m |     { id: 'profile', label: 'Profile', href: '/profile' },
+ [2m112[0m |   ] as const
+ [2m113[0m | 
+ [2m114[0m |   return (
+ [2m115[0m |     <header className="sticky top-0 z-50 bg-white border-b border-black">
+ [2m116[0m |       <div className="max-w-7xl mx-auto px-2 sm:px-4">
+ [2m117[0m |         <div className="grid grid-cols-3 items-end h-16">
+ [2m118[0m |           {/* Left: Brand + Logout */}
+ [2m119[0m |           <div className="flex items-center gap-3 pb-1">
+ [2m120[0m |             <button
+ [2m121[0m |               onClick={async () => { await signOut(); router.push('/') }}
+ [2m122[0m |               className="hidden sm:inline text-sm font-['Space_Mono'] text-black hover:text-gray-600"
+ [2m123[0m |             >
+ [2m124[0m |               Log out
+ [2m125[0m |             </button>
+ [2m126[0m |             <h1 className="text-base sm:text-xl font-['Space_Mono'] font-semibold">Title</h1>
+ [2m127[0m |           </div>
+ [2m128[0m | 
+ [2m129[0m |           {/* Center: Tabs */}
+ [2m130[0m |           <nav className="justify-self-center pb-0">
+ [2m131[0m |             <div className="flex gap-2 sm:gap-6">
+ [2m132[0m |               {tabs.map(tab => (
+ [2m133[0m |                 <button
+ [2m134[0m |                   key={tab.id}
+ [2m135[0m |                   onClick={() => router.push(tab.href)}
+ [2m136[0m |                   className={`w-28 sm:w-40 h-8 text-xs sm:text-sm font-['Space_Mono'] border border-black transition-all active:scale-95 flex items-center justify-center ${
+ [2m137[0m |                     active === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
+ [2m138[0m |                   }`}
+ [2m139[0m |                 >
+ [2m140[0m |                   {tab.label}
+ [2m141[0m |                 </button>
+ [2m142[0m |               ))}
+ [2m143[0m |             </div>
+ [2m144[0m |           </nav>
+ [2m145[0m | 
+ [2m146[0m |           {/* Right: Create + Feedback + Auth */}
+ [2m147[0m |           <div className="flex items-center justify-end gap-2 sm:gap-4 pb-1">
+ [2m148[0m |             <button
+ [2m149[0m |               onClick={() => router.push('/create')}
+ [2m150[0m |               aria-label="Create Post"
+ [2m151[0m |               className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 bg-black text-white border border-black hover:bg-black"
+ [2m152[0m |             >
+ [2m153[0m |               <svg
+ [2m154[0m |                 xmlns="http://www.w3.org/2000/svg"
+ [2m155[0m |                 viewBox="0 0 24 24"
+ [2m156[0m |                 fill="none"
+ [2m157[0m |                 stroke="currentColor"
+ [2m158[0m |                 strokeWidth="2"
+ [2m159[0m |                 className="h-3.5 w-3.5"
+ [2m160[0m |               >
+ [2m161[0m |                 <path d="M12 5v14M5 12h14" />
+ [2m162[0m |               </svg>
+ [2m163[0m |             </button>
+ [2m164[0m |             <button
+ [2m165[0m |               onClick={() => router.push('/feedback')}
+ [2m166[0m |               className="text-xs font-['Space_Mono'] text-gray-500 hover:text-black"
+ [2m167[0m |             >
+ [2m168[0m |               Feedback
+ [2m169[0m |             </button>
+ [2m170[0m |             {isAuthenticated ? (
+ [2m171[0m |               <span className="hidden sm:inline text-xs font-['Space_Mono'] text-green-600 truncate max-w-[120px]">
+ [2m172[0m |                 {user?.name || user?.email}
+ [2m173[0m |               </span>
+ [2m174[0m |             ) : (
+ [2m175[0m |               <button onClick={() => router.push('/')} className="text-xs font-['Space_Mono'] text-blue-600 hover:text-blue-800">
+ [2m176[0m |                 Sign In
+ [2m177[0m |               </button>
+ [2m178[0m |             )}
+ [2m179[0m |           </div>
+ [2m180[0m |         </div>
+ [2m181[0m |       </div>
+ [2m182[0m |     </header>
+ [2m183[0m |   )
+ [2m184[0m | }
+ [2m185[0m | 
+ [2m186[0m | export default SiteHeader
+     : [33;1m^^^^^^^^^^^^|^^^^^^^^^^^^[0m
+     :             [33;1m`-- [33;1mexported more than once[0m[0m
+ [2m187[0m | 
+     `----
+
+Error: 
+  [36m>[0m Exported identifiers must be unique
+
+Import trace for requested module:
+./src/components/SiteHeader.tsx
+./src/components/feed-page.tsx
+[?25h
