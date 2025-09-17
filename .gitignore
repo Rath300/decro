@@ -26,14 +26,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env
-.env.*
 .env*.local
-
-# local logs/artifacts
-dev.out
-build.out
-.devpid
 
 # vercel
 .vercel

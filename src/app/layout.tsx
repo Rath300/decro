@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import ClientProviders from '@/components/ClientProviders'
 import { PostProvider } from '@/context/post-context'
-import { AuthProvider } from '@/context/auth-context'
 
 export const metadata: Metadata = {
   title: 'Decro - Sign Up',
@@ -16,19 +16,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
+        <ClientProviders>
           <PostProvider>
             {children}
           </PostProvider>
-        </AuthProvider>
+        </ClientProviders>
         <script dangerouslySetInnerHTML={{ __html: `
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
-` }} />
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+          }
+        ` }} />
       </body>
     </html>
   )
-}
+} 

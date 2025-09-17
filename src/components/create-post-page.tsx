@@ -2,9 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import SiteHeader from './SiteHeader'
-import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/context/auth-context'
+// Header removed per request
 
 interface PostData {
   title: string;
@@ -18,7 +16,6 @@ interface PostData {
 
 export default function CreatePostPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const [postData, setPostData] = useState<PostData>({
     title: '',
     description: '',
@@ -35,6 +32,25 @@ export default function CreatePostPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const [subgroupQuery, setSubgroupQuery] = useState('')
+  const [subgroupResults, setSubgroupResults] = useState<{ id: string; name: string; slug: string }[]>([])
+  const [selectedSubgroup, setSelectedSubgroup] = useState<{ id: string; name: string; slug: string } | null>(null)
+
+  // Debounced subgroup search
+  const searchTimer = useRef<any>(null)
+  const onSearch = (value: string) => {
+    setSubgroupQuery(value)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(async () => {
+      if (!value.trim()) { setSubgroupResults([]); return }
+      const res = await fetch(`/api/subgroups?query=${encodeURIComponent(value.trim())}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSubgroupResults(data.items || [])
+      }
+    }, 300)
+  }
 
   const handleLogout = () => {
     router.push('/');
@@ -74,12 +90,12 @@ export default function CreatePostPage() {
   };
 
   const handleSubmit = async () => {
-    if (!user?.id) {
-      alert('Please sign in to create a post');
-      return;
-    }
     if (!postData.title.trim()) {
       alert('Please enter a title for your post');
+      return;
+    }
+    if (!selectedSubgroup) {
+      alert('Please select a subgroup');
       return;
     }
 
@@ -101,57 +117,20 @@ export default function CreatePostPage() {
     setIsSubmitting(true);
 
     try {
-      // Upload media to Supabase Storage (bucket: media)
-      const uploadFile = async (file: File | null) => {
-        if (!file) return null as string | null
-        const path = `posts/${user.id}/${Date.now()}-${file.name}`
-        const { error } = await supabase.storage.from('media').upload(path, file)
-        if (error) throw error
-        const { data } = supabase.storage.from('media').getPublicUrl(path)
-        return data.publicUrl
-      }
+      const body = new FormData()
+      body.append('title', postData.title)
+      body.append('description', postData.description)
+      body.append('contentType', postData.contentType)
+      body.append('isCurated', String(postData.isCurated))
+      body.append('subgroupId', selectedSubgroup.id)
+      if (postData.file) body.append('file', postData.file)
+      if (postData.audioFile) body.append('audioFile', postData.audioFile)
+      if (postData.videoFile) body.append('videoFile', postData.videoFile)
 
-      const normalizedType = ((): string => {
-        switch (postData.contentType) {
-          case 'physical-art':
-            return 'physical_art'
-          case 'graphic-design':
-            return 'graphic_design'
-          default:
-            return postData.contentType
-        }
-      })()
+      const res = await fetch('/api/posts', { method: 'POST', body })
+      if (!res.ok) throw new Error('Failed to create')
 
-      let mediaUrl: string | null = null
-      let audioUrl: string | null = null
-      let videoUrl: string | null = null
-
-      if (['image', 'physical-art', 'edits', 'graphic-design'].includes(postData.contentType)) {
-        mediaUrl = await uploadFile(postData.file)
-      } else if (postData.contentType === 'music') {
-        // Prefer an image upload for cover if present
-        mediaUrl = await uploadFile(postData.file)
-        audioUrl = await uploadFile(postData.audioFile)
-      } else if (['video', 'film'].includes(postData.contentType)) {
-        videoUrl = await uploadFile(postData.videoFile)
-        mediaUrl = await uploadFile(postData.file) // optional poster
-      }
-
-      const { error: insertErr } = await supabase.from('posts').insert({
-        creator_id: user.id,
-        title: postData.title,
-        description: postData.description || null,
-        content_type: normalizedType,
-        media_url: mediaUrl || '/image.png',
-        audio_url: audioUrl,
-        video_url: videoUrl,
-        is_curated: postData.isCurated,
-        views: 0,
-        source_id: 'decro'
-      })
-      if (insertErr) throw insertErr
-
-      router.push('/feed')
+      router.push('/feed');
     } catch (error) {
       console.error('Error creating post:', error);
       alert('Failed to create post. Please try again.');
@@ -186,7 +165,6 @@ export default function CreatePostPage() {
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
-      <SiteHeader active="feed" />
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-8">
@@ -230,15 +208,23 @@ export default function CreatePostPage() {
             </label>
             <input
               type="text"
+              value={selectedSubgroup ? selectedSubgroup.name : subgroupQuery}
+              onChange={(e) => { setSelectedSubgroup(null); onSearch(e.target.value) }}
               placeholder="Search subgroups..."
               className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-              list="subgroup-options"
             />
-            <datalist id="subgroup-options">
-              {['Music','Image','Video','Film','Design','Portrait','Typography'].map(n => (
-                <option key={n} value={n} />
-              ))}
-            </datalist>
+            {(!selectedSubgroup && subgroupResults.length > 0) && (
+              <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 divide-y">
+                {subgroupResults.map(s => (
+                  <button key={s.id} onClick={() => setSelectedSubgroup(s)} className="w-full text-left px-3 py-2 hover:bg-gray-50 font-['Space_Mono'] text-sm">
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            {selectedSubgroup && (
+              <div className="mt-2 text-xs font-['Space_Mono']">Selected: {selectedSubgroup.name}</div>
+            )}
           </div>
 
           {/* Title Input */}
@@ -449,23 +435,6 @@ export default function CreatePostPage() {
 
           {/* Submit Button */}
           <div className="pt-4">
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className={`w-full py-3 font-['Space_Mono'] text-sm font-medium border border-black transition-all duration-150 active:transform active:scale-95 ${
-                isSubmitting
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-black text-white hover:bg-gray-800'
-              }`}
-            >
-              {isSubmitting ? 'Creating Post...' : 'Create Post'}
-            </button>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-} 
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}

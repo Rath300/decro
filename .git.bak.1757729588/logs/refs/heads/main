@@ -1,0 +1,2 @@
+0000000000000000000000000000000000000000 40e4a1011e2c516cb639ea210ee69083b2551372 shreyanshrathred <shreyanshrathred@gmail.com> 1757199451 -0500	commit (initial): chore: init Decro app, auth + local-first setup
+40e4a1011e2c516cb639ea210ee69083b2551372 fe727c82ac8a84fe252d1078790c4a9fa8efefd3 shreyanshrathred <shreyanshrathred@gmail.com> 1757216453 -0500	commit: fix: dedupe imports/exports in SiteHeader, AuthModal, create/explore/feedback pages

@@ -1,0 +1,17 @@
+
+> decro@1.0.0 build
+> next build
+
+unhandledRejection SyntaxError: Error parsing /Users/shreyansh/Desktop/Decro/node_modules/next/dist/compiled/devalue/package.json: Unexpected end of JSON input
+    at parse (<anonymous>)
+    at read (node:internal/modules/package_json_reader:80:16)
+    at readPackage (node:internal/modules/package_json_reader:141:10)
+    at tryPackage (node:internal/modules/cjs/loader:475:15)
+    at Module._findPath (node:internal/modules/cjs/loader:763:18)
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1198:27)
+    at /Users/shreyansh/Desktop/Decro/node_modules/next/dist/server/require-hook.js:54:36
+    at Module._load (node:internal/modules/cjs/loader:1043:27)
+    at Module.require (node:internal/modules/cjs/loader:1298:19)
+    at mod.require (/Users/shreyansh/Desktop/Decro/node_modules/next/dist/server/require-hook.js:64:28) {
+  path: '/Users/shreyansh/Desktop/Decro/node_modules/next/dist/compiled/devalue/package.json'
+}

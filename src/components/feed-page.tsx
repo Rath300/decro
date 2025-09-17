@@ -3,11 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePosts } from '@/context/post-context';
-import supabase from '@/lib/supabase-client'
 import type { MediaCard } from '@/context/post-context';
 import { useAuth } from '@/context/auth-context';
 import AuthModal from './auth-modal';
-import SiteHeader from './SiteHeader'
+// SiteHeader removed per request to avoid obstruction
 
 
 
@@ -25,9 +24,7 @@ export default function FeedPage() {
     setShowDetailModal, 
     commentText, 
     setCommentText, 
-    handleComment,
-    loadComments,
-    commentsByPost
+    handleComment 
   } = usePosts();
   
   const [activeTab, setActiveTab] = useState('feed');
@@ -37,32 +34,6 @@ export default function FeedPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalAction, setAuthModalAction] = useState('');
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
-  const [liveViews, setLiveViews] = useState<number | null>(null)
-  const [liveLikes, setLiveLikes] = useState<number | null>(null)
-
-  const fetchViewCount = async (postId: string) => {
-    try {
-      const { count } = await supabase
-        .from('views')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', postId)
-      if (typeof count === 'number') setLiveViews(count)
-    } catch {
-      setLiveViews(null)
-    }
-  }
-
-  const fetchLikeCount = async (postId: string) => {
-    try {
-      const { count } = await supabase
-        .from('likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', postId)
-      if (typeof count === 'number') setLiveLikes(count)
-    } catch {
-      setLiveLikes(null)
-    }
-  }
 
   useEffect(() => {
     // Simulate old internet: random sorting by default
@@ -86,29 +57,16 @@ export default function FeedPage() {
     toggleLike(cardId);
   };
 
-  const handleCommentSubmit = async () => {
+  const handleCommentSubmit = () => {
     if (!isAuthenticated) {
       setAuthModalAction('comment on posts');
       setShowAuthModal(true);
       return;
     }
-    await handleComment();
-    if (selectedCard) {
-      await loadComments(selectedCard.id);
-    }
+    handleComment();
   };
 
   const handleCardClick = (card: MediaCard) => {
-    // record a unique view for signed-in users via Better Auth user id
-    (async () => {
-      try {
-        if (user?.id) {
-          await supabase.from('views').upsert({ post_id: card.id, user_id: user.id }, { onConflict: 'post_id,user_id' })
-          // refresh live count after upsert
-          fetchViewCount(card.id)
-        }
-      } catch {}
-    })()
     if (card.type === 'music') {
       // For music, require double click or show a different interaction
       handleAudioPlay(card.id, card.audioUrl!);
@@ -122,14 +80,6 @@ export default function FeedPage() {
       setShowDetailModal(true);
     }
   };
-
-  // Fetch live unique views for the modal
-  useEffect(() => {
-    if (!showDetailModal || !selectedCard) { setLiveViews(null); return }
-    fetchViewCount(selectedCard.id)
-    fetchLikeCount(selectedCard.id)
-    loadComments(selectedCard.id)
-  }, [showDetailModal, selectedCard?.id])
 
   const handlePortfolioClick = (creator: string) => {
     // Navigate to profile page (in real app, this would be /profile/[username])
@@ -236,7 +186,44 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
-      <SiteHeader active="feed" />
+      {/* Tabs Navigation */}
+      <div className="sticky top-0 z-20 bg-white">
+        <div className="border-b border-black">
+          <div className="max-w-7xl mx-auto px-4 flex items-end justify-between">
+            <div className="flex items-end gap-2">
+              <a href="/feed" className={`px-14 py-2 border border-black -mb-px text-sm bg-black text-white transition-transform duration-150 active:translate-y-[1px]`}>Feed</a>
+              <a href="/spotlight" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Spotlight</a>
+              <a href="/subgroup" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Subgroup</a>
+              <a href="/profile" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Profile</a>
+            </div>
+            <div className="flex items-center gap-4 pb-2">
+              {isAuthenticated ? (
+                <a href="/profile" className="text-sm text-black">{user?.name || user?.email}</a>
+              ) : (
+                <a href="/" className="text-sm text-black">Sign In</a>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Ensure continuous rule under tabs */}
+      <div className="h-px bg-black"></div>
+      {/* Moved + button below strip */}
+      <div className="max-w-7xl mx-auto px-4 mt-3 flex justify-end">
+        <button
+          onClick={() => {
+            if (!isAuthenticated) {
+              setAuthModalAction('create a post');
+              setShowAuthModal(true);
+            } else {
+              router.push('/create');
+            }
+          }}
+          className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black"
+        >
+          +
+        </button>
+      </div>
 
       {/* Old Internet Controls */}
       <div className="max-w-7xl mx-auto px-4 py-4 border-b border-gray-200">
@@ -362,7 +349,8 @@ export default function FeedPage() {
                               {card.creator}
                             </button>
                             <div className="flex items-center space-x-2">
-                              <span className="font-['Space_Mono']">{new Date(card.date).toLocaleDateString()}</span>
+                              <span className="font-['Space_Mono']">{new Date(card.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                              <span className="font-['Space_Mono'] text-gray-600">· {card.views} views</span>
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -471,9 +459,9 @@ export default function FeedPage() {
                     </button>
                   </div>
                   
-                  <div className="text-sm font-['Space_Mono'] text-gray-600 mb-4">
-                    {new Date(selectedCard.date).toLocaleDateString()} • {(liveViews !== null ? liveViews : selectedCard.views)} views
-                  </div>
+                                      <div className="text-sm font-['Space_Mono'] text-gray-600 mb-4">
+                      {new Date(selectedCard.date).toLocaleDateString()} • {selectedCard.views} views
+                    </div>
                   
                   {/* Work Description */}
                   <div className="mb-4">
@@ -514,7 +502,7 @@ export default function FeedPage() {
                   {/* Like Button */}
                   <div className="border-t border-gray-200 pt-4 mb-4">
                     <button 
-                      onClick={() => { if (selectedCard) { handleLikeClick(selectedCard.id); fetchLikeCount(selectedCard.id) } }}
+                      onClick={() => selectedCard && handleLikeClick(selectedCard.id)}
                       className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                         selectedCard && likedCards.has(selectedCard.id)
                           ? 'bg-red-50 text-red-500'
@@ -533,7 +521,7 @@ export default function FeedPage() {
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                       </svg>
                       <span className="font-['Space_Mono'] text-sm">
-                        {selectedCard && likedCards.has(selectedCard.id) ? 'Liked' : 'Like'} ({liveLikes ?? 0})
+                        {selectedCard && likedCards.has(selectedCard.id) ? 'Liked' : 'Like'}
                       </span>
                     </button>
                   </div>
@@ -552,7 +540,7 @@ export default function FeedPage() {
                         onChange={(e) => setCommentText(e.target.value)}
                         placeholder="Add a comment..."
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                        onKeyDown={(e) => {
+                        onKeyPress={(e) => {
                           if (e.key === 'Enter') {
                             handleCommentSubmit();
                           }
@@ -582,16 +570,9 @@ export default function FeedPage() {
                     </div>
                     
                     <div className="space-y-3">
-                      {(commentsByPost[selectedCard.id] || []).length === 0 ? (
-                        <div className="text-sm font-['Space_Mono'] text-gray-500">No comments yet. Be the first to comment!</div>
-                      ) : (
-                        (commentsByPost[selectedCard.id] || []).map(c => (
-                          <div key={c.id} className="text-sm font-['Space_Mono'] text-black">
-                            {c.content}
-                            <span className="ml-2 text-xs text-gray-500">{new Date(c.created_at).toLocaleString()}</span>
-                          </div>
-                        ))
-                      )}
+                      <div className="text-sm font-['Space_Mono'] text-gray-500">
+                        No comments yet. Be the first to comment!
+                      </div>
                     </div>
                   </div>
                 </div>

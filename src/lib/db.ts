@@ -1,6 +1,6 @@
 import Dexie, { Table } from 'dexie'
 
-interface PostRow {
+export interface CachedPost {
   id: string
   type: string
   title: string
@@ -12,44 +12,45 @@ interface PostRow {
   date: string
   isCurated?: boolean
   views: number
+  subgroupId?: string | null
 }
 
-interface LikeRow {
-  postId: string
-  userId: string
-}
+export interface CachedLike { postId: string; userId: string }
+export interface CachedComment { id?: number; postId: string; userId: string; content: string; createdAt: number }
 
-interface CommentRow {
-  id?: number
-  postId: string
-  userId: string
-  content: string
-  createdAt: number
-}
-
-type OutboxJob =
+export type OutboxAction =
   | { id?: number; type: 'like'; postId: string; userId: string; add: boolean }
   | { id?: number; type: 'comment'; postId: string; userId: string; content: string }
 
-class LocalDB extends Dexie {
-  posts!: Table<PostRow, string>
-  likes!: Table<LikeRow, [string, string]>
-  comments!: Table<CommentRow, number>
-  outbox!: Table<OutboxJob, number>
+export class LocalDb extends Dexie {
+  posts!: Table<CachedPost, string>
+  likes!: Table<CachedLike, [string, string]> // [postId, userId]
+  comments!: Table<CachedComment, number>
+  outbox!: Table<OutboxAction, number>
 
   constructor() {
-    super('decro')
+    super('decro-local')
+    // v1: initial schema; v2: add subgroupId to posts index
     this.version(1).stores({
-      posts: 'id,date',
+      posts: 'id, date',
       likes: '[postId+userId]',
-      comments: '++id,postId,createdAt',
-      outbox: '++id,type,postId',
+      comments: '++id, postId, userId, createdAt',
+      outbox: '++id,type',
+    })
+    this.version(2).stores({
+      posts: 'id, date, subgroupId',
+      likes: '[postId+userId]',
+      comments: '++id, postId, userId, createdAt',
+      outbox: '++id,type',
+    }).upgrade(tx => {
+      return (tx.table('posts') as any).toCollection().modify((p: any) => {
+        if (p.subgroupId === undefined) p.subgroupId = null
+      })
     })
   }
 }
 
-const db = new LocalDB()
-
+const db = new LocalDb()
 export default db
 
 

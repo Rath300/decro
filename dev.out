@@ -1,0 +1,58 @@
+  ▲ Next.js 13.5.11
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env
+
+ ✓ Ready in 914ms
+ ✓ Compiled /page in 1575ms (388 modules)
+ ✓ Compiled in 358ms (192 modules)
+ ✓ Compiled in 70ms
+ ⨯ ./src/app/layout.tsx
+Error: 
+  [31mx[0m Expected '}', got '<eof>'
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/app/layout.tsx[0m:30:1]
+ [2m30[0m |         ` }} />
+ [2m31[0m |       </body>
+ [2m32[0m |     </html>
+ [2m33[0m |   )
+    : [31;1m  ^[0m
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/layout.tsx
+ ○ Compiling /not-found ...
+ ⨯ ./src/app/layout.tsx
+Error: 
+  [31mx[0m Expected '}', got '<eof>'
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/app/layout.tsx[0m:30:1]
+ [2m30[0m |         ` }} />
+ [2m31[0m |       </body>
+ [2m32[0m |     </html>
+ [2m33[0m |   )
+    : [31;1m  ^[0m
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/layout.tsx
+ ⨯ ./src/app/layout.tsx
+Error: 
+  [31mx[0m Expected '}', got '<eof>'
+    ,-[[36;1;4m/Users/shreyansh/Desktop/Decro/src/app/layout.tsx[0m:30:1]
+ [2m30[0m |         ` }} />
+ [2m31[0m |       </body>
+ [2m32[0m |     </html>
+ [2m33[0m |   )
+    : [31;1m  ^[0m
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/layout.tsx
+[?25h
