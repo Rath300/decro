@@ -6,6 +6,7 @@ import { useAuth } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
 import AuthModal from '@/components/auth-modal'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type SpotlightItem = { id: string; url: string; caption: string }
 type Spotlight = { id: string; title: string; blurb?: string; items: SpotlightItem[] }
@@ -57,17 +58,35 @@ export default function SpotlightPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {spotlights.map(sp => (
-              <div key={sp.id} className="border border-black p-3 bg-white">
-                <h2 className="text-lg font-bold text-black mb-2">{sp.title}</h2>
-                {sp.blurb && <p className="text-sm text-gray-700 mb-3">{sp.blurb}</p>}
-                <div className="grid grid-cols-2 gap-2 aspect-square">
-                  {(sp.items || []).slice(0,4).map(it => (
-                    <img key={it.id} src={it.url} alt={it.caption} className="w-full h-full object-cover" />
-                  ))}
-                </div>
-              </div>
-            ))}
+            <AnimatePresence>
+              {spotlights.map((sp, index) => (
+                <motion.div
+                  key={sp.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ 
+                    duration: 0.3, 
+                    delay: index * 0.1,
+                    ease: "easeOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  className="border border-black p-3 bg-white"
+                >
+                  <h2 className="text-lg font-bold text-black mb-2">{sp.title}</h2>
+                  {sp.blurb && <p className="text-sm text-gray-700 mb-3">{sp.blurb}</p>}
+                  <div className="grid grid-cols-2 gap-2 aspect-square">
+                    {(sp.items || []).slice(0,4).map(it => (
+                      <img key={it.id} src={it.url} alt={it.caption} className="w-full h-full object-cover" />
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </main>

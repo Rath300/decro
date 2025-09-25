@@ -43,6 +43,13 @@ interface PostContextType {
   commentText: string;
   setCommentText: (text: string) => void;
   handleComment: () => void;
+  
+  // View tracking
+  trackView: (postId: string) => void;
+  
+  // User action tracking
+  trackUserAction: (action: string, targetId: string, targetType: string) => void;
+  trackSubgroupVisit: (subgroupSlug: string) => void;
 }
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
@@ -57,118 +64,194 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   const toggleLike = async (cardId: string) => {
+    if (!user?.id) return
+    
+    // Optimistic update for instant UI response
+    const isCurrentlyLiked = likedCards.has(cardId)
     setLikedCards(prev => {
       const next = new Set(prev)
-      if (next.has(cardId)) next.delete(cardId); else next.add(cardId)
+      if (isCurrentlyLiked) {
+        next.delete(cardId)
+      } else {
+        next.add(cardId)
+      }
       return next
     })
+    
+    // Track user action
+    await trackUserAction(isCurrentlyLiked ? 'unlike' : 'like', cardId, 'post')
+    
     try {
-      if (!user?.id) return
-      // upsert/delete like
-      const exists = likedCards.has(cardId)
-      if (!exists) {
-        // queue to outbox and optimistic cache
+      // Try to sync with server
+      const { data, error } = await supabase.rpc('toggle_like', {
+        post_id_param: cardId,
+        user_id_param: user.id
+      })
+      
+      if (error) throw error
+      
+      // Update local cache
+      if (data.liked) {
         await db.likes.put({ postId: cardId, userId: user.id })
-        await db.outbox.add({ type: 'like', postId: cardId, userId: user.id, add: true })
       } else {
         await db.likes.delete([cardId, user.id])
-        await db.outbox.add({ type: 'like', postId: cardId, userId: user.id, add: false })
       }
     } catch (e) {
-      console.warn('toggleLike failed', e)
+      console.warn('toggleLike failed, queuing for offline sync:', e)
+      
+      // Queue for offline sync
+      try {
+        await db.outbox.add({ 
+          type: 'like', 
+          postId: cardId, 
+          userId: user.id, 
+          add: !isCurrentlyLiked 
+        })
+      } catch (outboxError) {
+        console.warn('Failed to queue like action:', outboxError)
+      }
     }
   };
 
   const handleComment = async () => {
     if (commentText.trim() && selectedCard && user?.id) {
+      const commentContent = commentText.trim()
+      
+      // Clear comment immediately for good UX
+      setCommentText('')
+      
       try {
-        await db.comments.add({ postId: selectedCard.id, userId: user.id, content: commentText.trim(), createdAt: Date.now() })
-        await db.outbox.add({ type: 'comment', postId: selectedCard.id, userId: user.id, content: commentText.trim() })
-        setCommentText('')
+        const { error } = await supabase
+          .from('comments')
+          .insert({
+            post_id: selectedCard.id,
+            user_id: user.id,
+            content: commentContent,
+            source_id: 'decro'
+          })
+        
+        if (error) throw error
+        
+        // Update local cache
+        await db.comments.add({ 
+          postId: selectedCard.id, 
+          userId: user.id, 
+          content: commentContent, 
+          createdAt: Date.now() 
+        })
       } catch (e) {
-        console.warn('comment insert failed', e)
+        console.warn('comment insert failed, queuing for offline sync:', e)
+        
+        // Queue for offline sync
+        try {
+          await db.outbox.add({ 
+            type: 'comment', 
+            postId: selectedCard.id, 
+            userId: user.id, 
+            content: commentContent 
+          })
+        } catch (outboxError) {
+          console.warn('Failed to queue comment action:', outboxError)
+        }
       }
     }
   };
 
   useEffect(() => {
     (async () => {
-      // 1) read from local cache first
-      const cached = await db.posts.orderBy('date').reverse().toArray()
-      if (cached.length) {
-        setPosts(
-          cached.map((r) => ({
-            id: r.id,
-            type: r.type as any,
-            title: r.title,
-            imageUrl: r.imageUrl,
-            aspectRatio: r.aspectRatio,
-            audioUrl: r.audioUrl,
-            videoUrl: r.videoUrl,
-            creator: r.creator,
-            date: r.date,
-            isCurated: r.isCurated,
-            views: r.views,
-            subgroupId: r.subgroupId ?? undefined,
-          }))
-        )
-      }
-      // 2) fetch from Supabase and refresh cache
+      // 1. Load from local cache first for instant display
       try {
-        const { data, error } = await supabase
-          .from('posts')
-          .select('id,content_type,title,media_url,audio_url,video_url,is_curated,views,created_at,creator_id,subgroup_id')
-          .order('created_at', { ascending: false })
-          .limit(100)
-        if (error) throw error
-        if (data) {
-          // Fetch author names for creator_id
-          const creatorIds = Array.from(new Set(data.map((r: any) => r.creator_id).filter(Boolean)))
-          let idToName: Record<string, string> = {}
-          if (creatorIds.length) {
-            try {
-              const { data: authors } = await supabase.from('user').select('id,name,email').in('id', creatorIds)
-              if (authors) {
-                authors.forEach((u: any) => { idToName[String(u.id)] = u.name || u.email || 'brokebop' })
-              }
-            } catch {}
-          }
-
-          const mapped: MediaCard[] = data.map((r: any) => ({
-            id: String(r.id),
-            type: r.content_type,
-            title: r.title,
-            imageUrl: r.media_url,
-            aspectRatio: 'square',
-            audioUrl: r.audio_url ?? undefined,
-            videoUrl: r.video_url ?? undefined,
-            creator: idToName[String(r.creator_id)] || 'brokebop',
-            date: r.created_at,
-            isCurated: r.is_curated ?? false,
-            views: r.views ?? 0,
-            subgroupId: r.subgroup_id ?? undefined,
-          }))
-          setPosts(mapped)
-          await db.posts.clear()
-          await db.posts.bulkPut(
-            mapped.map((m) => ({
-              id: m.id,
-              type: m.type,
-              title: m.title,
-              imageUrl: m.imageUrl,
-              aspectRatio: m.aspectRatio,
-              audioUrl: m.audioUrl,
-              videoUrl: m.videoUrl,
-              creator: m.creator,
-              date: m.date,
-              isCurated: m.isCurated,
-              views: m.views,
-              subgroupId: m.subgroupId ?? null,
+        const cached = await db.posts.orderBy('date').reverse().toArray()
+        if (cached.length > 0) {
+          setPosts(
+            cached.map((r) => ({
+              id: r.id,
+              type: r.type as any,
+              title: r.title,
+              imageUrl: r.imageUrl,
+              aspectRatio: r.aspectRatio,
+              audioUrl: r.audioUrl,
+              videoUrl: r.videoUrl,
+              creator: r.creator,
+              date: r.date,
+              isCurated: r.isCurated,
+              views: r.views,
+              subgroupId: r.subgroupId ?? undefined,
             }))
           )
         }
       } catch (e) {
-        console.warn('Supabase fetch failed', e)
+        console.warn('Failed to load cached posts:', e)
+      }
+
+      // 2. Fetch fresh data from Supabase in background
+      try {
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            content_type,
+            title,
+            media_url,
+            audio_url,
+            video_url,
+            is_curated,
+            views,
+            created_at,
+            creator_id,
+            subgroup_id,
+            profiles!posts_creator_id_fkey(username, full_name)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(100)
+
+        if (postsError) throw postsError
+
+        if (postsData) {
+          const mapped: MediaCard[] = postsData.map((post: any) => ({
+            id: String(post.id),
+            type: post.content_type,
+            title: post.title,
+            imageUrl: post.media_url,
+            aspectRatio: 'square',
+            audioUrl: post.audio_url ?? undefined,
+            videoUrl: post.video_url ?? undefined,
+            creator: post.profiles?.username || post.profiles?.full_name || 'Anonymous',
+            date: post.created_at,
+            isCurated: post.is_curated ?? false,
+            views: post.views ?? 0,
+            subgroupId: post.subgroup_id ?? undefined,
+          }))
+          
+          // Update UI with fresh data
+          setPosts(mapped)
+          
+          // Update local cache for next time
+          try {
+            await db.posts.clear()
+            await db.posts.bulkPut(
+              mapped.map((m) => ({
+                id: m.id,
+                type: m.type,
+                title: m.title,
+                imageUrl: m.imageUrl,
+                aspectRatio: m.aspectRatio,
+                audioUrl: m.audioUrl,
+                videoUrl: m.videoUrl,
+                creator: m.creator,
+                date: m.date,
+                isCurated: m.isCurated,
+                views: m.views,
+                subgroupId: m.subgroupId ?? null,
+              }))
+            )
+          } catch (cacheError) {
+            console.warn('Failed to update cache:', cacheError)
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch fresh posts:', e)
+        // Keep showing cached data if available
       }
     })()
   }, [])
@@ -177,7 +260,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
     (async () => {
       if (!user?.id) return
       try {
-        const { data, error } = await supabase.from('likes').select('post_id').eq('user_id', user.id)
+        const { data, error } = await supabase
+          .from('likes')
+          .select('post_id')
+          .eq('user_id', user.id)
+          .eq('source_id', 'decro')
+        
         if (error) throw error
         if (data) setLikedCards(new Set(data.map((r: any) => String(r.post_id))))
       } catch (e) {
@@ -186,31 +274,101 @@ export function PostProvider({ children }: { children: ReactNode }) {
     })()
   }, [user?.id])
 
-  // Background sync
+  // View tracking function
+  const trackView = async (postId: string) => {
+    if (!user?.id) return
+    
+    try {
+      // Track in local history
+      await db.userHistory.add({
+        userId: user.id,
+        action: 'view',
+        targetId: postId,
+        targetType: 'post',
+        timestamp: Date.now()
+      })
+      
+      // Track view in Supabase
+      await supabase.rpc('track_view', {
+        post_id_param: postId,
+        user_id_param: user.id
+      })
+    } catch (e) {
+      console.warn('trackView failed', e)
+    }
+  }
+
+  // Track user interactions
+  const trackUserAction = async (action: string, targetId: string, targetType: string) => {
+    if (!user?.id) return
+    
+    try {
+      await db.userHistory.add({
+        userId: user.id,
+        action,
+        targetId,
+        targetType,
+        timestamp: Date.now()
+      })
+    } catch (e) {
+      console.warn('trackUserAction failed', e)
+    }
+  }
+
+  // Track subgroup visits
+  const trackSubgroupVisit = async (subgroupSlug: string) => {
+    await trackUserAction('view', subgroupSlug, 'subgroup')
+  }
+
+  // Background sync for offline support
   useEffect(() => {
     let stop = false
-    const tick = async () => {
+    const syncOfflineActions = async () => {
       if (stop) return
-      const jobs = await db.outbox.limit(10).toArray()
-      for (const j of jobs) {
-        try {
-          if (j.type === 'like') {
-            if (j.add) {
-              await supabase.from('likes').insert({ post_id: j.postId, user_id: j.userId, source_id: 'decro' })
-            } else {
-              await supabase.from('likes').delete().eq('post_id', j.postId).eq('user_id', j.userId)
+      
+      try {
+        // Process any pending offline actions
+        const pendingActions = await db.outbox.limit(10).toArray()
+        
+        for (const action of pendingActions) {
+          try {
+            if (action.type === 'like') {
+              if (action.add) {
+                await supabase.from('likes').insert({ 
+                  post_id: action.postId, 
+                  user_id: action.userId, 
+                  source_id: 'decro' 
+                })
+              } else {
+                await supabase.from('likes').delete()
+                  .eq('post_id', action.postId)
+                  .eq('user_id', action.userId)
+              }
+            } else if (action.type === 'comment') {
+              await supabase.from('comments').insert({ 
+                post_id: action.postId, 
+                user_id: action.userId, 
+                content: action.content, 
+                source_id: 'decro' 
+              })
             }
-          } else if (j.type === 'comment') {
-            await supabase.from('comments').insert({ post_id: j.postId, user_id: j.userId, content: j.content, source_id: 'decro' })
+            
+            // Remove from outbox after successful sync
+            await db.outbox.delete(action as any)
+          } catch (e) {
+            // Keep in outbox for retry
+            console.warn('Failed to sync action:', action, e)
           }
-          await db.outbox.delete(j as any)
-        } catch (e) {
-          // keep in outbox for retry
         }
+      } catch (e) {
+        console.warn('Background sync failed:', e)
       }
-      setTimeout(tick, 3000)
+      
+      // Retry every 30 seconds
+      setTimeout(syncOfflineActions, 30000)
     }
-    tick()
+    
+    syncOfflineActions()
     return () => { stop = true }
   }, [])
 
@@ -227,7 +385,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
     setShowDetailModal,
     commentText,
     setCommentText,
-    handleComment
+    handleComment,
+    trackView,
+    trackUserAction,
+    trackSubgroupVisit
   };
 
   return (

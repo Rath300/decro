@@ -6,6 +6,7 @@ import { usePosts } from '@/context/post-context';
 import type { MediaCard } from '@/context/post-context';
 import { useAuth } from '@/context/auth-context';
 import AuthModal from './auth-modal';
+import { motion, AnimatePresence } from 'framer-motion';
 // SiteHeader removed per request to avoid obstruction
 
 
@@ -24,7 +25,8 @@ export default function FeedPage() {
     setShowDetailModal, 
     commentText, 
     setCommentText, 
-    handleComment 
+    handleComment,
+    trackView
   } = usePosts();
   
   const [activeTab, setActiveTab] = useState('feed');
@@ -67,6 +69,9 @@ export default function FeedPage() {
   };
 
   const handleCardClick = (card: MediaCard) => {
+    // Track view
+    trackView(card.id);
+    
     if (card.type === 'music') {
       // For music, require double click or show a different interaction
       handleAudioPlay(card.id, card.audioUrl!);
@@ -274,11 +279,25 @@ export default function FeedPage() {
           </div>
         ) : (
         <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
-          {displayedCards.map((card) => (
-            <div
-              key={card.id}
-              className="break-inside-avoid mb-4 group cursor-pointer"
-            >
+          <AnimatePresence>
+            {displayedCards.map((card, index) => (
+              <motion.div
+                key={card.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ 
+                  duration: 0.3, 
+                  delay: index * 0.05,
+                  ease: "easeOut"
+                }}
+                whileHover={{ 
+                  scale: 1.02,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ scale: 0.98 }}
+                className="break-inside-avoid mb-4 group cursor-pointer"
+              >
                               {/* Floating Media Card - No card background */}
                 <div 
                   className={`relative ${getAspectRatioClass(card.aspectRatio)} overflow-hidden cursor-pointer`}
@@ -383,8 +402,9 @@ export default function FeedPage() {
                             </div>
                           )}
                         </div>
-            </div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
         )}
 
@@ -400,9 +420,21 @@ export default function FeedPage() {
       </main>
 
       {/* Detail Modal - Pinterest Style */}
-      {showDetailModal && selectedCard && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <AnimatePresence>
+        {showDetailModal && selectedCard && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            >
             <div className="flex flex-col lg:flex-row">
               {/* Image/Video Section */}
               <div className="lg:w-2/3 p-6">
@@ -578,9 +610,10 @@ export default function FeedPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Auth Modal */}
       <AuthModal 

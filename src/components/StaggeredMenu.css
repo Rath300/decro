@@ -51,7 +51,6 @@
   line-height: 1.25rem;
   overflow: visible;
   font-family: 'Space Mono', monospace;
-  top: 2px;
 }
 
 .sm-toggle:focus-visible {

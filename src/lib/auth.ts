@@ -2,12 +2,17 @@ import { betterAuth } from "better-auth"
 import { Pool } from "pg"
 
 export const auth = betterAuth({
-  database: new Pool({ connectionString: process.env.DATABASE_URL }),
-  emailAndPassword: { enabled: true, requireEmailVerification: false },
+  database: new Pool({ 
+    connectionString: process.env.DATABASE_URL 
+  }),
+  emailAndPassword: { 
+    enabled: true, 
+    requireEmailVerification: false 
+  },
   session: { expiresIn: 60 * 60 * 24 * 7 },
   trustedOrigins: [
     process.env.NODE_ENV === 'production' ? 'https://your-domain.vercel.app' : 'http://localhost:3000',
-    'http://localhost:3001',
+    'http://localhost:3000',
   ],
   emailVerification: {
     sendVerificationEmail: async (data: any) => {
@@ -23,7 +28,6 @@ export const auth = betterAuth({
 })
 
 const handler = auth.handler
-export const GET = handler
-export const POST = handler
+export { handler as GET, handler as POST }
 
 

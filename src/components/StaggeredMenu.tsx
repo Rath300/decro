@@ -2,6 +2,8 @@
 
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
+import { useUserHistory } from '@/hooks/use-user-history'
+import './StaggeredMenu.css'
 
 export interface StaggeredMenuItem {
   label: string
@@ -40,6 +42,7 @@ export interface StaggeredMenuProps {
   changeMenuColorOnOpen?: boolean
   onMenuOpen?: () => void
   onMenuClose?: () => void
+  usePersonalizedData?: boolean
 }
 
 export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
@@ -58,6 +61,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   accentColor = '#000',
   onMenuOpen,
   onMenuClose,
+  usePersonalizedData = false,
 }: StaggeredMenuProps) => {
   const [open, setOpen] = useState(false)
   const openRef = useRef(false)
@@ -70,6 +74,9 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   const textInnerRef = useRef<HTMLSpanElement | null>(null)
   const textWrapRef = useRef<HTMLSpanElement | null>(null)
   const [textLines, setTextLines] = useState<string[]>(['Menu', 'Close'])
+  
+  // Personalized data hook
+  const { personalizedData } = useUserHistory()
 
   const openTlRef = useRef<gsap.core.Timeline | null>(null)
   const closeTweenRef = useRef<gsap.core.Tween | null>(null)
@@ -362,6 +369,42 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     animateText(target)
   }, [playOpen, playClose, animateIcon, animateColor, animateText, onMenuClose, onMenuOpen])
 
+  // Generate personalized sections
+  const getPersonalizedSections = useCallback(() => {
+    if (!usePersonalizedData) return sections
+
+    const personalizedSections: StaggeredMenuSection[] = []
+
+    // Recent Subgroups
+    if (personalizedData.recentSubgroups.length > 0) {
+      personalizedSections.push({
+        title: 'Recent Subgroups',
+        items: personalizedData.recentSubgroups
+      })
+    }
+
+    // Liked Posts
+    if (personalizedData.likedPosts.length > 0) {
+      personalizedSections.push({
+        title: 'Liked Posts',
+        items: personalizedData.likedPosts
+      })
+    }
+
+    // Recent Posts
+    if (personalizedData.recentPosts.length > 0) {
+      personalizedSections.push({
+        title: 'Recent Posts',
+        items: personalizedData.recentPosts
+      })
+    }
+
+    // Fallback to provided sections if no personalized data
+    return personalizedSections.length > 0 ? personalizedSections : sections
+  }, [usePersonalizedData, personalizedData, sections])
+
+  const displaySections = getPersonalizedSections()
+
   return (
     <div
       className={(className ? className + ' ' : '') + 'staggered-menu-wrapper'}
@@ -391,6 +434,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
             height={20}
           />
         </div>
+        {/* Username on the left, menu toggle on the right; rely on external Identity rendered in feed page */}
         <button
           ref={toggleBtnRef}
           className="sm-toggle"
@@ -418,9 +462,9 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 
       <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
         <div className="sm-panel-inner">
-          {sections && sections.length > 0 ? (
+          {displaySections && displaySections.length > 0 ? (
             <div className="sm-sections">
-              {sections.map((sec, i) => (
+              {displaySections.map((sec, i) => (
                 <section className="sm-section" key={sec.title + i}>
                   <h3 className="sm-section-title">{sec.title}</h3>
                   <ul className="sm-section-list" role="list">

@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import supabase from '@/lib/supabase-client'
 import Identity from '@/components/Identity'
 import { useAuth } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
 import AuthModal from '@/components/auth-modal'
 import { StaggeredMenu } from '@/components/StaggeredMenu'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type Subgroup = { id: string; name: string; slug: string; description?: string | null }
 
@@ -65,6 +67,7 @@ export default function SubgroupIndex() {
           colors={['#f5f5f5', '#e5e7eb']}
           logoUrl="/logo.svg"
           accentColor="#000"
+          usePersonalizedData={true}
         />
       </div>
       <div className="sticky top-0 z-20 bg-white">
@@ -114,12 +117,31 @@ export default function SubgroupIndex() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filtered.map((s) => (
-              <Link key={s.id} href={`/subgroup/${s.slug}`} className="border border-black p-3 bg-white hover:bg-gray-50">
-                <div className="text-black font-bold mb-1">{s.name}</div>
-                <div className="text-xs text-gray-600">/{s.slug}</div>
-              </Link>
-            ))}
+            <AnimatePresence>
+              {filtered.map((s, index) => (
+                <motion.div
+                  key={s.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ 
+                    duration: 0.3, 
+                    delay: index * 0.05,
+                    ease: "easeOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Link href={`/subgroup/${s.slug}`} className="block border border-black p-3 bg-white hover:bg-gray-50 transition-colors duration-200">
+                    <div className="text-black font-bold mb-1">{s.name}</div>
+                    <div className="text-xs text-gray-600">/{s.slug}</div>
+                  </Link>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </main>

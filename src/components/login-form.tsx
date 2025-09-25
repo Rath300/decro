@@ -27,15 +27,21 @@ export default function LoginForm() {
     setLoading(true)
     setError('')
 
-    const result = await signIn(email, password)
-    
-    if (result.success) {
-      router.push('/feed')
-    } else {
-      setError(result.error || 'Sign in failed')
+    try {
+      const result = await signIn(email, password)
+      
+      if (result.success) {
+        // Redirect to feed after successful sign in
+        router.push('/feed')
+        router.refresh() // Force refresh to update auth state
+      } else {
+        setError(result.error || 'Sign in failed')
+      }
+    } catch (error) {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   const togglePasswordVisibility = () => {

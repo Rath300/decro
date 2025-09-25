@@ -17,6 +17,7 @@ export interface CachedPost {
 
 export interface CachedLike { postId: string; userId: string }
 export interface CachedComment { id?: number; postId: string; userId: string; content: string; createdAt: number }
+export interface UserHistory { id?: number; userId: string; action: string; targetId: string; targetType: string; timestamp: number }
 
 export type OutboxAction =
   | { id?: number; type: 'like'; postId: string; userId: string; add: boolean }
@@ -27,6 +28,7 @@ export class LocalDb extends Dexie {
   likes!: Table<CachedLike, [string, string]> // [postId, userId]
   comments!: Table<CachedComment, number>
   outbox!: Table<OutboxAction, number>
+  userHistory!: Table<UserHistory, number>
 
   constructor() {
     super('decro-local')
@@ -46,6 +48,13 @@ export class LocalDb extends Dexie {
       return (tx.table('posts') as any).toCollection().modify((p: any) => {
         if (p.subgroupId === undefined) p.subgroupId = null
       })
+    })
+    this.version(3).stores({
+      posts: 'id, date, subgroupId',
+      likes: '[postId+userId]',
+      comments: '++id, postId, userId, createdAt',
+      outbox: '++id,type',
+      userHistory: '++id, userId, action, targetId, targetType, timestamp',
     })
   }
 }

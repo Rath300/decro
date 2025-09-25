@@ -1,8 +1,7 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import React, { createContext, useContext, ReactNode } from 'react'
 import { client } from '@/lib/auth-client'
-import { useUserStore } from '@/store/user-store'
 
 interface User {
   id: string
@@ -22,33 +21,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const setUserStore = useUserStore(state => state.setUser)
+  const { 
+    data: session, 
+    isPending: loading, 
+    error 
+  } = client.useSession()
 
-  useEffect(() => {
-    // Check if user is already signed in
-    const checkSession = async () => {
-      try {
-        const session = await client.getSession()
-        if (session?.user) {
-          const u = {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.name
-          }
-          setUser(u)
-          setUserStore(u)
-        }
-      } catch (error) {
-        console.error('Session check failed:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkSession()
-  }, [])
+  const user: User | null = session?.user ? {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name
+  } : null
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -58,13 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (result.data?.user) {
-        const u = {
-          id: result.data.user.id,
-          email: result.data.user.email,
-          name: result.data.user.name
-        }
-        setUser(u)
-        setUserStore(u)
         return { success: true }
       } else {
         return { success: false, error: result.error?.message || 'Sign in failed' }
@@ -83,13 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (result.data?.user) {
-        const u = {
-          id: result.data.user.id,
-          email: result.data.user.email,
-          name: result.data.user.name
-        }
-        setUser(u)
-        setUserStore(u)
         return { success: true }
       } else {
         return { success: false, error: result.error?.message || 'Sign up failed' }
@@ -102,8 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       await client.signOut()
-      setUser(null)
-      setUserStore(null)
     } catch (error) {
       console.error('Sign out failed:', error)
     }

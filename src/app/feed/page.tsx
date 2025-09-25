@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic'
 import { StaggeredMenu } from '@/components/StaggeredMenu'
+import Identity from '@/components/Identity'
 
 const FeedPage = dynamic(() => import('@/components/feed-page'), { ssr: false })
 
@@ -36,7 +37,13 @@ export default function Feed() {
           colors={['#f5f5f5', '#e5e7eb']}
           logoUrl="/logo.svg"
           accentColor="#000"
+          usePersonalizedData={true}
         />
+      </div>
+      {/* Top strip: username (left) and menu button are already within StaggeredMenu header.
+          Render username here but keep pointer events enabled for clicks. */}
+      <div className="fixed top-3 left-4 z-50 pointer-events-auto">
+        <Identity />
       </div>
       <FeedPage />
     </>

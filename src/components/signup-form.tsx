@@ -40,15 +40,21 @@ export default function SignupForm() {
     setLoading(true)
     setError('')
 
-    const result = await signUp(email, password, username)
-    
-    if (result.success) {
-      router.push('/feed')
-    } else {
-      setError(result.error || 'Sign up failed')
+    try {
+      const result = await signUp(email, password, username)
+      
+      if (result.success) {
+        // Redirect to feed after successful sign up
+        router.push('/feed')
+        router.refresh() // Force refresh to update auth state
+      } else {
+        setError(result.error || 'Sign up failed')
+      }
+    } catch (error) {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   const togglePasswordVisibility = () => {
