@@ -7,7 +7,7 @@ import type { MediaCard } from '@/context/post-context';
 import { useAuth } from '@/context/auth-context';
 import AuthModal from './auth-modal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRealtimeComments } from '@/hooks/use-realtime-comments';
+import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments';
 import { PostStats } from './post-stats';
 import supabase from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
@@ -59,6 +59,8 @@ export default function FeedPage() {
   }, [posts, sortMode]);
 
   const { signOut, isAuthenticated, user } = useAuth();
+  const [commentsRefreshSignal, setCommentsRefreshSignal] = useState(0);
+  const [optimisticComments, setOptimisticComments] = useState<RealtimeComment[]>([]);
 
   const handleLogout = async () => {
     await signOut();
@@ -80,7 +82,27 @@ export default function FeedPage() {
       setShowAuthModal(true);
       return;
     }
+    // Capture current text before context clears it
+    const content = commentText.trim();
     handleComment();
+    if (selectedCard && content) {
+      // Optimistic append to detail view comments
+      const optimistic: RealtimeComment = {
+        id: `local-${Date.now()}`,
+        content,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: user?.id || 'anon',
+        username: user?.name || user?.email || 'You',
+        full_name: user?.name || null,
+        avatar_url: null,
+      };
+      setOptimisticComments((prev) => [optimistic, ...prev]);
+      // Trigger a refetch in CommentsList to reconcile soon after
+      setCommentsRefreshSignal((n) => n + 1);
+      // Clear optimistic after a short delay to avoid duplicates when realtime arrives
+      setTimeout(() => setOptimisticComments([]), 2500);
+    }
   };
 
   const handleCardClick = (card: MediaCard) => {
@@ -591,7 +613,7 @@ export default function FeedPage() {
                       </button>
                     </div>
                     
-                    <CommentsList postId={selectedCard.id} />
+                    <CommentsList postId={selectedCard.id} refreshSignal={commentsRefreshSignal} optimisticComments={optimisticComments} />
                   </div>
                 </div>
               </div>
@@ -613,8 +635,13 @@ export default function FeedPage() {
 }
 
 // Comments List Component
-function CommentsList({ postId }: { postId: string }) {
-  const { comments, loading } = useRealtimeComments(postId);
+function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: string; refreshSignal: number; optimisticComments: RealtimeComment[] }) {
+  const { comments, loading, refetch } = useRealtimeComments(postId);
+
+  useEffect(() => {
+    if (!postId) return;
+    refetch();
+  }, [refreshSignal]);
 
   if (loading) {
     return (
@@ -624,7 +651,9 @@ function CommentsList({ postId }: { postId: string }) {
     );
   }
 
-  if (comments.length === 0) {
+  const merged = [...optimisticComments, ...comments];
+
+  if (merged.length === 0) {
     return (
       <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">
         No comments yet. Be the first to comment!
@@ -646,7 +675,7 @@ function CommentsList({ postId }: { postId: string }) {
 
   return (
     <div className="space-y-3 max-h-64 overflow-y-auto">
-      {comments.map((comment) => (
+      {merged.map((comment) => (
         <div key={comment.id} className="flex gap-3">
           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
             {comment.username?.[0]?.toUpperCase() || '?'}
