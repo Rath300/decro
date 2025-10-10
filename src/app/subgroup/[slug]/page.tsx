@@ -7,8 +7,6 @@ import CardGrid from '@/components/card-grid'
 import DetailModal from '@/components/detail-modal'
 import { useEffect, useState } from 'react'
 import supabase from '@/lib/supabase-client'
-import { StaggeredMenu } from '@/components/StaggeredMenu'
-import Identity from '@/components/Identity'
 import { useAuth } from '@/context/auth-context'
 import { useToast } from '@/hooks/use-toast'
 
