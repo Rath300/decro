@@ -11,9 +11,10 @@ export const auth = betterAuth({
   },
   session: { expiresIn: 60 * 60 * 24 * 7 },
   trustedOrigins: [
-    process.env.NODE_ENV === 'production' ? 'https://your-domain.vercel.app' : 'http://localhost:3000',
+    process.env.NODE_ENV === 'production' && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
+    process.env.NEXT_PUBLIC_SITE_URL || '',
     'http://localhost:3000',
-  ],
+  ].filter(Boolean) as string[],
   emailVerification: {
     sendVerificationEmail: async (data: any) => {
       console.log('Email verification sent to:', data.user.email)
