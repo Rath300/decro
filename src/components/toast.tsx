@@ -24,7 +24,10 @@ export function ToastContainer() {
   )
 }
 
-function ToastItem({ toast, onClose }: { toast: any; onClose: () => void }) {
+type ToastType = 'success' | 'error' | 'warning' | 'info'
+interface ToastData { id: string; type: ToastType; message: string }
+
+function ToastItem({ toast, onClose }: { toast: ToastData; onClose: () => void }) {
   useEffect(() => {
     // Slide in animation
     const el = document.getElementById(`toast-${toast.id}`)
@@ -36,19 +39,21 @@ function ToastItem({ toast, onClose }: { toast: any; onClose: () => void }) {
     }
   }, [toast.id])
   
-  const bgColor = {
+  const bgMap: Record<ToastType, string> = {
     success: 'bg-green-500',
     error: 'bg-red-500',
     warning: 'bg-yellow-500',
     info: 'bg-blue-500'
-  }[toast.type] || 'bg-gray-800'
+  }
+  const bgColor = bgMap[toast.type] ?? 'bg-gray-800'
   
-  const icon = {
+  const iconMap: Record<ToastType, string> = {
     success: '✓',
     error: '✕',
     warning: '⚠',
     info: 'ℹ'
-  }[toast.type] || ''
+  }
+  const icon = iconMap[toast.type] ?? ''
   
   return (
     <div
