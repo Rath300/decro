@@ -9,8 +9,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
-import StaggeredMenu from '@/components/StaggeredMenu'
-import Identity from '@/components/Identity'
 import { PostStats } from '@/components/post-stats'
 import { useToast } from '@/hooks/use-toast'
 
