@@ -87,9 +87,9 @@ export function useUserHistory() {
         })) || []
 
         // Process liked posts
-        const likedPosts = likesResult.data?.map(like => ({
-          title: like.posts?.title || `Post ${like.post_id}`,
-          link: `/feed#${like.post_id}`
+        const likedPosts = (likesResult.data as any[] | undefined)?.map((like: any) => ({
+          title: like?.posts?.title ?? `Post ${like?.post_id}`,
+          link: `/feed#${like?.post_id}`
         })) || []
 
         // If no real data, add some sample data for demo
