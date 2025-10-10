@@ -10,8 +10,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
 import { useToast } from '@/hooks/use-toast'
-import StaggeredMenu from '@/components/StaggeredMenu'
-import Identity from '@/components/Identity'
 
 export default function SettingsPage() {
   const { user, isAuthenticated, signOut } = useAuth()
@@ -131,14 +129,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
-      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <StaggeredMenu sections={[]} usePersonalizedData={true} />
-          <Identity />
-        </div>
-      </div>
-
-      <main className="max-w-4xl mx-auto px-4 pt-24 pb-12">
+      <main className="max-w-4xl mx-auto px-4 pb-12">
         <h1 className="text-3xl font-bold mb-8">Settings</h1>
 
         {/* Tabs */}

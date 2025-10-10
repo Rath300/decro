@@ -10,8 +10,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
 import { useToast } from '@/hooks/use-toast'
-import StaggeredMenu from '@/components/StaggeredMenu'
-import Identity from '@/components/Identity'
 
 export default function EditPostPage() {
   const params = useParams()
@@ -145,14 +143,7 @@ export default function EditPostPage() {
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
-      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <StaggeredMenu sections={[]} usePersonalizedData={true} />
-          <Identity />
-        </div>
-      </div>
-
-      <main className="max-w-2xl mx-auto px-4 pt-24 pb-12">
+      <main className="max-w-2xl mx-auto px-4 pb-12">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Edit Post</h1>
           <p className="text-gray-600 text-sm">

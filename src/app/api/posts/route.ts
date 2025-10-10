@@ -22,8 +22,7 @@ export async function POST(req: Request) {
     }
 
     // Auth
-    const ctx = await auth.$context
-    const session = await ctx.getSession()
+    const session = auth.session
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
