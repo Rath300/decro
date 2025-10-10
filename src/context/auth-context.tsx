@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await client.signUp.email({
         email,
         password,
-        name,
+        name: name ?? '',
       })
 
       if (result.data?.user) {
