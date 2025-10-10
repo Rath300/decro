@@ -216,8 +216,12 @@ export default function ProfilePage() {
                       className="relative block aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
                       onClick={() => {
                         if (user?.id) {
-                          // Fire-and-forget view tracking
-                          supabase.rpc('track_view', { post_id_param: post.id, user_id_param: user.id }).catch(() => {})
+                          // Fire-and-forget view tracking (avoid TS catch typing)
+                          (async () => {
+                            try {
+                              await supabase.rpc('track_view', { post_id_param: post.id, user_id_param: user.id })
+                            } catch {}
+                          })()
                         }
                       }}
                     >
