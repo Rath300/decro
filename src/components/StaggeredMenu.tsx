@@ -379,7 +379,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     personalizedSections.push({
       title: 'Recent Subgroups',
       items: personalizedData.recentSubgroups.length > 0 
-        ? personalizedData.recentSubgroups.map(({ label, link }) => ({ label, link }))
+        ? personalizedData.recentSubgroups.map((s: any) => ({ label: s.label ?? s.name ?? s.slug ?? 'Subgroup', link: s.link ?? (s.slug ? `/subgroup/${s.slug}` : '#') }))
         : []
     })
 
@@ -387,7 +387,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     personalizedSections.push({
       title: 'Liked Posts',
       items: personalizedData.likedPosts.length > 0 
-        ? personalizedData.likedPosts.map(({ label, link }) => ({ label, link }))
+        ? personalizedData.likedPosts.map((p: any) => ({ label: p.label ?? p.name ?? 'Post', link: p.link ?? '#' }))
         : []
     })
 
@@ -395,7 +395,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     personalizedSections.push({
       title: 'Recent Posts',
       items: personalizedData.recentPosts.length > 0 
-        ? personalizedData.recentPosts.map(({ label, link }) => ({ label, link }))
+        ? personalizedData.recentPosts.map((p: any) => ({ label: p.label ?? p.name ?? 'Post', link: p.link ?? '#' }))
         : []
     })
 
