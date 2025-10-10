@@ -54,7 +54,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   displaySocials = true,
   displayItemNumbering = true,
   className,
-  logoUrl = '/logo.svg',
+  logoUrl,
   menuButtonColor = '#000',
   openMenuButtonColor = '#000',
   changeMenuColorOnOpen = true,
@@ -375,32 +375,31 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 
     const personalizedSections: StaggeredMenuSection[] = []
 
-    // Recent Subgroups
-    if (personalizedData.recentSubgroups.length > 0) {
-      personalizedSections.push({
-        title: 'Recent Subgroups',
-        items: personalizedData.recentSubgroups
-      })
-    }
+    // Recent Subgroups - always show, even if empty
+    personalizedSections.push({
+      title: 'Recent Subgroups',
+      items: personalizedData.recentSubgroups.length > 0 
+        ? personalizedData.recentSubgroups 
+        : []
+    })
 
-    // Liked Posts
-    if (personalizedData.likedPosts.length > 0) {
-      personalizedSections.push({
-        title: 'Liked Posts',
-        items: personalizedData.likedPosts
-      })
-    }
+    // Liked Posts - always show, even if empty
+    personalizedSections.push({
+      title: 'Liked Posts',
+      items: personalizedData.likedPosts.length > 0 
+        ? personalizedData.likedPosts 
+        : []
+    })
 
-    // Recent Posts
-    if (personalizedData.recentPosts.length > 0) {
-      personalizedSections.push({
-        title: 'Recent Posts',
-        items: personalizedData.recentPosts
-      })
-    }
+    // Recent Posts - always show, even if empty
+    personalizedSections.push({
+      title: 'Recent Posts',
+      items: personalizedData.recentPosts.length > 0 
+        ? personalizedData.recentPosts 
+        : []
+    })
 
-    // Fallback to provided sections if no personalized data
-    return personalizedSections.length > 0 ? personalizedSections : sections
+    return personalizedSections
   }, [usePersonalizedData, personalizedData, sections])
 
   const displaySections = getPersonalizedSections()
@@ -424,17 +423,19 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
         })()}
       </div>
       <header className="staggered-menu-header" aria-label="Main navigation header">
-        <div className="sm-logo" aria-label="Logo">
-          <img
-            src={logoUrl || '/logo.svg'}
-            alt="Logo"
-            className="sm-logo-img"
-            draggable={false}
-            width={96}
-            height={20}
-          />
-        </div>
-        {/* Username on the left, menu toggle on the right; rely on external Identity rendered in feed page */}
+        {logoUrl ? (
+          <div className="sm-logo" aria-label="Logo">
+            <img
+              src={logoUrl}
+              alt="Logo"
+              className="sm-logo-img"
+              draggable={false}
+              width={96}
+              height={20}
+            />
+          </div>
+        ) : <span />}
+        {/* External Identity on the right; align toggle with header baseline */}
         <button
           ref={toggleBtnRef}
           className="sm-toggle"
@@ -477,7 +478,12 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                         </li>
                       ))
                     ) : (
-                      <li className="sm-section-item sm-section-empty">No items</li>
+                      <li className="sm-section-item sm-section-empty">
+                        {sec.title === 'Recent Subgroups' && 'No subgroups visited yet'}
+                        {sec.title === 'Liked Posts' && 'No posts liked yet'}
+                        {sec.title === 'Recent Posts' && 'No recent posts'}
+                        {!['Recent Subgroups', 'Liked Posts', 'Recent Posts'].includes(sec.title) && 'No items'}
+                      </li>
                     )}
                   </ul>
                 </section>

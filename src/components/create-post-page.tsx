@@ -12,6 +12,7 @@ interface PostData {
   audioFile: File | null;
   videoFile: File | null;
   isCurated: boolean;
+  tags: string[];
 }
 
 export default function CreatePostPage() {
@@ -23,8 +24,10 @@ export default function CreatePostPage() {
     file: null,
     audioFile: null,
     videoFile: null,
-    isCurated: false
+    isCurated: false,
+    tags: []
   });
+  const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string>('');
@@ -94,10 +97,6 @@ export default function CreatePostPage() {
       alert('Please enter a title for your post');
       return;
     }
-    if (!selectedSubgroup) {
-      alert('Please select a subgroup');
-      return;
-    }
 
     if (postData.contentType === 'music' && !postData.audioFile) {
       alert('Please upload an audio file for music posts');
@@ -122,7 +121,8 @@ export default function CreatePostPage() {
       body.append('description', postData.description)
       body.append('contentType', postData.contentType)
       body.append('isCurated', String(postData.isCurated))
-      body.append('subgroupId', selectedSubgroup.id)
+      if (selectedSubgroup?.id) body.append('subgroupId', selectedSubgroup.id)
+      body.append('tags', JSON.stringify(postData.tags))
       if (postData.file) body.append('file', postData.file)
       if (postData.audioFile) body.append('audioFile', postData.audioFile)
       if (postData.videoFile) body.append('videoFile', postData.videoFile)
@@ -204,13 +204,13 @@ export default function CreatePostPage() {
           {/* Subgroup selection */}
           <div>
             <label className="block text-sm font-['Space_Mono'] font-medium text-black mb-2">
-              Subgroup (search to select)
+              Subgroup (optional)
             </label>
             <input
               type="text"
               value={selectedSubgroup ? selectedSubgroup.name : subgroupQuery}
               onChange={(e) => { setSelectedSubgroup(null); onSearch(e.target.value) }}
-              placeholder="Search subgroups..."
+              placeholder="Search subgroups... (optional)"
               className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
             />
             {(!selectedSubgroup && subgroupResults.length > 0) && (
@@ -238,7 +238,7 @@ export default function CreatePostPage() {
               value={postData.title}
               onChange={(e) => setPostData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Give your work a title..."
-              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
               maxLength={100}
             />
           </div>
@@ -411,7 +411,7 @@ export default function CreatePostPage() {
               onChange={(e) => setPostData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Tell us about your work..."
               rows={4}
-              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm resize-none focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black placeholder-gray-400 resize-none focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
               maxLength={500}
             />
             <div className="text-xs font-['Space_Mono'] text-gray-500 mt-1 text-right">
@@ -419,7 +419,52 @@ export default function CreatePostPage() {
             </div>
           </div>
 
-          {/* Curated Option */}
+          {/* Tags Input */}
+          <div>
+            <label className="block text-sm font-['Space_Mono'] font-medium text-black mb-2">
+              Tags (press Enter to add)
+            </label>
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && tagInput.trim()) {
+                  e.preventDefault()
+                  const tag = tagInput.trim().toLowerCase()
+                  if (!postData.tags.includes(tag) && postData.tags.length < 5) {
+                    setPostData(prev => ({ ...prev, tags: [...prev.tags, tag] }))
+                    setTagInput('')
+                  }
+                }
+              }}
+              placeholder="e.g., photography, landscape, sunset..."
+              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+            />
+            {postData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {postData.tags.map((tag, index) => (
+                  <span key={index} className="px-2 py-1 bg-black text-white text-xs font-['Space_Mono'] flex items-center gap-1">
+                    #{tag}
+                    <button
+                      onClick={() => setPostData(prev => ({
+                        ...prev,
+                        tags: prev.tags.filter((_, i) => i !== index)
+                      }))}
+                      className="ml-1 hover:text-red-300"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="text-xs font-['Space_Mono'] text-gray-500 mt-1">
+              {postData.tags.length}/5 tags
+            </div>
+          </div>
+
+          {/* Royalty Free Option */}
           <div className="flex items-center space-x-3">
             <input
               type="checkbox"
@@ -429,7 +474,7 @@ export default function CreatePostPage() {
               className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
             />
             <label htmlFor="curated" className="text-sm font-['Space_Mono'] text-black">
-              Mark as curated content
+              Mark as royalty free
             </label>
           </div>
 

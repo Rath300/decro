@@ -8,12 +8,6 @@ const PUBLIC_PATHS = [
   '/feed',
   '/spotlight',
   '/subgroup',
-  '/explore',
-  '/trending',
-  '/portfolios',
-  '/web',
-  '/annotations',
-  '/feedback',
 ]
 
 export function middleware(req: NextRequest) {

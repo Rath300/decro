@@ -7,6 +7,10 @@ import type { MediaCard } from '@/context/post-context';
 import { useAuth } from '@/context/auth-context';
 import AuthModal from './auth-modal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRealtimeComments } from '@/hooks/use-realtime-comments';
+import { PostStats } from './post-stats';
+import supabase from '@/lib/supabase-client';
+import { useToast } from '@/hooks/use-toast';
 // SiteHeader removed per request to avoid obstruction
 
 
@@ -26,9 +30,11 @@ export default function FeedPage() {
     commentText, 
     setCommentText, 
     handleComment,
-    trackView
+    trackView,
+    refetchPosts
   } = usePosts();
   
+  // Global header handles navigation; keep state for legacy references if any
   const [activeTab, setActiveTab] = useState('feed');
   const [displayedCards, setDisplayedCards] = useState<MediaCard[]>([]);
   const [sortMode, setSortMode] = useState<'random' | 'newest' | 'curated'>('random');
@@ -38,10 +44,19 @@ export default function FeedPage() {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
   useEffect(() => {
-    // Simulate old internet: random sorting by default
-    const shuffled = [...posts].sort(() => Math.random() - 0.5);
-    setDisplayedCards(shuffled);
-  }, [posts]);
+    if (sortMode === 'random') {
+      const shuffled = [...posts].sort(() => Math.random() - 0.5);
+      setDisplayedCards(shuffled);
+    } else if (sortMode === 'newest') {
+      const sorted = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setDisplayedCards(sorted);
+    } else if (sortMode === 'curated') {
+      const filtered = [...posts].filter(card => card.isCurated);
+      setDisplayedCards(filtered);
+    } else {
+      setDisplayedCards(posts);
+    }
+  }, [posts, sortMode]);
 
   const { signOut, isAuthenticated, user } = useAuth();
 
@@ -86,9 +101,21 @@ export default function FeedPage() {
     }
   };
 
-  const handlePortfolioClick = (creator: string) => {
-    // Navigate to profile page (in real app, this would be /profile/[username])
-    router.push('/profile');
+  const handlePortfolioClick = async (creatorId: string) => {
+    // Get username from creator ID and navigate to public profile
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', creatorId)
+        .single()
+      
+      if (data?.username) {
+        router.push(`/profile/${data.username}`)
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error)
+    }
   };
 
 
@@ -104,7 +131,7 @@ export default function FeedPage() {
     }
   };
 
-  const handleSort = (mode: 'random' | 'newest' | 'curated') => {
+  const handleSort = async (mode: 'random' | 'newest' | 'curated') => {
     console.log('Sorting by:', mode); // Debug log
     setSortMode(mode);
     let sorted: MediaCard[];
@@ -114,6 +141,7 @@ export default function FeedPage() {
         sorted = [...posts].sort(() => Math.random() - 0.5);
         break;
       case 'newest':
+        await refetchPosts('created_at');
         sorted = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         break;
       case 'curated':
@@ -191,47 +219,9 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
-      {/* Tabs Navigation */}
-      <div className="sticky top-0 z-20 bg-white">
-        <div className="border-b border-black">
-          <div className="max-w-7xl mx-auto px-4 flex items-end justify-between">
-            <div className="flex items-end gap-2">
-              <a href="/feed" className={`px-14 py-2 border border-black -mb-px text-sm bg-black text-white transition-transform duration-150 active:translate-y-[1px]`}>Feed</a>
-              <a href="/spotlight" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Spotlight</a>
-              <a href="/subgroup" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Subgroup</a>
-              <a href="/profile" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Profile</a>
-            </div>
-            <div className="flex items-center gap-4 pb-2">
-              {isAuthenticated ? (
-                <a href="/profile" className="text-sm text-black">{user?.name || user?.email}</a>
-              ) : (
-                <a href="/" className="text-sm text-black">Sign In</a>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Ensure continuous rule under tabs */}
-      <div className="h-px bg-black"></div>
-      {/* Moved + button below strip */}
-      <div className="max-w-7xl mx-auto px-4 mt-3 flex justify-end">
-        <button
-          onClick={() => {
-            if (!isAuthenticated) {
-              setAuthModalAction('create a post');
-              setShowAuthModal(true);
-            } else {
-              router.push('/create');
-            }
-          }}
-          className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black"
-        >
-          +
-        </button>
-      </div>
 
       {/* Old Internet Controls */}
-      <div className="max-w-7xl mx-auto px-4 py-4 border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 py-4 border-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <span className="text-sm font-['Space_Mono'] text-gray-600">Sort by:</span>
@@ -357,50 +347,47 @@ export default function FeedPage() {
                           )}
                           
                           <div className="flex items-center justify-between text-xs text-gray-600">
-                            <button
+                            <a
+                              href={`/profile/${card.creator.toLowerCase().replace(/\s+/g, '_')}`}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handlePortfolioClick(card.creator);
                               }}
                               className="font-['Space_Mono'] text-blue-600 hover:text-blue-800 transition-colors line-clamp-1"
                               title={card.creator}
                             >
                               {card.creator}
-                            </button>
-                            <div className="flex items-center space-x-2">
-                              <span className="font-['Space_Mono']">{new Date(card.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                              <span className="font-['Space_Mono'] text-gray-600">· {card.views} views</span>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleLikeClick(card.id);
-                                }}
-                                className={`p-1 rounded-full transition-all duration-200 ${
-                                  likedCards.has(card.id)
-                                    ? 'bg-red-50 text-red-500'
-                                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                                }`}
+                            </a>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLikeClick(card.id);
+                              }}
+                              className={`p-1 rounded-full transition-all duration-200 ${
+                                likedCards.has(card.id)
+                                  ? 'bg-red-50 text-red-500'
+                                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                              }`}
+                            >
+                              <svg 
+                                width="12" 
+                                height="12" 
+                                viewBox="0 0 24 24" 
+                                fill={likedCards.has(card.id) ? "currentColor" : "none"}
+                                stroke="currentColor" 
+                                strokeWidth="2"
+                                className="transition-all duration-200"
                               >
-                                <svg 
-                                  width="12" 
-                                  height="12" 
-                                  viewBox="0 0 24 24" 
-                                  fill={likedCards.has(card.id) ? "currentColor" : "none"}
-                                  stroke="currentColor" 
-                                  strokeWidth="2"
-                                  className="transition-all duration-200"
-                                >
-                                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                                </svg>
-                              </button>
-                            </div>
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                              </svg>
+                            </button>
                           </div>
                           
-                          {showStats && (
-                            <div className="text-xs text-gray-500 font-['Space_Mono']">
-                              {card.views} views
-                            </div>
-                          )}
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <PostStats 
+                              postId={card.id}
+                              initialViews={card.views}
+                            />
+                          </div>
                         </div>
               </motion.div>
             ))}
@@ -531,8 +518,8 @@ export default function FeedPage() {
                     </div>
                   </div>
                   
-                  {/* Like Button */}
-                  <div className="border-t border-gray-200 pt-4 mb-4">
+                  {/* Action Buttons */}
+                  <div className="border-t border-gray-200 pt-4 mb-4 flex items-center gap-3">
                     <button 
                       onClick={() => selectedCard && handleLikeClick(selectedCard.id)}
                       className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
@@ -556,6 +543,9 @@ export default function FeedPage() {
                         {selectedCard && likedCards.has(selectedCard.id) ? 'Liked' : 'Like'}
                       </span>
                     </button>
+                    
+                    <EditPostButton postId={selectedCard.id} />
+                    <DeletePostButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} />
                   </div>
 
                   {/* Comments Section */}
@@ -601,11 +591,7 @@ export default function FeedPage() {
                       </button>
                     </div>
                     
-                    <div className="space-y-3">
-                      <div className="text-sm font-['Space_Mono'] text-gray-500">
-                        No comments yet. Be the first to comment!
-                      </div>
-                    </div>
+                    <CommentsList postId={selectedCard.id} />
                   </div>
                 </div>
               </div>
@@ -623,5 +609,174 @@ export default function FeedPage() {
       />
 
     </div>
+  );
+}
+
+// Comments List Component
+function CommentsList({ postId }: { postId: string }) {
+  const { comments, loading } = useRealtimeComments(postId);
+
+  if (loading) {
+    return (
+      <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">
+        Loading comments...
+      </div>
+    );
+  }
+
+  if (comments.length === 0) {
+    return (
+      <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">
+        No comments yet. Be the first to comment!
+      </div>
+    );
+  }
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  return (
+    <div className="space-y-3 max-h-64 overflow-y-auto">
+      {comments.map((comment) => (
+        <div key={comment.id} className="flex gap-3">
+          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+            {comment.username?.[0]?.toUpperCase() || '?'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-2">
+              <span className="font-['Space_Mono'] font-bold text-sm text-black">
+                {comment.username || 'Anonymous'}
+              </span>
+              <span className="font-['Space_Mono'] text-xs text-gray-500">
+                {getTimeAgo(comment.created_at)}
+              </span>
+            </div>
+            <p className="font-['Space_Mono'] text-sm text-gray-800 mt-1 break-words">
+              {comment.content}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Edit Post Button Component
+function EditPostButton({ postId }: { postId: string }) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id || !postId) return;
+
+    const checkOwnership = async () => {
+      const { data } = await supabase
+        .from('posts')
+        .select('creator_id')
+        .eq('id', postId)
+        .single();
+
+      if (data && data.creator_id === user.id) {
+        setIsOwner(true);
+      }
+    };
+
+    checkOwnership();
+  }, [user?.id, postId]);
+
+  if (!isOwner) return null;
+
+  return (
+    <button
+      onClick={() => router.push(`/post/edit/${postId}`)}
+      className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
+      <span className="font-['Space_Mono'] text-sm">Edit</span>
+    </button>
+  );
+}
+
+// Delete Post Button Component
+function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted: () => void }) {
+  const { user } = useAuth();
+  const toast = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id || !postId) return;
+
+    const checkOwnership = async () => {
+      const { data } = await supabase
+        .from('posts')
+        .select('creator_id')
+        .eq('id', postId)
+        .single();
+
+      if (data && data.creator_id === user.id) {
+        setIsOwner(true);
+      }
+    };
+
+    checkOwnership();
+  }, [user?.id, postId]);
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this post? This cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId);
+
+      if (error) throw error;
+
+      toast.success('Post deleted successfully');
+      onDeleted();
+      
+      // Refresh the page to update the feed
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Failed to delete post:', error);
+      toast.error(error.message || 'Failed to delete post');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (!isOwner) return null;
+
+  return (
+    <button
+      onClick={handleDelete}
+      disabled={isDeleting}
+      className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      </svg>
+      <span className="font-['Space_Mono'] text-sm">
+        {isDeleting ? 'Deleting...' : 'Delete'}
+      </span>
+    </button>
   );
 } 

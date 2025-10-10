@@ -2,10 +2,15 @@ import type { Metadata } from 'next'
 import './globals.css'
 import ClientProviders from '@/components/ClientProviders'
 import { PostProvider } from '@/context/post-context'
+import { ToastContainer } from '@/components/toast'
+import RootChrome from '@/components/RootChrome'
 
 export const metadata: Metadata = {
   title: 'Decro - Sign Up',
   description: 'Create your Decro account',
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
@@ -18,7 +23,10 @@ export default function RootLayout({
       <body>
         <ClientProviders>
           <PostProvider>
-            {children}
+            <RootChrome>
+              {children}
+            </RootChrome>
+            <ToastContainer />
           </PostProvider>
         </ClientProviders>
         <script dangerouslySetInnerHTML={{ __html: `

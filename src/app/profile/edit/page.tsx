@@ -1,0 +1,315 @@
+/**
+ * Profile Edit Page
+ * Edit username, full name, bio, and avatar
+ */
+
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/auth-context'
+import supabase from '@/lib/supabase-client'
+import { uploadAvatar } from '@/lib/upload'
+import { useToast } from '@/hooks/use-toast'
+import StaggeredMenu from '@/components/StaggeredMenu'
+import Identity from '@/components/Identity'
+
+export default function EditProfilePage() {
+  const { user, isAuthenticated } = useAuth()
+  const router = useRouter()
+  const toast = useToast()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [formData, setFormData] = useState({
+    username: '',
+    full_name: '',
+    bio: '',
+    avatar_url: ''
+  })
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string>('')
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/')
+      return
+    }
+
+    loadProfile()
+  }, [user?.id, isAuthenticated])
+
+  const loadProfile = async () => {
+    if (!user?.id) return
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, full_name, bio, avatar_url')
+        .eq('id', user.id)
+        .single()
+
+      if (!error && data) {
+        setFormData({
+          username: data.username || '',
+          full_name: data.full_name || '',
+          bio: data.bio || '',
+          avatar_url: data.avatar_url || ''
+        })
+        setAvatarPreview(data.avatar_url || '')
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be less than 5MB')
+        return
+      }
+
+      setAvatarFile(file)
+      const url = URL.createObjectURL(file)
+      setAvatarPreview(url)
+    }
+  }
+
+  const checkUsernameAvailable = async (username: string): Promise<boolean> => {
+    if (!username || username === formData.username) return true
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.toLowerCase())
+        .neq('id', user?.id)
+        .single()
+
+      return !data
+    } catch {
+      return true
+    }
+  }
+
+  const handleSave = async () => {
+    if (!user?.id) return
+
+    // Validation
+    if (!formData.username.trim()) {
+      toast.error('Username is required')
+      return
+    }
+
+    if (formData.username.length < 3) {
+      toast.error('Username must be at least 3 characters')
+      return
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      toast.error('Username can only contain letters, numbers, and underscores')
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      // Check username availability
+      const isAvailable = await checkUsernameAvailable(formData.username)
+      if (!isAvailable) {
+        toast.error('Username is already taken')
+        setSaving(false)
+        return
+      }
+
+      let avatarUrl = formData.avatar_url
+
+      // Upload avatar if changed
+      if (avatarFile) {
+        setUploading(true)
+        try {
+          const result = await uploadAvatar(avatarFile)
+          avatarUrl = result.url
+        } catch (uploadError) {
+          toast.error('Failed to upload avatar')
+          setSaving(false)
+          setUploading(false)
+          return
+        }
+        setUploading(false)
+      }
+
+      // Update profile
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: formData.username.toLowerCase(),
+          full_name: formData.full_name.trim() || null,
+          bio: formData.bio.trim() || null,
+          avatar_url: avatarUrl || null
+        })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      toast.success('Profile updated successfully!')
+      router.push('/profile')
+    } catch (error: any) {
+      console.error('Failed to update profile:', error)
+      toast.error(error.message || 'Failed to update profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!isAuthenticated || loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-black"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-white font-['Space_Mono']">
+      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <StaggeredMenu sections={[]} usePersonalizedData={true} />
+          <Identity />
+        </div>
+      </div>
+
+      <main className="max-w-2xl mx-auto px-4 pt-24 pb-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Edit Profile</h1>
+          <p className="text-gray-600 text-sm">
+            Update your profile information and avatar
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          {/* Avatar Upload */}
+          <div>
+            <label className="block text-sm font-medium text-black mb-3">
+              Profile Photo
+            </label>
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center text-3xl font-bold text-gray-600">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'
+                )}
+              </div>
+              <div>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+                >
+                  {uploading ? 'Uploading...' : 'Change Photo'}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <p className="text-xs text-gray-500 mt-2">JPG, PNG or GIF. Max 5MB.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-black mb-2">
+              Username *
+            </label>
+            <input
+              type="text"
+              id="username"
+              value={formData.username}
+              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+              placeholder="your_username"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+              maxLength={30}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Letters, numbers, and underscores only. Minimum 3 characters.
+            </p>
+          </div>
+
+          {/* Full Name */}
+          <div>
+            <label htmlFor="full_name" className="block text-sm font-medium text-black mb-2">
+              Full Name
+            </label>
+            <input
+              type="text"
+              id="full_name"
+              value={formData.full_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+              placeholder="John Doe"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+              maxLength={100}
+            />
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label htmlFor="bio" className="block text-sm font-medium text-black mb-2">
+              Bio
+            </label>
+            <textarea
+              id="bio"
+              value={formData.bio}
+              onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+              placeholder="Tell us about yourself..."
+              rows={4}
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none"
+              maxLength={500}
+            />
+            <div className="text-xs text-gray-500 mt-1 text-right">
+              {formData.bio.length}/500
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={handleSave}
+              disabled={saving || uploading}
+              className={`flex-1 py-3 text-sm font-medium border-2 border-black transition-colors ${
+                saving || uploading
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-black text-white hover:bg-gray-800'
+              }`}
+            >
+              {saving ? 'Saving...' : uploading ? 'Uploading...' : 'Save Changes'}
+            </button>
+            <button
+              onClick={() => router.back()}
+              disabled={saving || uploading}
+              className="px-6 py-3 text-sm border-2 border-gray-300 hover:border-black transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+

@@ -1,0 +1,288 @@
+/**
+ * Edit Post Page
+ * Edit existing post title, description, and tags
+ */
+
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/context/auth-context'
+import supabase from '@/lib/supabase-client'
+import { useToast } from '@/hooks/use-toast'
+import StaggeredMenu from '@/components/StaggeredMenu'
+import Identity from '@/components/Identity'
+
+export default function EditPostPage() {
+  const params = useParams()
+  const router = useRouter()
+  const { user } = useAuth()
+  const toast = useToast()
+  const postId = params.id as string
+
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    tags: [] as string[]
+  })
+  const [tagInput, setTagInput] = useState('')
+  const [postData, setPostData] = useState<any>(null)
+
+  useEffect(() => {
+    loadPost()
+  }, [postId])
+
+  const loadPost = async () => {
+    try {
+      // Load post data
+      const { data: post, error: postError } = await supabase
+        .from('posts')
+        .select('id, title, description, creator_id, media_url')
+        .eq('id', postId)
+        .single()
+
+      if (postError) throw postError
+
+      // Check ownership
+      if (post.creator_id !== user?.id) {
+        toast.error('You can only edit your own posts')
+        router.push('/feed')
+        return
+      }
+
+      setPostData(post)
+
+      // Load tags
+      const { data: tags, error: tagsError } = await supabase
+        .from('post_tags')
+        .select(`
+          tags (name)
+        `)
+        .eq('post_id', postId)
+
+      const tagNames = tags?.map((t: any) => t.tags.name) || []
+
+      setFormData({
+        title: post.title,
+        description: post.description || '',
+        tags: tagNames
+      })
+    } catch (error) {
+      console.error('Failed to load post:', error)
+      toast.error('Failed to load post')
+      router.push('/feed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!formData.title.trim()) {
+      toast.error('Title is required')
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      // Update post
+      const { error: updateError } = await supabase
+        .from('posts')
+        .update({
+          title: formData.title.trim(),
+          description: formData.description.trim() || null
+        })
+        .eq('id', postId)
+
+      if (updateError) throw updateError
+
+      // Update tags - delete old tags and add new ones
+      const { error: deleteError } = await supabase
+        .from('post_tags')
+        .delete()
+        .eq('post_id', postId)
+
+      if (deleteError) throw deleteError
+
+      // Add new tags
+      if (formData.tags.length > 0) {
+        for (const tagName of formData.tags) {
+          try {
+            const { data: tagId, error: tagError } = await supabase.rpc('get_or_create_tag', {
+              tag_name: tagName
+            })
+
+            if (!tagError && tagId) {
+              await supabase
+                .from('post_tags')
+                .insert({ post_id: postId, tag_id: tagId })
+            }
+          } catch (tagErr) {
+            console.warn('Failed to add tag:', tagName, tagErr)
+          }
+        }
+      }
+
+      toast.success('Post updated successfully!')
+      router.push('/feed')
+    } catch (error: any) {
+      console.error('Failed to update post:', error)
+      toast.error(error.message || 'Failed to update post')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-black"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-white font-['Space_Mono']">
+      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <StaggeredMenu sections={[]} usePersonalizedData={true} />
+          <Identity />
+        </div>
+      </div>
+
+      <main className="max-w-2xl mx-auto px-4 pt-24 pb-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Edit Post</h1>
+          <p className="text-gray-600 text-sm">
+            Update your post's title, description, and tags
+          </p>
+        </div>
+
+        {/* Preview Image */}
+        {postData?.media_url && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-black mb-3">
+              Preview
+            </label>
+            <img
+              src={postData.media_url}
+              alt="Post preview"
+              className="max-w-full h-64 object-cover border-2 border-gray-300"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              Note: Media files cannot be changed. To change the media, delete this post and create a new one.
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-6">
+          {/* Title */}
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-black mb-2">
+              Title *
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Give your work a title..."
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+              maxLength={100}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-black mb-2">
+              Description
+            </label>
+            <textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Tell us about your work..."
+              rows={4}
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none"
+              maxLength={500}
+            />
+            <div className="text-xs text-gray-500 mt-1 text-right">
+              {formData.description.length}/500
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-medium text-black mb-2">
+              Tags (press Enter to add)
+            </label>
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && tagInput.trim()) {
+                  e.preventDefault()
+                  const tag = tagInput.trim().toLowerCase()
+                  if (!formData.tags.includes(tag) && formData.tags.length < 5) {
+                    setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }))
+                    setTagInput('')
+                  }
+                }
+              }}
+              placeholder="e.g., photography, landscape, sunset..."
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+            />
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.tags.map((tag, index) => (
+                  <span key={index} className="px-2 py-1 bg-black text-white text-xs flex items-center gap-1">
+                    #{tag}
+                    <button
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        tags: prev.tags.filter((_, i) => i !== index)
+                      }))}
+                      className="ml-1 hover:text-red-300"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="text-xs text-gray-500 mt-1">
+              {formData.tags.length}/5 tags
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className={`flex-1 py-3 text-sm font-medium border-2 border-black transition-colors ${
+                saving
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-black text-white hover:bg-gray-800'
+              }`}
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              onClick={() => router.back()}
+              disabled={saving}
+              className="px-6 py-3 text-sm border-2 border-gray-300 hover:border-black transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+

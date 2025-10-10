@@ -8,75 +8,106 @@ import DetailModal from '@/components/detail-modal'
 import { useEffect, useState } from 'react'
 import supabase from '@/lib/supabase-client'
 import { StaggeredMenu } from '@/components/StaggeredMenu'
+import Identity from '@/components/Identity'
+import { useAuth } from '@/context/auth-context'
+import { useToast } from '@/hooks/use-toast'
 
 export default function SubgroupDetail() {
   const params = useParams() as { slug: string }
   const label = params.slug?.replace(/-/g, ' ')
   const { posts } = usePosts()
+  const { user } = useAuth()
+  const toast = useToast()
   const [subgroupId, setSubgroupId] = useState<string | null>(null)
+  const [subgroupData, setSubgroupData] = useState<any>(null)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
+  const [followerCount, setFollowerCount] = useState(0)
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from('subgroups').select('id').eq('slug', params.slug).single()
-      setSubgroupId(data?.id ?? null)
+      const { data } = await supabase
+        .from('subgroups')
+        .select('id, name, description')
+        .eq('slug', params.slug)
+        .single()
+      
+      if (data) {
+        setSubgroupId(data.id)
+        setSubgroupData(data)
+
+        // Get follower count
+        const { count } = await supabase
+          .from('subgroup_follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('subgroup_id', data.id)
+        
+        setFollowerCount(count || 0)
+
+        // Check if user is following
+        if (user?.id) {
+          const { data: followData } = await supabase.rpc('is_following_subgroup', {
+            target_subgroup_id: data.id
+          })
+          setIsFollowing(followData || false)
+        }
+      }
     })()
-  }, [params.slug])
+  }, [params.slug, user?.id])
+
+  const handleFollow = async () => {
+    if (!user?.id) {
+      toast.error('Please sign in to follow subgroups')
+      return
+    }
+
+    if (!subgroupId) return
+
+    setFollowLoading(true)
+
+    try {
+      const { data, error } = await supabase.rpc('toggle_follow_subgroup', {
+        target_subgroup_id: subgroupId
+      })
+
+      if (error) throw error
+
+      setIsFollowing(data.following)
+      setFollowerCount(prev => data.following ? prev + 1 : prev - 1)
+      toast.success(data.following ? 'Following subgroup!' : 'Unfollowed subgroup')
+    } catch (error: any) {
+      console.error('Follow toggle failed:', error)
+      toast.error(error.message || 'Failed to follow subgroup')
+    } finally {
+      setFollowLoading(false)
+    }
+  }
 
   const cards: MediaCard[] = subgroupId ? posts.filter(p => p.subgroupId === subgroupId) : []
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
-      <div className="fixed inset-0 z-50 pointer-events-none">
-        <StaggeredMenu
-          position="right"
-          sections={[
-            {
-              title: 'Subgroups',
-              items: [
-                { label: 'decro-music', link: '/subgroup/decro-music' },
-                { label: 'visual-art', link: '/subgroup/visual-art' },
-                { label: 'film', link: '/subgroup/film' },
-              ],
-            },
-            {
-              title: 'Feed',
-              items: [
-                { label: 'Kendrick live set in LA — 4K remaster', link: '/feed' },
-                { label: 'A24 behind the scenes on DP choices ...', link: '/feed' },
-                { label: 'New indie playlist drop (Sep)', link: '/feed' },
-              ],
-            },
-          ]}
-          socialItems={[]}
-          displaySocials={false}
-          displayItemNumbering={false}
-          menuButtonColor="#000"
-          openMenuButtonColor="#000"
-          changeMenuColorOnOpen={true}
-          colors={['#f5f5f5', '#e5e7eb']}
-          logoUrl="/logo.svg"
-          accentColor="#000"
-        />
-      </div>
-      <div className="sticky top-0 z-20 bg-white">
-        <div className="border-b border-black">
-          <div className="max-w-7xl mx-auto px-4 flex items-end justify-between">
-            <div className="flex items-end gap-2">
-              <a href="/feed" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Feed</a>
-              <a href="/spotlight" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Spotlight</a>
-              <a href="/subgroup" className={`px-14 py-2 border border-black -mb-px text-sm bg-black text-white transition-transform duration-150 active:translate-y-[1px]`}>Subgroup</a>
-              <a href="/profile" className="px-14 py-2 border border-black border-b-0 -mb-px text-sm bg-white text-black hover:bg-gray-50 transition-transform duration-150 active:translate-y-[1px]">Profile</a>
-            </div>
-            <div className="flex items-center gap-4 pb-2 text-xs leading-6">
-              <a href="/create" className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black">+</a>
-              <a href="/" className="underline">Sign In</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="h-px bg-black"></div>
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-['Space_Mono'] font-bold text-black mb-4">{label}</h1>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-['Space_Mono'] font-bold text-black mb-2">{subgroupData?.name || label}</h1>
+            {subgroupData?.description && (
+              <p className="text-sm text-gray-600 mb-2">{subgroupData.description}</p>
+            )}
+            <p className="text-sm text-gray-500">{followerCount} followers · {cards.length} posts</p>
+          </div>
+          <button
+            onClick={handleFollow}
+            disabled={followLoading || !user}
+            className={`px-4 py-2 border-2 transition-colors text-sm ${
+              isFollowing
+                ? 'border-gray-300 hover:border-red-500 hover:text-red-500'
+                : 'border-black bg-black text-white hover:bg-gray-800'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {followLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
+          </button>
+        </div>
         {cards.length === 0 ? (
           <div className="text-center py-24 border border-dashed border-black">
             <p className="text-black font-['Space_Mono']">No posts yet in this subgroup.</p>

@@ -46,6 +46,8 @@ interface PostContextType {
   
   // View tracking
   trackView: (postId: string) => void;
+  // Refetch posts with server sort
+  refetchPosts: (sortBy?: 'created_at' | 'likes' | 'comments') => Promise<void>;
   
   // User action tracking
   trackUserAction: (action: string, targetId: string, targetType: string) => void;
@@ -157,6 +159,65 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Server-side refetch using RPC with sorting
+  const refetchPosts = async (sortBy: 'created_at' | 'likes' | 'comments' = 'created_at') => {
+    try {
+      const { data: postsData, error: postsError } = await supabase
+        .rpc('get_feed_posts', {
+          page_size: 100,
+          page_offset: 0,
+          subgroup_filter: null,
+          content_type_filter: null,
+          sort_by: sortBy
+        })
+
+      if (postsError) throw postsError
+
+      if (postsData) {
+        const mapped: MediaCard[] = postsData.map((post: any) => ({
+          id: String(post.id),
+          type: post.content_type,
+          title: post.title,
+          imageUrl: post.media_url,
+          aspectRatio: 'square',
+          audioUrl: post.audio_url ?? undefined,
+          videoUrl: post.video_url ?? undefined,
+          creator: post.creator_username || 'Anonymous',
+          date: post.created_at,
+          isCurated: post.is_curated ?? false,
+          views: post.views ?? 0,
+          subgroupId: post.subgroup_id ?? undefined,
+        }))
+
+        setPosts(mapped)
+
+        try {
+          await db.posts.clear()
+          await db.posts.bulkPut(
+            mapped.map((m) => ({
+              id: m.id,
+              type: m.type,
+              title: m.title,
+              imageUrl: m.imageUrl,
+              aspectRatio: m.aspectRatio,
+              audioUrl: m.audioUrl,
+              videoUrl: m.videoUrl,
+              creator: m.creator,
+              date: m.date,
+              isCurated: m.isCurated,
+              views: m.views,
+              subgroupId: m.subgroupId ?? null,
+            }))
+          )
+        } catch (cacheError) {
+          console.warn('Failed to update cache:', cacheError)
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch fresh posts:', e)
+    }
+  }
+
   useEffect(() => {
     (async () => {
       // 1. Load from local cache first for instant display
@@ -184,75 +245,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
         console.warn('Failed to load cached posts:', e)
       }
 
-      // 2. Fetch fresh data from Supabase in background
-      try {
-        const { data: postsData, error: postsError } = await supabase
-          .from('posts')
-          .select(`
-            id,
-            content_type,
-            title,
-            media_url,
-            audio_url,
-            video_url,
-            is_curated,
-            views,
-            created_at,
-            creator_id,
-            subgroup_id,
-            profiles!posts_creator_id_fkey(username, full_name)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(100)
-
-        if (postsError) throw postsError
-
-        if (postsData) {
-          const mapped: MediaCard[] = postsData.map((post: any) => ({
-            id: String(post.id),
-            type: post.content_type,
-            title: post.title,
-            imageUrl: post.media_url,
-            aspectRatio: 'square',
-            audioUrl: post.audio_url ?? undefined,
-            videoUrl: post.video_url ?? undefined,
-            creator: post.profiles?.username || post.profiles?.full_name || 'Anonymous',
-            date: post.created_at,
-            isCurated: post.is_curated ?? false,
-            views: post.views ?? 0,
-            subgroupId: post.subgroup_id ?? undefined,
-          }))
-          
-          // Update UI with fresh data
-          setPosts(mapped)
-          
-          // Update local cache for next time
-          try {
-            await db.posts.clear()
-            await db.posts.bulkPut(
-              mapped.map((m) => ({
-                id: m.id,
-                type: m.type,
-                title: m.title,
-                imageUrl: m.imageUrl,
-                aspectRatio: m.aspectRatio,
-                audioUrl: m.audioUrl,
-                videoUrl: m.videoUrl,
-                creator: m.creator,
-                date: m.date,
-                isCurated: m.isCurated,
-                views: m.views,
-                subgroupId: m.subgroupId ?? null,
-              }))
-            )
-          } catch (cacheError) {
-            console.warn('Failed to update cache:', cacheError)
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to fetch fresh posts:', e)
-        // Keep showing cached data if available
-      }
+      // 2. Fetch fresh data from Supabase via RPC (no auth required)
+      await refetchPosts('created_at')
     })()
   }, [])
 
@@ -276,22 +270,22 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   // View tracking function
   const trackView = async (postId: string) => {
-    if (!user?.id) return
-    
     try {
-      // Track in local history
-      await db.userHistory.add({
-        userId: user.id,
-        action: 'view',
-        targetId: postId,
-        targetType: 'post',
-        timestamp: Date.now()
-      })
-      
-      // Track view in Supabase
+      // Track in local history for authenticated users
+      if (user?.id) {
+        await db.userHistory.add({
+          userId: user.id,
+          action: 'view',
+          targetId: postId,
+          targetType: 'post',
+          timestamp: Date.now()
+        })
+      }
+
+      // Track view in Supabase (allows null user)
       await supabase.rpc('track_view', {
         post_id_param: postId,
-        user_id_param: user.id
+        user_id_param: user?.id ?? null
       })
     } catch (e) {
       console.warn('trackView failed', e)
@@ -387,6 +381,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     setCommentText,
     handleComment,
     trackView,
+    refetchPosts,
     trackUserAction,
     trackSubgroupVisit
   };

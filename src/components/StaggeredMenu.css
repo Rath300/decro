@@ -12,9 +12,9 @@
   left: 0;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  padding: 0.25rem 1rem;
+  padding: 0.5rem 1rem;
   background: transparent;
   pointer-events: none;
   z-index: 20;
@@ -40,17 +40,18 @@
 .sm-toggle {
   position: relative;
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.25rem;
   background: transparent;
   border: none;
   cursor: pointer;
   color: #000;
-  font-weight: 500;
-  font-size: 0.875rem;
+  font-weight: 400;
+  font-size: 0.9rem;
   line-height: 1.25rem;
   overflow: visible;
   font-family: 'Space Mono', monospace;
+  margin-top: 14px; /* nudge button down to align with tabs */
 }
 
 .sm-toggle:focus-visible {
