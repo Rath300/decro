@@ -21,8 +21,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing title' }, { status: 400 })
     }
 
-    // Auth
-    const session = auth.session
+    // Auth (Better Auth - get session from request headers)
+    const anyAuth: any = auth as any
+    const sessionRes = await anyAuth.api.getSession({ headers: Object.fromEntries((req as any).headers) })
+    const session = sessionRes?.data || sessionRes?.session || sessionRes
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
