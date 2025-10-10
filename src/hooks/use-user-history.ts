@@ -4,7 +4,7 @@ import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
 
 export interface UserHistoryItem {
-  id: number
+  id?: number
   userId: string
   action: string
   targetId: string
@@ -33,12 +33,12 @@ export function useUserHistory() {
     const loadUserHistory = async () => {
       try {
         // Get recent user history from local storage first
-        const allHistory = await db.userHistory
+        const allHistory: any[] = await db.userHistory
           .where('userId')
           .equals(user.id)
           .toArray()
 
-        const recentHistory = allHistory
+        const recentHistory: UserHistoryItem[] = allHistory
           .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
           .slice(0, 50)
 
