@@ -33,13 +33,14 @@ export function useUserHistory() {
     const loadUserHistory = async () => {
       try {
         // Get recent user history from local storage first
-        const recentHistory = await db.userHistory
+        const allHistory = await db.userHistory
           .where('userId')
           .equals(user.id)
-          .orderBy('timestamp')
-          .reverse()
-          .limit(50)
           .toArray()
+
+        const recentHistory = allHistory
+          .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+          .slice(0, 50)
 
         setHistory(recentHistory)
 
