@@ -731,26 +731,30 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                 Reply{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
               </button>
               <div className="inline-flex items-center gap-1">
-                <button
+                 <button
                   title="Upvote"
                   className="hover:text-black"
                   onClick={async () => {
                     if (!isAuthenticated || !user?.id) return;
                     // optimistic +1
                     setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, vote_score: (c.vote_score ?? 0) + 1 }) : c));
-                    await supabase.rpc('toggle_comment_vote_ext', { comment_id_param: comment.id, external_id_param: user.id, direction: 1 }).catch(() => {});
+                     try {
+                       await supabase.rpc('toggle_comment_vote_ext', { comment_id_param: comment.id, external_id_param: user.id, direction: 1 });
+                     } catch {}
                     refetch();
                   }}
                 >▲</button>
                 <span className="tabular-nums">{comment.vote_score ?? 0}</span>
-                <button
+                 <button
                   title="Downvote"
                   className="hover:text-black"
                   onClick={async () => {
                     if (!isAuthenticated || !user?.id) return;
                     // optimistic -1
                     setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, vote_score: (c.vote_score ?? 0) - 1 }) : c));
-                    await supabase.rpc('toggle_comment_vote_ext', { comment_id_param: comment.id, external_id_param: user.id, direction: -1 }).catch(() => {});
+                     try {
+                       await supabase.rpc('toggle_comment_vote_ext', { comment_id_param: comment.id, external_id_param: user.id, direction: -1 });
+                     } catch {}
                     refetch();
                   }}
                 >▼</button>
@@ -765,7 +769,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                     onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
                     placeholder="Write a reply..."
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                    onKeyPress={async (e) => {
+                     onKeyPress={async (e) => {
                       if (e.key === 'Enter') {
                         const content = (replyText[comment.id] || '').trim();
                         if (!content || !isAuthenticated || !user?.id) return;
@@ -779,14 +783,16 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                           ]
                         }));
                         setReplyText(prev => ({ ...prev, [comment.id]: '' }));
-                        await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content }).catch(() => {});
+                         try {
+                           await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                         } catch {}
                         // refresh replies
                         const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                         setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
                       }
                     }}
                   />
-                  <button
+                   <button
                     className="px-3 py-2 text-xs bg-black text-white rounded"
                     onClick={async () => {
                       const content = (replyText[comment.id] || '').trim();
@@ -800,7 +806,9 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                         ]
                       }));
                       setReplyText(prev => ({ ...prev, [comment.id]: '' }));
-                      await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content }).catch(() => {});
+                       try {
+                         await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                       } catch {}
                       const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                       setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
                     }}
