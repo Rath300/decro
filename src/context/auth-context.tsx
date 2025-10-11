@@ -33,6 +33,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     name: session.user.name
   } : null
 
+  // Ensure a profile row exists and update display fields from auth
+  if (session?.user) {
+    // fire-and-forget; avoid blocking render
+    fetch(process.env.NEXT_PUBLIC_SUPABASE_URL + '/rest/v1/rpc/upsert_profile_from_external', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+      },
+      body: JSON.stringify({
+        external_id_param: session.user.id,
+        username_param: session.user.name || session.user.email?.split('@')[0] || null,
+        full_name_param: session.user.name || null
+      })
+    }).catch(() => {})
+  }
+
   const signIn = async (email: string, password: string) => {
     try {
       const result = await client.signIn.email({
