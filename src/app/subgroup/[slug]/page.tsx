@@ -44,8 +44,9 @@ export default function SubgroupDetail() {
 
         // Check if user is following
         if (user?.id) {
-          const { data: followData } = await supabase.rpc('is_following_subgroup', {
-            target_subgroup_id: data.id
+          const { data: followData } = await supabase.rpc('is_following_subgroup_ext', {
+            target_subgroup_id: data.id,
+            external_id_param: user.id
           })
           setIsFollowing(followData || false)
         }
@@ -64,8 +65,9 @@ export default function SubgroupDetail() {
     setFollowLoading(true)
 
     try {
-      const { data, error } = await supabase.rpc('toggle_follow_subgroup', {
-        target_subgroup_id: subgroupId
+      const { data, error } = await supabase.rpc('toggle_follow_subgroup_ext', {
+        target_subgroup_id: subgroupId,
+        external_id_param: user.id
       })
 
       if (error) throw error
