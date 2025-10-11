@@ -1,7 +1,7 @@
 // Service Worker for Decro - Local-First Architecture
-const CACHE_NAME = 'decro-v1'
-const STATIC_CACHE = 'decro-static-v1'
-const API_CACHE = 'decro-api-v1'
+const CACHE_NAME = 'decro-v2'
+const STATIC_CACHE = 'decro-static-v2'
+const API_CACHE = 'decro-api-v2'
 
 // Static assets to cache
 const STATIC_ASSETS = [
@@ -48,6 +48,11 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Never intercept Supabase requests; let them hit the network with auth headers
+  if (url.origin.includes('supabase.co')) {
+    return
+  }
+
   // Handle different types of requests
   if (url.pathname.startsWith('/api/')) {
     // API requests - network first, cache fallback
@@ -55,7 +60,7 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then(response => {
           // Cache successful API responses
-          if (response.ok) {
+          if (response.ok && response.status === 200) {
             const responseClone = response.clone()
             caches.open(API_CACHE).then(cache => {
               cache.put(request, responseClone)
@@ -77,7 +82,8 @@ self.addEventListener('fetch', (event) => {
             return response
           }
           return fetch(request).then(response => {
-            if (response.ok) {
+            // Avoid caching partial content (206) which breaks Cache.put
+            if (response.ok && response.status === 200) {
               const responseClone = response.clone()
               caches.open(STATIC_CACHE).then(cache => {
                 cache.put(request, responseClone)
@@ -96,7 +102,7 @@ self.addEventListener('fetch', (event) => {
             return response
           }
           return fetch(request).then(response => {
-            if (response.ok) {
+            if (response.ok && response.status === 200) {
               const responseClone = response.clone()
               caches.open(CACHE_NAME).then(cache => {
                 cache.put(request, responseClone)

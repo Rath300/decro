@@ -124,14 +124,11 @@ export function PostProvider({ children }: { children: ReactNode }) {
       
       try {
         const { error } = await supabase
-          .from('comments')
-          .insert({
-            post_id: selectedCard.id,
-            user_id: user.id,
-            content: commentContent,
-            source_id: 'decro'
+          .rpc('add_comment', {
+            post_id_param: selectedCard.id,
+            user_id_param: user.id,
+            content_param: commentContent
           })
-        
         if (error) throw error
         
         // Update local cache
@@ -339,16 +336,19 @@ export function PostProvider({ children }: { children: ReactNode }) {
                   .eq('user_id', action.userId)
               }
             } else if (action.type === 'comment') {
-              await supabase.from('comments').insert({ 
-                post_id: action.postId, 
-                user_id: action.userId, 
-                content: action.content, 
-                source_id: 'decro' 
+              await supabase.rpc('add_comment', {
+                post_id_param: action.postId,
+                user_id_param: action.userId,
+                content_param: action.content
               })
             }
             
             // Remove from outbox after successful sync
-            await db.outbox.delete(action as any)
+            try {
+              await db.outbox.delete((action as any).id)
+            } catch (e) {
+              // ignore if key missing
+            }
           } catch (e) {
             // Keep in outbox for retry
             console.warn('Failed to sync action:', action, e)
