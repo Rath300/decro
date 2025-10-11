@@ -22,9 +22,8 @@ export async function POST(req: Request) {
     }
 
     // Auth (Better Auth - get session from request headers)
-    const anyAuth: any = auth as any
-    const sessionRes = await anyAuth.api.getSession({ headers: Object.fromEntries((req as any).headers) })
-    const session = sessionRes?.data || sessionRes?.session || sessionRes
+    const sessionRes = await auth.api.getSession(req.headers as any)
+    const session = (sessionRes as any)?.data || (sessionRes as any)?.session || sessionRes
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
