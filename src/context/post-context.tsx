@@ -322,15 +322,15 @@ export function PostProvider({ children }: { children: ReactNode }) {
           try {
             if (action.type === 'like') {
               if (action.add) {
-                await supabase.from('likes').insert({ 
-                  post_id: action.postId, 
-                  user_id: action.userId, 
-                  source_id: 'decro' 
+                await supabase.rpc('toggle_like_ext', {
+                  post_id_param: action.postId,
+                  external_id_param: action.userId
                 })
               } else {
-                await supabase.from('likes').delete()
-                  .eq('post_id', action.postId)
-                  .eq('user_id', action.userId)
+                await supabase.rpc('toggle_like_ext', {
+                  post_id_param: action.postId,
+                  external_id_param: action.userId
+                })
               }
             } else if (action.type === 'comment') {
               await supabase.rpc('add_comment_ext', {
