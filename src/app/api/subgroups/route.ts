@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     const { data, error } = await supabase
       .from('subgroups')
       .select('id,name,slug')
-      .or(`name.ilike.%${q}%,slug.ilike.%${q}%`)
+      .or(`name.ilike.*${q}*,slug.ilike.*${q}*`)
       .limit(20)
 
     if (error) throw error
