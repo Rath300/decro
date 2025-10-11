@@ -61,6 +61,7 @@ export default function FeedPage() {
   const { signOut, isAuthenticated, user } = useAuth();
   const [commentsRefreshSignal, setCommentsRefreshSignal] = useState(0);
   const [optimisticComments, setOptimisticComments] = useState<RealtimeComment[]>([]);
+  const [lastOptimisticContent, setLastOptimisticContent] = useState<string | null>(null);
 
   const handleLogout = async () => {
     await signOut();
@@ -98,10 +99,9 @@ export default function FeedPage() {
         avatar_url: null,
       };
       setOptimisticComments((prev) => [optimistic, ...prev]);
+      setLastOptimisticContent(content);
       // Trigger a refetch in CommentsList to reconcile soon after
       setCommentsRefreshSignal((n) => n + 1);
-      // Clear optimistic after a short delay to avoid duplicates when realtime arrives
-      setTimeout(() => setOptimisticComments([]), 2500);
     }
   };
 
@@ -637,21 +637,38 @@ export default function FeedPage() {
 // Comments List Component
 function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: string; refreshSignal: number; optimisticComments: RealtimeComment[] }) {
   const { comments, loading, refetch } = useRealtimeComments(postId);
+  const [merged, setMerged] = useState<RealtimeComment[]>([]);
+  const { isAuthenticated, user } = useAuth();
+  const [openReplyFor, setOpenReplyFor] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [replies, setReplies] = useState<Record<string, RealtimeComment[]>>({});
+  const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!postId) return;
     refetch();
   }, [refreshSignal]);
 
-  if (loading) {
+  useEffect(() => {
+    // Keep optimistic item until a matching server comment appears
+    const server = comments || [];
+    const optimistic = optimisticComments || [];
+    if (optimistic.length === 0) {
+      setMerged(server);
+      return;
+    }
+    // match by same content from current user within recent window
+    const filteredOptimistic = optimistic.filter(o => !server.some(s => s.content === o.content && Math.abs(new Date(s.created_at).getTime() - new Date(o.created_at).getTime()) < 60000));
+    setMerged([...filteredOptimistic, ...server]);
+  }, [comments, optimisticComments]);
+
+  if (loading && (!merged || merged.length === 0)) {
     return (
       <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">
         Loading comments...
       </div>
     );
   }
-
-  const merged = [...optimisticComments, ...comments];
 
   if (merged.length === 0) {
     return (
@@ -692,6 +709,127 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             <p className="font-['Space_Mono'] text-sm text-gray-800 mt-1 break-words">
               {comment.content}
             </p>
+            {/* Reply and voting controls */}
+            <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+              <button
+                className="hover:text-black"
+                onClick={async () => {
+                  if (openReplyFor === comment.id) {
+                    setOpenReplyFor(null);
+                    return;
+                  }
+                  setOpenReplyFor(comment.id);
+                  // lazy load replies on open
+                  if (!replies[comment.id]) {
+                    setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
+                    const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                    setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                    setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
+                  }
+                }}
+              >
+                Reply{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+              </button>
+              <div className="inline-flex items-center gap-1">
+                <button
+                  title="Upvote"
+                  className="hover:text-black"
+                  onClick={async () => {
+                    if (!isAuthenticated || !user?.id) return;
+                    // optimistic +1
+                    setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, vote_score: (c.vote_score ?? 0) + 1 }) : c));
+                    await supabase.rpc('toggle_comment_vote_ext', { comment_id_param: comment.id, external_id_param: user.id, direction: 1 }).catch(() => {});
+                    refetch();
+                  }}
+                >▲</button>
+                <span className="tabular-nums">{comment.vote_score ?? 0}</span>
+                <button
+                  title="Downvote"
+                  className="hover:text-black"
+                  onClick={async () => {
+                    if (!isAuthenticated || !user?.id) return;
+                    // optimistic -1
+                    setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, vote_score: (c.vote_score ?? 0) - 1 }) : c));
+                    await supabase.rpc('toggle_comment_vote_ext', { comment_id_param: comment.id, external_id_param: user.id, direction: -1 }).catch(() => {});
+                    refetch();
+                  }}
+                >▼</button>
+              </div>
+            </div>
+            {openReplyFor === comment.id && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={replyText[comment.id] || ''}
+                    onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                    placeholder="Write a reply..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                    onKeyPress={async (e) => {
+                      if (e.key === 'Enter') {
+                        const content = (replyText[comment.id] || '').trim();
+                        if (!content || !isAuthenticated || !user?.id) return;
+                        // optimistic bump reply count and add local reply shell
+                        setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, reply_count: (c.reply_count ?? 0) + 1 }) : c));
+                        setReplies(prev => ({
+                          ...prev,
+                          [comment.id]: [
+                            { id: `local-${Date.now()}`, content, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), user_id: user.id, username: user.name || user.email || 'You', full_name: user.name || null, avatar_url: null } as any,
+                            ...(prev[comment.id] || [])
+                          ]
+                        }));
+                        setReplyText(prev => ({ ...prev, [comment.id]: '' }));
+                        await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content }).catch(() => {});
+                        // refresh replies
+                        const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                        setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                      }
+                    }}
+                  />
+                  <button
+                    className="px-3 py-2 text-xs bg-black text-white rounded"
+                    onClick={async () => {
+                      const content = (replyText[comment.id] || '').trim();
+                      if (!content || !isAuthenticated || !user?.id) return;
+                      setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, reply_count: (c.reply_count ?? 0) + 1 }) : c));
+                      setReplies(prev => ({
+                        ...prev,
+                        [comment.id]: [
+                          { id: `local-${Date.now()}`, content, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), user_id: user.id, username: user.name || user.email || 'You', full_name: user.name || null, avatar_url: null } as any,
+                          ...(prev[comment.id] || [])
+                        ]
+                      }));
+                      setReplyText(prev => ({ ...prev, [comment.id]: '' }));
+                      await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content }).catch(() => {});
+                      const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                      setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                    }}
+                  >Reply</button>
+                </div>
+                <div className="pl-2 border-l border-gray-200">
+                  {loadingReplies[comment.id] ? (
+                    <div className="text-xs text-gray-500">Loading replies...</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(replies[comment.id] || []).map(r => (
+                        <div key={r.id} className="flex gap-2">
+                          <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600 flex-shrink-0">
+                            {r.username?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-['Space_Mono'] font-bold text-xs text-black">{r.username || 'Anonymous'}</span>
+                              <span className="font-['Space_Mono'] text-[10px] text-gray-500">{getTimeAgo(r.created_at)}</span>
+                            </div>
+                            <p className="font-['Space_Mono'] text-xs text-gray-800 mt-1 break-words">{r.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ))}

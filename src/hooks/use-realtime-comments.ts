@@ -15,6 +15,8 @@ export interface Comment {
   username: string
   full_name: string | null
   avatar_url: string | null
+  vote_score?: number
+  reply_count?: number
 }
 
 export function useRealtimeComments(postId: string) {
@@ -100,7 +102,9 @@ export function useRealtimeComments(postId: string) {
             prev.map(c => c.id === payload.new.id ? {
               ...c,
               content: payload.new.content,
-              updated_at: payload.new.updated_at
+              updated_at: payload.new.updated_at,
+              vote_score: payload.new.vote_score ?? c.vote_score,
+              reply_count: payload.new.reply_count ?? c.reply_count,
             } : c)
           )
         }
