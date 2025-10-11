@@ -252,10 +252,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       if (!user?.id) return
       try {
         const { data, error } = await supabase
-          .from('likes')
-          .select('post_id')
-          .eq('user_id', user.id)
-          .eq('source_id', 'decro')
+          .rpc('get_user_likes', { user_id_param: user.id })
         
         if (error) throw error
         if (data) setLikedCards(new Set(data.map((r: any) => String(r.post_id))))
