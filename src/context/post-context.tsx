@@ -85,9 +85,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
     
     try {
       // Try to sync with server
-      const { data, error } = await supabase.rpc('toggle_like', {
+      const { data, error } = await supabase.rpc('toggle_like_ext', {
         post_id_param: cardId,
-        user_id_param: user.id
+        external_id_param: user.id
       })
       
       if (error) throw error
@@ -252,7 +252,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       if (!user?.id) return
       try {
         const { data, error } = await supabase
-          .rpc('get_user_likes', { user_id_param: user.id })
+          .rpc('get_user_likes_ext', { external_id_param: user.id })
         
         if (error) throw error
         if (data) setLikedCards(new Set(data.map((r: any) => String(r.post_id))))
@@ -279,7 +279,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       // Track view in Supabase (allows null user)
       await supabase.rpc('track_view', {
         post_id_param: postId,
-        user_id_param: user?.id ?? null
+        user_id_param: null
       })
     } catch (e) {
       console.warn('trackView failed', e)
@@ -333,9 +333,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
                   .eq('user_id', action.userId)
               }
             } else if (action.type === 'comment') {
-              await supabase.rpc('add_comment', {
+              await supabase.rpc('add_comment_ext', {
                 post_id_param: action.postId,
-                user_id_param: action.userId,
+                external_id_param: action.userId,
                 content_param: action.content
               })
             }
