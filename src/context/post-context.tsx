@@ -124,9 +124,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
       
       try {
         const { error } = await supabase
-          .rpc('add_comment', {
+          .rpc('add_comment_ext', {
             post_id_param: selectedCard.id,
-            user_id_param: user.id,
+            external_id_param: user.id,
             content_param: commentContent
           })
         if (error) throw error
