@@ -1,31 +1,24 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-// Header removed per request
-
-interface PostData {
-  title: string;
-  description: string;
-  contentType: 'image' | 'music' | 'text' | 'physical-art' | 'edits' | 'video' | 'film' | 'graphic-design';
-  file: File | null;
-  audioFile: File | null;
-  videoFile: File | null;
-  isCurated: boolean;
-  tags: string[];
-}
+import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
+import { useState, useRef } from 'react'
+import supabase from '@/lib/supabase-client'
+import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
+import { useAuth } from '@/context/auth-context'
 
 export default function CreatePostPage() {
   const router = useRouter();
-  const [postData, setPostData] = useState<PostData>({
+  const { isAuthenticated, user } = useAuth();
+  const [postData, setPostData] = useState({
     title: '',
     description: '',
-    contentType: 'image',
-    file: null,
-    audioFile: null,
-    videoFile: null,
+    contentType: 'image' as 'image' | 'music' | 'text' | 'physical-art' | 'edits' | 'video' | 'film' | 'graphic-design',
+    file: null as File | null,
+    audioFile: null as File | null,
+    videoFile: null as File | null,
     isCurated: false,
-    tags: []
+    tags: [] as string[]
   });
   const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,16 +48,10 @@ export default function CreatePostPage() {
     }, 300)
   }
 
-  const handleLogout = () => {
-    router.push('/');
-  };
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setPostData(prev => ({ ...prev, file }));
-      
-      // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -74,8 +61,6 @@ export default function CreatePostPage() {
     const file = event.target.files?.[0];
     if (file) {
       setPostData(prev => ({ ...prev, audioFile: file }));
-      
-      // Create preview URL
       const url = URL.createObjectURL(file);
       setAudioPreviewUrl(url);
     }
@@ -85,29 +70,29 @@ export default function CreatePostPage() {
     const file = event.target.files?.[0];
     if (file) {
       setPostData(prev => ({ ...prev, videoFile: file }));
-      
-      // Create preview URL
       const url = URL.createObjectURL(file);
       setVideoPreviewUrl(url);
     }
   };
 
   const handleSubmit = async () => {
+    if (!isAuthenticated || !user?.id) {
+      alert('Please sign in to create a post');
+      return;
+    }
+
     if (!postData.title.trim()) {
       alert('Please enter a title for your post');
       return;
     }
-
     if (postData.contentType === 'music' && !postData.audioFile) {
       alert('Please upload an audio file for music posts');
       return;
     }
-
     if (['image', 'physical-art', 'edits', 'graphic-design'].includes(postData.contentType) && !postData.file) {
       alert('Please upload an image file');
       return;
     }
-
     if (['video', 'film'].includes(postData.contentType) && !postData.videoFile) {
       alert('Please upload a video file');
       return;
@@ -116,26 +101,39 @@ export default function CreatePostPage() {
     setIsSubmitting(true);
 
     try {
-      const body = new FormData()
-      body.append('title', postData.title)
-      body.append('description', postData.description)
-      body.append('contentType', postData.contentType)
-      body.append('isCurated', String(postData.isCurated))
-      if (selectedSubgroup?.id) body.append('subgroupId', selectedSubgroup.id)
-      body.append('tags', JSON.stringify(postData.tags))
-      if (postData.file) body.append('file', postData.file)
-      if (postData.audioFile) body.append('audioFile', postData.audioFile)
-      if (postData.videoFile) body.append('videoFile', postData.videoFile)
+      // Upload media to Supabase Storage
+      let mediaUrl: string | null = null
+      let audioUrl: string | null = null
+      let videoUrl: string | null = null
 
-      const res = await fetch('/api/posts', { method: 'POST', body, credentials: 'include' as RequestCredentials })
-      if (!res.ok) {
-        let msg = 'Failed to create'
-        try {
-          const j = await res.json()
-          if (j?.error) msg = j.error
-        } catch {}
-        throw new Error(msg)
+      if (postData.file) {
+        const result = await uploadImage(postData.file)
+        mediaUrl = result.url
       }
+      if (postData.audioFile) {
+        const result = await uploadAudio(postData.audioFile)
+        audioUrl = result.url
+      }
+      if (postData.videoFile) {
+        const result = await uploadVideo(postData.videoFile)
+        videoUrl = result.url
+      }
+
+      // Create post via SECURITY DEFINER RPC with Better Auth external id
+      const { data: newId, error: rpcError } = await supabase.rpc('create_post_ext', {
+        external_id_param: user.id,
+        title_param: postData.title,
+        description_param: postData.description,
+        content_type_param: postData.contentType,
+        media_url_param: mediaUrl,
+        audio_url_param: audioUrl,
+        video_url_param: videoUrl,
+        is_curated_param: postData.isCurated,
+        subgroup_id_param: selectedSubgroup?.id ?? null,
+        tags_param: postData.tags,
+      })
+
+      if (rpcError) throw new Error(rpcError.message || 'Create failed')
 
       router.push('/feed');
     } catch (error) {
@@ -149,25 +147,17 @@ export default function CreatePostPage() {
   const removeFile = () => {
     setPostData(prev => ({ ...prev, file: null }));
     setPreviewUrl('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
-
   const removeAudioFile = () => {
     setPostData(prev => ({ ...prev, audioFile: null }));
     setAudioPreviewUrl('');
-    if (audioInputRef.current) {
-      audioInputRef.current.value = '';
-    }
+    if (audioInputRef.current) audioInputRef.current.value = '';
   };
-
   const removeVideoFile = () => {
     setPostData(prev => ({ ...prev, videoFile: null }));
     setVideoPreviewUrl('');
-    if (videoInputRef.current) {
-      videoInputRef.current.value = '';
-    }
+    if (videoInputRef.current) videoInputRef.current.value = '';
   };
 
   return (
