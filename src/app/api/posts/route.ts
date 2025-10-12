@@ -4,6 +4,8 @@ import { auth } from '@/lib/auth'
 import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
 import { headers as nextHeaders } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: Request) {
   try {
     const form = await req.formData()

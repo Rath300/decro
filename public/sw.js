@@ -86,15 +86,15 @@ self.addEventListener('fetch', (event) => {
             if (response.ok && response.status === 200) {
               const responseClone = response.clone()
               caches.open(STATIC_CACHE).then(cache => {
-                cache.put(request, responseClone)
+                try { cache.put(request, responseClone) } catch {}
               })
             }
             return response
-          })
+          }).catch(() => fetch(request))
         })
     )
   } else {
-    // Page requests - cache first, network fallback
+    // Page and asset requests - cache first, network fallback
     event.respondWith(
       caches.match(request)
         .then(response => {
@@ -105,11 +105,11 @@ self.addEventListener('fetch', (event) => {
             if (response.ok && response.status === 200) {
               const responseClone = response.clone()
               caches.open(CACHE_NAME).then(cache => {
-                cache.put(request, responseClone)
+                try { cache.put(request, responseClone) } catch {}
               })
             }
             return response
-          })
+          }).catch(() => fetch(request))
         })
     )
   }
