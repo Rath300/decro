@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase-client'
 import { auth } from '@/lib/auth'
 import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
+import { headers as nextHeaders } from 'next/headers'
 
 export async function POST(req: Request) {
   try {
@@ -25,10 +26,15 @@ export async function POST(req: Request) {
     // Auth (Better Auth - get session from request headers)
     let sessionRes: any
     try {
-      sessionRes = await auth.api.getSession(req.headers as any)
+      // Prefer Next headers() to ensure cookies are present in all runtimes
+      const h = nextHeaders()
+      sessionRes = await (auth as any).api.getSession({ headers: Object.fromEntries(h) } as any)
     } catch {
-      // Some runtimes expect an object with a headers property
-      sessionRes = await (auth as any).api.getSession({ headers: req.headers } as any)
+      try {
+        sessionRes = await auth.api.getSession(req.headers as any)
+      } catch {
+        sessionRes = await (auth as any).api.getSession({ headers: req.headers } as any)
+      }
     }
     const session = sessionRes?.data || sessionRes?.session || sessionRes
     if (!session?.user?.id) {
