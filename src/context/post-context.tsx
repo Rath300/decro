@@ -229,7 +229,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
               id: r.id,
               type: r.type as any,
               title: r.title,
-              description: r.description ?? undefined,
               imageUrl: r.imageUrl,
               aspectRatio: r.aspectRatio,
               audioUrl: r.audioUrl,
@@ -239,6 +238,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
               isCurated: r.isCurated,
               views: r.views,
               subgroupId: r.subgroupId ?? undefined,
+              description: r.description ?? undefined,
             }))
           )
         }

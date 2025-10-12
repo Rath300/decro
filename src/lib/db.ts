@@ -13,6 +13,7 @@ export interface CachedPost {
   isCurated?: boolean
   views: number
   subgroupId?: string | null
+  description?: string | null
 }
 
 export interface CachedLike { postId: string; userId: string }
