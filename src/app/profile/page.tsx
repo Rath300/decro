@@ -56,7 +56,6 @@ export default function ProfilePage() {
       // Map external auth id -> profiles.id
       const { data: profileId, error: ensureErr } = await supabase.rpc('ensure_profile', {
         external_id_param: user.id,
-        username_param: user.name || user.email?.split('@')[0] || null,
       })
       if (ensureErr) throw ensureErr
 
