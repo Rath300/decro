@@ -127,7 +127,7 @@ export default function CreatePostPage() {
       if (postData.audioFile) body.append('audioFile', postData.audioFile)
       if (postData.videoFile) body.append('videoFile', postData.videoFile)
 
-      const res = await fetch('/api/posts', { method: 'POST', body })
+      const res = await fetch('/api/posts', { method: 'POST', body, credentials: 'include' as RequestCredentials })
       if (!res.ok) {
         let msg = 'Failed to create'
         try {
