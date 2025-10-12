@@ -19,6 +19,7 @@ export interface MediaCard {
   isCurated?: boolean;
   views: number;
   subgroupId?: string;
+  tags?: string[];
 }
 
 interface PostContextType {
@@ -186,6 +187,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
           isCurated: post.is_curated ?? false,
           views: post.views ?? 0,
           subgroupId: post.subgroup_id ?? undefined,
+          tags: Array.isArray(post.tags) ? post.tags : undefined,
         }))
 
         setPosts(mapped)
