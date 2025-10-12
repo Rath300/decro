@@ -51,7 +51,7 @@ async function compressImage(file: File, maxWidth = 1920, quality = 0.85): Promi
 /**
  * Upload image to Supabase Storage
  */
-export async function uploadImage(file: File, bucket = 'post-media'): Promise<UploadResult> {
+export async function uploadImage(file: File, bucket = 'media'): Promise<UploadResult> {
   try {
     // Compress image before upload
     const compressed = await compressImage(file)
@@ -90,7 +90,7 @@ export async function uploadImage(file: File, bucket = 'post-media'): Promise<Up
 /**
  * Upload audio file to Supabase Storage
  */
-export async function uploadAudio(file: File, bucket = 'post-media'): Promise<UploadResult> {
+export async function uploadAudio(file: File, bucket = 'media'): Promise<UploadResult> {
   try {
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
@@ -126,7 +126,7 @@ export async function uploadAudio(file: File, bucket = 'post-media'): Promise<Up
 /**
  * Upload video file to Supabase Storage
  */
-export async function uploadVideo(file: File, bucket = 'post-media'): Promise<UploadResult> {
+export async function uploadVideo(file: File, bucket = 'media'): Promise<UploadResult> {
   try {
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
