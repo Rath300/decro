@@ -3,9 +3,10 @@
 import { useRef } from 'react'
 import { usePosts } from '@/context/post-context'
 import type { MediaCard } from '@/context/post-context'
+import { PostStats } from '@/components/post-stats'
 
 export default function CardGrid({ cards }: { cards: MediaCard[] }) {
-  const { setSelectedCard, setShowDetailModal, trackView, playingAudio, setPlayingAudio } = usePosts()
+  const { setSelectedCard, setShowDetailModal, trackView, playingAudio, setPlayingAudio, likedCards, toggleLike } = usePosts()
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
 
   const handleCardClick = (card: MediaCard) => {
@@ -60,6 +61,24 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
           {card.description && (
             <p className="mt-1 text-xs text-gray-600 line-clamp-2">{card.description}</p>
           )}
+          <div className="mt-1 flex items-center justify-between text-xs text-gray-600">
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleLike(card.id) }}
+              className={`p-1 rounded-full transition-all duration-200 ${
+                likedCards.has(card.id)
+                  ? 'bg-red-50 text-red-500'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+              }`}
+              aria-label="Like"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill={likedCards.has(card.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" className="transition-all duration-200">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+            <div onClick={(e) => e.stopPropagation()}>
+              <PostStats postId={card.id} initialViews={card.views} />
+            </div>
+          </div>
         </div>
       ))}
     </div>
