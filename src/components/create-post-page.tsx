@@ -294,6 +294,50 @@ export default function CreatePostPage() {
           {/* Audio Upload for Music */}
           {postData.contentType === 'music' && (
             <div>
+              {/* Optional Cover Art */}
+              <label className="block text-sm font-['Space_Mono'] font-medium text-black mb-2">
+                Cover Art (optional)
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-6">
+                {!postData.file ? (
+                  <div>
+                    <div className="text-4xl mb-4">🖼️</div>
+                    <p className="text-sm font-['Space_Mono'] text-gray-600 mb-4">
+                      Upload an image to use as cover art for your track (optional)
+                    </p>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-4 py-2 bg-black text-white font-['Space_Mono'] text-sm hover:bg-gray-800 transition-colors"
+                    >
+                      Choose Image
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    {previewUrl && (
+                      <img
+                        src={previewUrl}
+                        alt="Cover Art Preview"
+                        className="max-w-full max-h-64 mx-auto rounded-lg mb-4"
+                      />
+                    )}
+                    <div className="flex items-center justify-center space-x-2">
+                      <span className="text-sm font-['Space_Mono'] text-gray-600">
+                        {postData.file.name}
+                      </span>
+                      <button onClick={removeFile} className="text-red-500 hover:text-red-700 font-['Space_Mono'] text-sm">Remove</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <label className="block text-sm font-['Space_Mono'] font-medium text-black mb-2">
                 Upload Audio File
               </label>
