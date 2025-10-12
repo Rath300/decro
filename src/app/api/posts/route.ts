@@ -41,7 +41,9 @@ export async function POST(req: Request) {
     }
     const session = sessionRes?.data || sessionRes?.session || sessionRes
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const h = nextHeaders()
+      const cookieHeader = h.get('cookie') || ''
+      return NextResponse.json({ error: 'Unauthorized', hint: cookieHeader ? 'cookie_present' : 'no_cookie' }, { status: 401 })
     }
     const externalId: string = session.user.id
 

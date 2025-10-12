@@ -9,7 +9,17 @@ export const auth = betterAuth({
     enabled: true, 
     requireEmailVerification: false 
   },
-  session: { expiresIn: 60 * 60 * 24 * 7 },
+  session: { 
+    expiresIn: 60 * 60 * 24 * 7,
+    // Ensure cookie is sent to all routes on the origin
+    cookie: {
+      name: 'better-auth.session',
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+    } as any,
+  },
   trustedOrigins: [
     process.env.NODE_ENV === 'production' && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
     process.env.NEXT_PUBLIC_SITE_URL || '',
