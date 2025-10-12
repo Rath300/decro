@@ -9,6 +9,7 @@ export interface MediaCard {
   id: string;
   type: 'music' | 'physical-art' | 'image' | 'edits' | 'video' | 'film' | 'graphic-design';
   title: string;
+  description?: string;
   imageUrl: string;
   aspectRatio: 'square' | 'portrait' | 'landscape';
   audioUrl?: string;
@@ -175,6 +176,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
           id: String(post.id),
           type: post.content_type,
           title: post.title,
+          description: post.description ?? undefined,
           imageUrl: post.media_url,
           aspectRatio: 'square',
           audioUrl: post.audio_url ?? undefined,
@@ -195,6 +197,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
               id: m.id,
               type: m.type,
               title: m.title,
+              description: m.description ?? null,
               imageUrl: m.imageUrl,
               aspectRatio: m.aspectRatio,
               audioUrl: m.audioUrl,
@@ -226,6 +229,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
               id: r.id,
               type: r.type as any,
               title: r.title,
+              description: r.description ?? undefined,
               imageUrl: r.imageUrl,
               aspectRatio: r.aspectRatio,
               audioUrl: r.audioUrl,

@@ -57,6 +57,9 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
           {card.title && (
             <p className="mt-2 text-sm font-['Space_Mono'] text-black line-clamp-1">{card.title}</p>
           )}
+          {card.description && (
+            <p className="mt-1 text-xs text-gray-600 line-clamp-2">{card.description}</p>
+          )}
         </div>
       ))}
     </div>
