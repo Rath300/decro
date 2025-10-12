@@ -510,32 +510,17 @@ export default function FeedPage() {
                       About this work
                     </h3>
                     <div className="text-sm font-['Space_Mono'] text-gray-700 leading-relaxed">
-                      {selectedCard.title === 'Synth Experiment #1' && (
-                        'An experimental electronic composition exploring ambient textures and modular synthesis techniques.'
+                      {selectedCard.description ? (
+                        <p>{selectedCard.description}</p>
+                      ) : (
+                        <p className="text-gray-500">No description provided.</p>
                       )}
-                      {selectedCard.title === 'Acoustic Session' && (
-                        'A warm acoustic guitar piece recorded in a cozy studio setting with natural reverb.'
-                      )}
-                      {selectedCard.title === 'Ambient Drift' && (
-                        'A meditative ambient track featuring ethereal pads and subtle field recordings.'
-                      )}
-                      {selectedCard.title === 'Classical Art Piece' && (
-                        'A classical painting inspired by Renaissance masters, exploring themes of beauty and tradition.'
-                      )}
-                      {selectedCard.title === 'Urban Photography' && (
-                        'Street photography capturing the dynamic energy and architectural beauty of city life.'
-                      )}
-                      {selectedCard.title === 'Digital Art' && (
-                        'Digital illustration blending traditional art techniques with modern digital tools.'
-                      )}
-                      {selectedCard.title === 'Street Photography' && (
-                        'Candid street photography documenting everyday moments and urban culture.'
-                      )}
-                      {selectedCard.title === 'Abstract Composition' && (
-                        'Abstract artwork exploring color theory and geometric forms through mixed media.'
-                      )}
-                      {!['Synth Experiment #1', 'Acoustic Session', 'Ambient Drift', 'Classical Art Piece', 'Urban Photography', 'Digital Art', 'Street Photography', 'Abstract Composition'].includes(selectedCard.title) && (
-                        'Description not available for this work.'
+                      {Array.isArray((selectedCard as any).tags) && (selectedCard as any).tags.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {(selectedCard as any).tags.map((tag: string) => (
+                            <span key={tag} className="px-2 py-1 bg-black text-white text-xs font-['Space_Mono']">#{tag}</span>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
