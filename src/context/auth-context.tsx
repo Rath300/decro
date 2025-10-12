@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react'
 import { client } from '@/lib/auth-client'
+import { useSession } from 'better-auth/client/react'
 
 interface User {
   id: string
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: session, 
     isPending: loading, 
     error 
-  } = client.useSession()
+  } = useSession()
 
   const user: User | null = session?.user ? {
     id: session.user.id,
