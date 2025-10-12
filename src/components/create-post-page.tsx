@@ -128,12 +128,19 @@ export default function CreatePostPage() {
       if (postData.videoFile) body.append('videoFile', postData.videoFile)
 
       const res = await fetch('/api/posts', { method: 'POST', body })
-      if (!res.ok) throw new Error('Failed to create')
+      if (!res.ok) {
+        let msg = 'Failed to create'
+        try {
+          const j = await res.json()
+          if (j?.error) msg = j.error
+        } catch {}
+        throw new Error(msg)
+      }
 
       router.push('/feed');
     } catch (error) {
       console.error('Error creating post:', error);
-      alert('Failed to create post. Please try again.');
+      alert(String((error as any)?.message || 'Failed to create post.'));
     } finally {
       setIsSubmitting(false);
     }
