@@ -8,5 +8,6 @@ const getBaseURL = () => {
 }
 
 export const client = createAuthClient({
-  baseURL: getBaseURL()
+  baseURL: getBaseURL(),
+  fetchOptions: { credentials: 'include' }
 })
