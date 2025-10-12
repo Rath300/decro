@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react'
 import { client } from '@/lib/auth-client'
-import { useSession } from 'better-auth/client/react'
+import { useStore } from '@nanostores/react'
 
 interface User {
   id: string
@@ -22,11 +22,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { 
-    data: session, 
-    isPending: loading, 
-    error 
-  } = useSession()
+  const sessionState = useStore(client.useSession)
+  const session = sessionState?.data as any
+  const loading = !!sessionState?.isPending
 
   const user: User | null = session?.user ? {
     id: session.user.id,
