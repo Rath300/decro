@@ -27,7 +27,18 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const userId = session.user.id
+    const externalId: string = session.user.id
+
+    // Map external auth id -> profiles.id (uuid)
+    const desiredUsername = session.user.name || session.user.email?.split('@')[0] || null
+    const { data: profileId, error: ensureErr } = await supabase.rpc('ensure_profile', {
+      external_id_param: externalId,
+      username_param: desiredUsername,
+    })
+    if (ensureErr) {
+      console.error('ensure_profile failed:', ensureErr)
+      return NextResponse.json({ error: 'Profile mapping failed' }, { status: 500 })
+    }
 
     // Upload files using optimized upload utilities
     let mediaUrl: string | null = null
@@ -52,6 +63,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: uploadError.message || 'Upload failed' }, { status: 500 })
     }
 
+    // Insert post using profiles.id (uuid) as creator_id
     const { data, error } = await supabase
       .from('posts')
       .insert({
@@ -62,13 +74,16 @@ export async function POST(req: Request) {
         audio_url: audioUrl,
         video_url: videoUrl,
         is_curated: isCurated,
-        creator_id: userId,
+        creator_id: profileId,
         subgroup_id: subgroupId || null,
       })
       .select('id')
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Insert post failed:', error)
+      return NextResponse.json({ error: error.message || 'Insert failed' }, { status: 500 })
+    }
 
     // Add tags if provided
     if (tags && tags.length > 0 && data?.id) {
@@ -94,6 +109,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ id: data?.id })
   } catch (e: any) {
+    console.error('Create post failed:', e)
     return NextResponse.json({ error: e?.message || 'Create failed' }, { status: 500 })
   }
 }

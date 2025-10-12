@@ -214,16 +214,16 @@ export default function CreatePostPage() {
               className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
             />
             {(!selectedSubgroup && subgroupResults.length > 0) && (
-              <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 divide-y">
+              <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 divide-y bg-white">
                 {subgroupResults.map(s => (
-                  <button key={s.id} onClick={() => setSelectedSubgroup(s)} className="w-full text-left px-3 py-2 hover:bg-gray-50 font-['Space_Mono'] text-sm">
+                  <button key={s.id} onClick={() => setSelectedSubgroup(s)} className="w-full text-left px-3 py-2 hover:bg-gray-50 font-['Space_Mono'] text-sm text-black">
                     {s.name}
                   </button>
                 ))}
               </div>
             )}
             {selectedSubgroup && (
-              <div className="mt-2 text-xs font-['Space_Mono']">Selected: {selectedSubgroup.name}</div>
+              <div className="mt-2 text-xs font-['Space_Mono'] text-black">Selected: {selectedSubgroup.name}</div>
             )}
           </div>
 
