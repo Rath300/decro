@@ -5,6 +5,7 @@ import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
 import { headers as nextHeaders } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
@@ -28,9 +29,9 @@ export async function POST(req: Request) {
     // Auth (Better Auth - get session from request headers)
     let sessionRes: any
     try {
-      // Prefer Next headers() to ensure cookies are present in all runtimes
       const h = nextHeaders()
-      sessionRes = await (auth as any).api.getSession({ headers: Object.fromEntries(h) } as any)
+      const cookieHeader = h.get('cookie') || (req.headers as any).get?.('cookie') || ''
+      sessionRes = await (auth as any).api.getSession({ headers: { cookie: cookieHeader } } as any)
     } catch {
       try {
         sessionRes = await auth.api.getSession(req.headers as any)
