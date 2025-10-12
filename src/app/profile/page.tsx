@@ -53,9 +53,16 @@ export default function ProfilePage() {
     if (!user?.id) return
 
     try {
+      // Map external auth id -> profiles.id
+      const { data: profileId, error: ensureErr } = await supabase.rpc('ensure_profile', {
+        external_id_param: user.id,
+        username_param: user.name || user.email?.split('@')[0] || null,
+      })
+      if (ensureErr) throw ensureErr
+
       // Load user stats
       const { data: statsData, error: statsError } = await supabase.rpc('get_user_stats', {
-        user_id_param: user.id
+        user_id_param: profileId
       })
 
       if (!statsError && statsData) {
@@ -73,7 +80,7 @@ export default function ProfilePage() {
           views,
           created_at
         `)
-        .eq('creator_id', user.id)
+        .eq('creator_id', profileId)
         .order('created_at', { ascending: false })
 
       if (!postsError && postsData) {
