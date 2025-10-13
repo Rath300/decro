@@ -127,6 +127,7 @@ export default function DetailModal() {
                 <div>
                   <PostStats postId={selectedCard.id} initialViews={selectedCard.views} />
                 </div>
+                <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} />
               </div>
 
               {/* Comments */}
@@ -209,6 +210,47 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
         </div>
       ))}
     </div>
+  )
+}
+
+function OwnerDeleteButton({ postId, onDeleted }: { postId: string; onDeleted: () => void }) {
+  const { user } = useAuth()
+  const [isOwner, setIsOwner] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  useEffect(() => {
+    if (!user?.id || !postId) return
+    supabase
+      .from('posts')
+      .select('creator_id')
+      .eq('id', postId)
+      .single()
+      .then(({ data }) => {
+        if (data && data.creator_id === user.id) setIsOwner(true)
+      })
+  }, [user?.id, postId])
+
+  if (!isOwner) return null
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this post? This cannot be undone.')) return
+    setIsDeleting(true)
+    try {
+      const { error } = await supabase.from('posts').delete().eq('id', postId)
+      if (error) throw error
+      onDeleted()
+      window.location.reload()
+    } catch (e) {
+      console.error('Failed to delete post:', e)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  return (
+    <button onClick={handleDelete} disabled={isDeleting} className="px-3 py-2 text-sm border border-red-500 text-red-600 hover:bg-red-50 disabled:opacity-50">
+      {isDeleting ? 'Deleting...' : 'Delete'}
+    </button>
   )
 }
 

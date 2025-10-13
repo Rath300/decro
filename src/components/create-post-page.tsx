@@ -7,6 +7,60 @@ import supabase from '@/lib/supabase-client'
 import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
 import { useAuth } from '@/context/auth-context'
 
+// Capture a random frame from a video file and return a JPEG File for cover art
+async function generateVideoThumbnailFile(videoFile: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    try {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.muted = true
+      video.src = URL.createObjectURL(videoFile)
+
+      const cleanup = () => {
+        URL.revokeObjectURL(video.src)
+      }
+
+      video.onloadedmetadata = () => {
+        // Choose a random time between 0s and duration (avoid very end)
+        const duration = Math.max(0.1, video.duration || 1)
+        const target = Math.min(duration - 0.1, Math.random() * duration)
+        video.currentTime = isFinite(target) ? target : 0.1
+      }
+
+      video.onseeked = () => {
+        try {
+          const canvas = document.createElement('canvas')
+          const vw = video.videoWidth || 640
+          const vh = video.videoHeight || 360
+          canvas.width = vw
+          canvas.height = vh
+          const ctx = canvas.getContext('2d')
+          ctx?.drawImage(video, 0, 0, vw, vh)
+          canvas.toBlob((blob) => {
+            cleanup()
+            if (!blob) {
+              reject(new Error('Failed to create thumbnail blob'))
+              return
+            }
+            const file = new File([blob], `cover-${Date.now()}.jpg`, { type: 'image/jpeg' })
+            resolve(file)
+          }, 'image/jpeg', 0.9)
+        } catch (e) {
+          cleanup()
+          reject(e)
+        }
+      }
+
+      video.onerror = () => {
+        cleanup()
+        reject(new Error('Failed to load video for thumbnail'))
+      }
+    } catch (e) {
+      reject(e)
+    }
+  })
+}
+
 export default function CreatePostPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
@@ -70,8 +124,21 @@ export default function CreatePostPage() {
     const file = event.target.files?.[0];
     if (file) {
       setPostData(prev => ({ ...prev, videoFile: file }));
+      
+      // Create preview URL
       const url = URL.createObjectURL(file);
       setVideoPreviewUrl(url);
+
+      // Auto-generate a cover image from a random frame
+      generateVideoThumbnailFile(file)
+        .then((thumb) => {
+          setPostData(prev => ({ ...prev, file: thumb }))
+          const coverUrl = URL.createObjectURL(thumb)
+          setPreviewUrl(coverUrl)
+        })
+        .catch(() => {
+          // Non-fatal: allow video without cover art
+        })
     }
   };
 
