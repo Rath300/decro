@@ -43,7 +43,18 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
       {cards.map((card) => (
         <div key={card.id} className="group cursor-pointer" onClick={() => handleCardClick(card)}>
           <div className="relative aspect-square overflow-hidden">
-            <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            {card.type === 'text' || !card.imageUrl ? (
+              <div className="w-full h-full bg-white border border-gray-200 flex items-center justify-center p-4">
+                <div className="text-center">
+                  <h4 className="text-sm md:text-base font-['Space_Mono'] text-black line-clamp-2">{card.title || 'Post'}</h4>
+                  {card.description && (
+                    <p className="mt-2 text-xs md:text-sm text-gray-600 line-clamp-3">{card.description}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            )}
             {card.type === 'music' && card.audioUrl && (
               <button
                 type="button"
