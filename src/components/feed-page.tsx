@@ -374,9 +374,16 @@ export default function FeedPage() {
                                       {/* Card Info */}
                         <div className="mt-2 space-y-1">
                           {card.title && (
-                            <p className="text-sm font-['Space_Mono'] text-black">
+                            <button
+                              className="text-left w-full text-sm font-['Space_Mono'] text-black hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedCard(card);
+                                setShowDetailModal(true);
+                              }}
+                            >
                               {card.title}
-                            </p>
+                            </button>
                           )}
                           
                           <div className="flex items-center justify-between text-xs text-gray-600">
@@ -415,11 +422,17 @@ export default function FeedPage() {
                             </button>
                           </div>
                           
-                          <div onClick={(e) => e.stopPropagation()}>
+                          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-between">
                             <PostStats 
                               postId={card.id}
                               initialViews={card.views}
                             />
+                            <button
+                              className="ml-2 px-2 py-1 text-xs border border-black hover:bg-black hover:text-white transition-colors"
+                              onClick={(e) => { e.stopPropagation(); setSelectedCard(card); setShowDetailModal(true) }}
+                            >
+                              View details
+                            </button>
                           </div>
                         </div>
               </motion.div>

@@ -67,13 +67,27 @@ export default function DetailModal() {
         </div>
 
         <div className="flex flex-col lg:flex-row">
-          {/* Media */}
+          {/* Media or Forum-style body */}
           <div className="lg:w-2/3 p-6">
             <div className="relative">
-              {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
-                <video src={selectedCard.videoUrl} controls className="w-full h-auto rounded" />
+              {selectedCard.imageUrl || (['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl) ? (
+                <> 
+                  {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
+                    <video src={selectedCard.videoUrl} controls className="w-full h-auto rounded" />
+                  ) : (
+                    <img src={selectedCard.imageUrl} alt={selectedCard.title} className="w-full h-auto rounded" />
+                  )}
+                </>
               ) : (
-                <img src={selectedCard.imageUrl} alt={selectedCard.title} className="w-full h-auto rounded" />
+                // Forum-style body for text-only posts
+                <div className="border border-gray-200 rounded p-4">
+                  <h3 className="text-lg font-['Space_Mono'] font-bold text-black mb-2">{selectedCard.title}</h3>
+                  {selectedCard.description ? (
+                    <p className="text-sm font-['Space_Mono'] text-gray-800 whitespace-pre-wrap">{selectedCard.description}</p>
+                  ) : (
+                    <p className="text-sm font-['Space_Mono'] text-gray-500">No body content provided.</p>
+                  )}
+                </div>
               )}
             </div>
           </div>

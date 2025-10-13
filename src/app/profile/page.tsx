@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
 import { PostStats } from '@/components/post-stats'
+import { usePosts } from '@/context/post-context'
 
 interface UserPost {
   id: string
@@ -33,6 +34,7 @@ interface UserStats {
 export default function ProfilePage() {
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
+  const { setSelectedCard, setShowDetailModal, trackView } = usePosts()
   const [posts, setPosts] = useState<UserPost[]>([])
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -217,18 +219,22 @@ export default function ProfilePage() {
               <div className="grid grid-cols-3 gap-4">
                 {posts.map((post) => (
                   <div key={post.id} className="group">
-                    <a
-                      href={`/feed#${post.id}`}
-                      className="relative block aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
+                    <button
+                      className="relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
                       onClick={() => {
-                        if (user?.id) {
-                          // Fire-and-forget view tracking (avoid TS catch typing)
-                          (async () => {
-                            try {
-                              await supabase.rpc('track_view', { post_id_param: post.id, user_id_param: user.id })
-                            } catch {}
-                          })()
-                        }
+                        trackView(post.id)
+                        setSelectedCard({
+                          id: post.id,
+                          type: (post.content_type as any) || 'image',
+                          title: post.title,
+                          description: undefined,
+                          imageUrl: post.media_url || '',
+                          aspectRatio: 'square',
+                          creator: user?.id || '',
+                          date: post.created_at,
+                          views: post.views,
+                        })
+                        setShowDetailModal(true)
                       }}
                     >
                       {post.media_url && (
@@ -250,7 +256,7 @@ export default function ProfilePage() {
                           />
                         </div>
                       </div>
-                    </a>
+                    </button>
                     {/* Always-visible compact stats below the tile */}
                     <div className="mt-1">
                       <PostStats
