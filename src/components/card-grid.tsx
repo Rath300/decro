@@ -43,7 +43,7 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
       {cards.map((card) => (
         <div key={card.id} className="group cursor-pointer" onClick={() => handleCardClick(card)}>
           <div className="relative aspect-square overflow-hidden">
-            {card.type === 'text' || !card.imageUrl ? (
+            {!card.imageUrl ? (
               <div className="w-full h-full bg-white border border-gray-200 flex items-center justify-center p-4">
                 <div className="text-center">
                   <h4 className="text-sm md:text-base font-['Space_Mono'] text-black line-clamp-2">{card.title || 'Post'}</h4>
