@@ -109,7 +109,10 @@ export default function FeedPage() {
     // Track view
     trackView(card.id);
     
-    if (card.type === 'music') {
+    if (card.type === 'text') {
+      // For text posts, redirect to Reddit-style forum page
+      router.push(`/post/${card.id}`);
+    } else if (card.type === 'music') {
       // For music, require double click or show a different interaction
       handleAudioPlay(card.id, card.audioUrl!);
     } else if (['video', 'film'].includes(card.type)) {
@@ -428,7 +431,7 @@ export default function FeedPage() {
                               initialViews={card.views}
                             />
                             <button
-                              className="ml-2 px-2 py-1 text-xs border border-black hover:bg-black hover:text-white transition-colors"
+                              className="ml-2 px-2 py-1 text-xs bg-black text-white border border-black hover:bg-gray-800 transition-colors"
                               onClick={(e) => { e.stopPropagation(); setSelectedCard(card); setShowDetailModal(true) }}
                             >
                               View details

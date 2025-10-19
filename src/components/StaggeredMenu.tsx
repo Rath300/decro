@@ -399,6 +399,14 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
         : []
     })
 
+    // Support section - always show
+    personalizedSections.push({
+      title: 'Support',
+      items: [
+        { label: 'Feedback', link: '/feedback' }
+      ]
+    })
+
     return personalizedSections
   }, [usePersonalizedData, personalizedData, sections])
 

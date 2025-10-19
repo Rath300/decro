@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { usePosts } from '@/context/post-context'
 import type { MediaCard } from '@/context/post-context'
 import { PostStats } from '@/components/post-stats'
@@ -8,11 +9,18 @@ import { PostStats } from '@/components/post-stats'
 export default function CardGrid({ cards }: { cards: MediaCard[] }) {
   const { setSelectedCard, setShowDetailModal, trackView, playingAudio, setPlayingAudio, likedCards, toggleLike } = usePosts()
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
+  const router = useRouter()
 
   const handleCardClick = (card: MediaCard) => {
     trackView(card.id)
-    setSelectedCard(card)
-    setShowDetailModal(true)
+    
+    if (card.type === 'text') {
+      // For text posts, redirect to Reddit-style forum page
+      router.push(`/post/${card.id}`)
+    } else {
+      setSelectedCard(card)
+      setShowDetailModal(true)
+    }
   }
 
   const handleAudioPlay = (cardId: string, audioUrl: string) => {

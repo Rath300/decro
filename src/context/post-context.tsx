@@ -7,7 +7,7 @@ import db from '@/lib/db'
 
 export interface MediaCard {
   id: string;
-  type: 'music' | 'physical-art' | 'image' | 'edits' | 'video' | 'film' | 'graphic-design';
+  type: 'music' | 'physical-art' | 'image' | 'edits' | 'video' | 'film' | 'graphic-design' | 'text';
   title: string;
   description?: string;
   imageUrl: string;

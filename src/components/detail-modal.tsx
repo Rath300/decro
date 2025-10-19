@@ -179,6 +179,11 @@ export default function DetailModal() {
 function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: string; refreshSignal: number; optimisticComments: RealtimeComment[] }) {
   const { comments, loading, refetch } = useRealtimeComments(postId)
   const [merged, setMerged] = useState<RealtimeComment[]>([])
+  const { isAuthenticated, user } = useAuth()
+  const [openReplyFor, setOpenReplyFor] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState<Record<string, string>>({})
+  const [replies, setReplies] = useState<Record<string, RealtimeComment[]>>({})
+  const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({})
 
   useEffect(() => { if (postId) refetch() }, [refreshSignal])
   useEffect(() => {
@@ -220,6 +225,121 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
               <span className="font-['Space_Mono'] text-xs text-gray-500">{getTimeAgo(comment.created_at)}</span>
             </div>
             <p className="font-['Space_Mono'] text-sm text-gray-800 mt-1 break-words">{comment.content}</p>
+            
+            {/* Reply and voting controls */}
+            <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+              <button
+                className="hover:text-black"
+                onClick={async () => {
+                  if (openReplyFor === comment.id) {
+                    setOpenReplyFor(null);
+                    return;
+                  }
+                  setOpenReplyFor(comment.id);
+                  // lazy load replies on open
+                  if (!replies[comment.id]) {
+                    setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
+                    const { data, error } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                    if (error) {
+                      console.error('Error loading replies:', error);
+                    } else {
+                      setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                    }
+                    setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
+                  }
+                }}
+              >
+                Reply{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+              </button>
+            </div>
+
+            {/* Reply input */}
+            {openReplyFor === comment.id && (
+              <div className="mt-3 pl-2 border-l-2 border-gray-200">
+                <div className="space-y-2">
+                  <textarea
+                    value={replyText[comment.id] || ''}
+                    onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                    placeholder="Write a reply..."
+                    className="w-full p-2 text-sm border border-gray-300 rounded resize-none"
+                    rows={2}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        const content = replyText[comment.id]?.trim();
+                        if (!content || !isAuthenticated || !user?.id) return;
+                        
+                        setReplyText(prev => ({ ...prev, [comment.id]: '' }));
+                        setReplies(prev => ({
+                          ...prev,
+                          [comment.id]: [
+                            {
+                              id: `temp-${Date.now()}`,
+                              content,
+                              created_at: new Date().toISOString(),
+                              updated_at: new Date().toISOString(),
+                              user_id: user.id,
+                              username: user.name || user.email?.split('@')[0] || 'You',
+                              full_name: user.name || null,
+                              avatar_url: null,
+                              vote_score: 0,
+                              reply_count: 0
+                            } as RealtimeComment,
+                            ...(prev[comment.id] || [])
+                          ]
+                        }));
+                        
+                        try {
+                          await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                          // Refresh replies
+                          const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                          setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                        } catch (error) {
+                          console.error('Error adding reply:', error);
+                        }
+                      }}
+                      className="px-3 py-1 text-xs bg-black text-white rounded hover:bg-gray-800"
+                    >
+                      Reply
+                    </button>
+                    <button
+                      onClick={() => {
+                        setOpenReplyFor(null);
+                        setReplyText(prev => ({ ...prev, [comment.id]: '' }));
+                      }}
+                      className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  
+                  {/* Show replies */}
+                  <div className="pl-2 border-l border-gray-200">
+                    {loadingReplies[comment.id] ? (
+                      <div className="text-xs text-gray-500">Loading replies...</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {(replies[comment.id] || []).map(r => (
+                          <div key={r.id} className="flex gap-2">
+                            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600 flex-shrink-0">
+                              {r.username?.[0]?.toUpperCase() || '?'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-baseline gap-2">
+                                <span className="font-['Space_Mono'] font-bold text-xs text-black">{r.username || 'Anonymous'}</span>
+                                <span className="font-['Space_Mono'] text-[10px] text-gray-500">{getTimeAgo(r.created_at)}</span>
+                              </div>
+                              <p className="font-['Space_Mono'] text-xs text-gray-800 mt-1 break-words">{r.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ))}
