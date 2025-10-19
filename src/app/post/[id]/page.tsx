@@ -189,7 +189,7 @@ export default function PostDetailPage() {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Add a comment..."
-              className="w-full p-3 border border-gray-300 rounded-lg resize-none"
+              className="w-full p-3 border border-gray-300 rounded-lg resize-none text-black bg-white"
               rows={3}
             />
             <div className="flex justify-end mt-2">
@@ -424,7 +424,7 @@ function RedditComment({
                 value={replyText[comment.id] || ''}
                 onChange={(e) => setReplyText({ ...replyText, [comment.id]: e.target.value })}
                 placeholder="Write a reply..."
-                className="w-full p-2 text-sm border border-gray-300 rounded resize-none"
+                className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black bg-white"
                 rows={2}
               />
               <div className="flex gap-2 mt-2">

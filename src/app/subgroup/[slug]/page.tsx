@@ -256,7 +256,7 @@ export default function SubgroupDetail() {
               <p className="text-sm">Be the first to share something in this subgroup!</p>
             </div>
             <Link
-              href="/create-post"
+              href={`/create?subgroup=${encodeURIComponent(subgroupId || '')}`}
               className="inline-block px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm"
             >
               Create Post

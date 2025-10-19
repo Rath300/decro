@@ -184,6 +184,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
   const [replyText, setReplyText] = useState<Record<string, string>>({})
   const [replies, setReplies] = useState<Record<string, RealtimeComment[]>>({})
   const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({})
+  const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set())
 
   useEffect(() => { if (postId) refetch() }, [refreshSignal])
   useEffect(() => {
@@ -231,25 +232,58 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
               <button
                 className="hover:text-black"
                 onClick={async () => {
-                  if (openReplyFor === comment.id) {
-                    setOpenReplyFor(null);
-                    return;
-                  }
-                  setOpenReplyFor(comment.id);
-                  // lazy load replies on open
-                  if (!replies[comment.id]) {
-                    setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
-                    const { data, error } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
-                    if (error) {
-                      console.error('Error loading replies:', error);
-                    } else {
-                      setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                  // Toggle replies visibility
+                  const newVisibleReplies = new Set(visibleReplies);
+                  if (newVisibleReplies.has(comment.id)) {
+                    newVisibleReplies.delete(comment.id);
+                    setVisibleReplies(newVisibleReplies);
+                  } else {
+                    newVisibleReplies.add(comment.id);
+                    setVisibleReplies(newVisibleReplies);
+                    // lazy load replies on open
+                    if (!replies[comment.id]) {
+                      setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
+                      const { data, error } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                      if (error) {
+                        console.error('Error loading replies:', error);
+                      } else {
+                        setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                      }
+                      setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
                     }
-                    setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
                   }
                 }}
               >
-                Reply{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+                {visibleReplies.has(comment.id) ? 'Hide replies' : 'Show replies'}{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+              </button>
+              <button
+                className="hover:text-black"
+                onClick={() => {
+                  setOpenReplyFor(openReplyFor === comment.id ? null : comment.id);
+                }}
+              >
+                Reply
+              </button>
+              <button
+                className="hover:text-red-500 flex items-center gap-1"
+                onClick={async () => {
+                  if (!isAuthenticated || !user?.id) return;
+                  try {
+                    await supabase.rpc('toggle_comment_vote_ext', { 
+                      comment_id_param: comment.id, 
+                      external_id_param: user.id, 
+                      direction: 1 
+                    });
+                    refetch();
+                  } catch (error) {
+                    console.error('Error toggling comment vote:', error);
+                  }
+                }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <span>{comment.vote_score || 0}</span>
               </button>
             </div>
 
@@ -261,7 +295,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                     value={replyText[comment.id] || ''}
                     onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
                     placeholder="Write a reply..."
-                    className="w-full p-2 text-sm border border-gray-300 rounded resize-none"
+                    className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black"
                     rows={2}
                   />
                   <div className="flex gap-2">
@@ -313,31 +347,33 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                       Cancel
                     </button>
                   </div>
-                  
-                  {/* Show replies */}
-                  <div className="pl-2 border-l border-gray-200">
-                    {loadingReplies[comment.id] ? (
-                      <div className="text-xs text-gray-500">Loading replies...</div>
-                    ) : (
-                      <div className="space-y-2">
-                        {(replies[comment.id] || []).map(r => (
-                          <div key={r.id} className="flex gap-2">
-                            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600 flex-shrink-0">
-                              {r.username?.[0]?.toUpperCase() || '?'}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-baseline gap-2">
-                                <span className="font-['Space_Mono'] font-bold text-xs text-black">{r.username || 'Anonymous'}</span>
-                                <span className="font-['Space_Mono'] text-[10px] text-gray-500">{getTimeAgo(r.created_at)}</span>
-                              </div>
-                              <p className="font-['Space_Mono'] text-xs text-gray-800 mt-1 break-words">{r.content}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </div>
+              </div>
+            )}
+
+            {/* Show replies */}
+            {visibleReplies.has(comment.id) && (
+              <div className="mt-3 pl-2 border-l border-gray-200">
+                {loadingReplies[comment.id] ? (
+                  <div className="text-xs text-gray-500">Loading replies...</div>
+                ) : (
+                  <div className="space-y-2">
+                    {(replies[comment.id] || []).map(r => (
+                      <div key={r.id} className="flex gap-2">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600 flex-shrink-0">
+                          {r.username?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-['Space_Mono'] font-bold text-xs text-black">{r.username || 'Anonymous'}</span>
+                            <span className="font-['Space_Mono'] text-[10px] text-gray-500">{getTimeAgo(r.created_at)}</span>
+                          </div>
+                          <p className="font-['Space_Mono'] text-xs text-gray-800 mt-1 break-words">{r.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -354,14 +390,34 @@ function OwnerDeleteButton({ postId, onDeleted }: { postId: string; onDeleted: (
 
   useEffect(() => {
     if (!user?.id || !postId) return
-    supabase
-      .from('posts')
-      .select('creator_id')
-      .eq('id', postId)
-      .single()
-      .then(({ data }) => {
-        if (data && data.creator_id === user.id) setIsOwner(true)
-      })
+    
+    const checkOwnership = async () => {
+      try {
+        // Get the profile ID from external ID
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .single()
+
+        if (profileError || !profileData) return
+
+        // Check if the post creator matches the profile ID
+        const { data, error } = await supabase
+          .from('posts')
+          .select('creator_id')
+          .eq('id', postId)
+          .single()
+
+        if (!error && data && data.creator_id === profileData.id) {
+          setIsOwner(true)
+        }
+      } catch (error) {
+        console.error('Failed to check post ownership:', error)
+      }
+    }
+
+    checkOwnership()
   }, [user?.id, postId])
 
   if (!isOwner) return null

@@ -867,14 +867,28 @@ function EditPostButton({ postId }: { postId: string }) {
     if (!user?.id || !postId) return;
 
     const checkOwnership = async () => {
-      const { data } = await supabase
-        .from('posts')
-        .select('creator_id')
-        .eq('id', postId)
-        .single();
+      try {
+        // Get the profile ID from external ID
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .single();
 
-      if (data && data.creator_id === user.id) {
-        setIsOwner(true);
+        if (profileError || !profileData) return;
+
+        // Check if the post creator matches the profile ID
+        const { data } = await supabase
+          .from('posts')
+          .select('creator_id')
+          .eq('id', postId)
+          .single();
+
+        if (data && data.creator_id === profileData.id) {
+          setIsOwner(true);
+        }
+      } catch (error) {
+        console.error('Failed to check post ownership:', error);
       }
     };
 
@@ -908,14 +922,28 @@ function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted: ()
     if (!user?.id || !postId) return;
 
     const checkOwnership = async () => {
-      const { data } = await supabase
-        .from('posts')
-        .select('creator_id')
-        .eq('id', postId)
-        .single();
+      try {
+        // Get the profile ID from external ID
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .single();
 
-      if (data && data.creator_id === user.id) {
-        setIsOwner(true);
+        if (profileError || !profileData) return;
+
+        // Check if the post creator matches the profile ID
+        const { data } = await supabase
+          .from('posts')
+          .select('creator_id')
+          .eq('id', postId)
+          .single();
+
+        if (data && data.creator_id === profileData.id) {
+          setIsOwner(true);
+        }
+      } catch (error) {
+        console.error('Failed to check post ownership:', error);
       }
     };
 

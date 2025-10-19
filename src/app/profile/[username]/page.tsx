@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
+import { usePosts } from '@/context/post-context'
 import supabase from '@/lib/supabase-client'
 import { PostStats } from '@/components/post-stats'
 import { useToast } from '@/hooks/use-toast'
@@ -43,6 +44,7 @@ export default function PublicProfilePage() {
   const params = useParams()
   const router = useRouter()
   const { user: currentUser } = useAuth()
+  const { setSelectedCard, setShowDetailModal, trackView } = usePosts()
   const toast = useToast()
   const username = params.username as string
 
@@ -267,10 +269,24 @@ export default function PublicProfilePage() {
         ) : (
           <div className="grid grid-cols-3 gap-4">
             {posts.map((post) => (
-              <a
+              <button
                 key={post.id}
-                href={`/feed#${post.id}`}
-                className="group relative aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
+                onClick={() => {
+                  trackView(post.id)
+                  setSelectedCard({
+                    id: post.id,
+                    type: (post.content_type as any) || 'image',
+                    title: post.title,
+                    description: undefined,
+                    imageUrl: post.media_url || '',
+                    aspectRatio: 'square' as const,
+                    creator: profile?.username || '',
+                    date: post.created_at,
+                    views: post.views,
+                  })
+                  setShowDetailModal(true)
+                }}
+                className="group relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
               >
                 {post.media_url && (
                   <img
@@ -291,7 +307,7 @@ export default function PublicProfilePage() {
                     />
                   </div>
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         )}

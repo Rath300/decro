@@ -117,7 +117,7 @@
   padding: 5em 1.25em 1.25em 1.25em;
   overflow-y: auto;
   z-index: 10;
-  border-left: 1px solid #000;
+  border-left: 1px solid transparent;
   pointer-events: auto;
 }
 
@@ -125,7 +125,7 @@
   right: auto;
   left: 0;
   border-left: none;
-  border-right: 1px solid #000;
+  border-right: 1px solid transparent;
 }
 
 .sm-prelayers {
