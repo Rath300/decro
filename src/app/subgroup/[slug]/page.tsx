@@ -119,7 +119,8 @@ export default function SubgroupDetail() {
       case 'hot':
         return [...cards].sort((a, b) => b.views - a.views)
       case 'top':
-        return [...cards].sort((a, b) => (b.views * 0.7 + (b.likes || 0) * 0.3) - (a.views * 0.7 + (a.likes || 0) * 0.3))
+        // For now, use views as the primary metric since we don't have likes count in MediaCard
+        return [...cards].sort((a, b) => b.views - a.views)
       default:
         return [...cards].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     }
