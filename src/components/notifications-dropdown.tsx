@@ -8,6 +8,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNotifications } from '@/hooks/use-notifications'
 import { useRouter } from 'next/navigation'
+import supabase from '@/lib/supabase-client'
 
 export function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false)
@@ -32,15 +33,39 @@ export function NotificationsDropdown() {
     }
   }, [isOpen])
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = async (notification: any) => {
     // Mark as read
     if (!notification.read) {
       markAsRead(notification.id)
     }
 
-    // Navigate to relevant page
+    // Navigate to relevant page based on notification type and post content
     if (notification.post_id) {
-      router.push(`/feed#${notification.post_id}`)
+      try {
+        // Check if the post is a text post to redirect to the dedicated post page
+        const { data: postData } = await supabase
+          .from('posts')
+          .select('content_type')
+          .eq('id', notification.post_id)
+          .single()
+
+        if (postData?.content_type === 'text') {
+          router.push(`/post/${notification.post_id}`)
+        } else {
+          router.push(`/feed#${notification.post_id}`)
+        }
+      } catch (error) {
+        // Fallback to feed page if error
+        router.push(`/feed#${notification.post_id}`)
+      }
+    } else if (notification.type === 'follow' || notification.type === 'profile_view') {
+      // Navigate to profile if it's a follow or profile view notification
+      if (notification.actor_username) {
+        router.push(`/profile/${notification.actor_username}`)
+      }
+    } else if (notification.type === 'spotlight' && notification.spotlight_id) {
+      // Navigate to spotlight page if it's a spotlight notification
+      router.push(`/spotlight`)
     }
 
     setIsOpen(false)
@@ -125,8 +150,11 @@ export function NotificationsDropdown() {
                       <div className="flex-shrink-0 mt-1">
                         {notification.type === 'like' && <span className="text-xl">❤️</span>}
                         {notification.type === 'comment' && <span className="text-xl">💬</span>}
+                        {notification.type === 'reply' && <span className="text-xl">↩️</span>}
+                        {notification.type === 'comment_like' && <span className="text-xl">💝</span>}
                         {notification.type === 'follow' && <span className="text-xl">👤</span>}
                         {notification.type === 'spotlight' && <span className="text-xl">⭐</span>}
+                        {notification.type === 'profile_view' && <span className="text-xl">👁️</span>}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-['Space_Mono'] text-sm text-black">

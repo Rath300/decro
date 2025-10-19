@@ -74,6 +74,18 @@ export default function PublicProfilePage() {
 
       setProfile(profileData)
 
+      // Track profile view
+      if (currentUser?.id) {
+        try {
+          await supabase.rpc('track_profile_view', {
+            profile_id_param: profileData.id,
+            viewer_id_param: currentUser.id
+          })
+        } catch (error) {
+          console.error('Failed to track profile view:', error)
+        }
+      }
+
       // Check if current user is following
       if (currentUser?.id) {
         const { data: followData } = await supabase.rpc('is_following_user', {

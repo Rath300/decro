@@ -7,7 +7,7 @@ import supabase from '@/lib/supabase-client'
 export interface Notification {
   id: string
   user_id: string
-  type: 'like' | 'comment' | 'follow' | 'spotlight' | 'mention'
+  type: 'like' | 'comment' | 'follow' | 'spotlight' | 'mention' | 'reply' | 'comment_like' | 'profile_view'
   actor_id: string | null
   actor_username: string | null
   post_id: string | null
