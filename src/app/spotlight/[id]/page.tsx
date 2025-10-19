@@ -75,7 +75,15 @@ export default function SpotlightDetailPage() {
 
       if (spotlightError) throw spotlightError
 
-      setSpotlight(spotlightData)
+      // Transform the data to match our interface
+      const transformedSpotlight: SpotlightData | null = spotlightData ? {
+        ...spotlightData,
+        profiles: Array.isArray((spotlightData as any).profiles) && (spotlightData as any).profiles.length > 0 
+          ? (spotlightData as any).profiles[0] 
+          : (spotlightData as any).profiles
+      } : null
+
+      setSpotlight(transformedSpotlight)
 
       // Load spotlight items with post details
       const { data: itemsData, error: itemsError } = await supabase
@@ -102,7 +110,19 @@ export default function SpotlightDetailPage() {
         .order('order_index', { ascending: true })
 
       if (itemsError) throw itemsError
-      setItems(itemsData || [])
+      
+      // Transform items data to handle nested profiles structure
+      const transformedItems: SpotlightItem[] = (itemsData || []).map((item: any) => ({
+        ...item,
+        posts: item.posts ? {
+          ...item.posts,
+          profiles: Array.isArray(item.posts.profiles) && item.posts.profiles.length > 0
+            ? item.posts.profiles[0]
+            : item.posts.profiles
+        } : item.posts
+      }))
+      
+      setItems(transformedItems)
     } catch (error) {
       console.error('Failed to load spotlight:', error)
     } finally {
