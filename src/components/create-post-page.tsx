@@ -71,6 +71,7 @@ export default function CreatePostPage() {
     file: null as File | null,
     audioFile: null as File | null,
     videoFile: null as File | null,
+    thumbnailFile: null as File | null,
     isCurated: false,
     tags: [] as string[]
   });
@@ -79,9 +80,11 @@ export default function CreatePostPage() {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string>('');
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string>('');
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const [subgroupQuery, setSubgroupQuery] = useState('')
   const [subgroupResults, setSubgroupResults] = useState<{ id: string; name: string; slug: string }[]>([])
@@ -142,6 +145,21 @@ export default function CreatePostPage() {
     }
   };
 
+  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setPostData(prev => ({ ...prev, thumbnailFile: file }));
+      const url = URL.createObjectURL(file);
+      setThumbnailPreviewUrl(url);
+    }
+  };
+
+  const removeThumbnailFile = () => {
+    setPostData(prev => ({ ...prev, thumbnailFile: null }));
+    setThumbnailPreviewUrl('');
+    if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
+  };
+
   const handleSubmit = async () => {
     if (!isAuthenticated || !user?.id) {
       alert('Please sign in to create a post');
@@ -173,7 +191,16 @@ export default function CreatePostPage() {
       let audioUrl: string | null = null
       let videoUrl: string | null = null
 
-      if (postData.file) {
+      // For videos, use custom thumbnail if available, otherwise use the auto-generated thumbnail
+      if (['video', 'film'].includes(postData.contentType)) {
+        if (postData.thumbnailFile) {
+          const result = await uploadImage(postData.thumbnailFile)
+          mediaUrl = result.url
+        } else if (postData.file) {
+          const result = await uploadImage(postData.file)
+          mediaUrl = result.url
+        }
+      } else if (postData.file) {
         const result = await uploadImage(postData.file)
         mediaUrl = result.url
       }
@@ -222,9 +249,11 @@ export default function CreatePostPage() {
     if (audioInputRef.current) audioInputRef.current.value = '';
   };
   const removeVideoFile = () => {
-    setPostData(prev => ({ ...prev, videoFile: null }));
+    setPostData(prev => ({ ...prev, videoFile: null, thumbnailFile: null }));
     setVideoPreviewUrl('');
+    setThumbnailPreviewUrl('');
     if (videoInputRef.current) videoInputRef.current.value = '';
+    if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
   };
 
   return (
@@ -502,6 +531,57 @@ export default function CreatePostPage() {
                         Your browser does not support the video element.
                       </video>
                     )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Custom Thumbnail Upload for Video/Film */}
+          {['video', 'film'].includes(postData.contentType) && postData.videoFile && (
+            <div>
+              <label className="block text-sm font-['Space_Mono'] font-medium text-black mb-2">
+                Custom Thumbnail (optional)
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                {!postData.thumbnailFile ? (
+                  <div>
+                    <div className="text-4xl mb-4">🖼️</div>
+                    <p className="text-sm font-['Space_Mono'] text-gray-600 mb-4">
+                      Upload a custom thumbnail image for your video (optional). If not provided, we'll use an auto-generated frame.
+                    </p>
+                    <button
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      className="px-4 py-2 bg-black text-white font-['Space_Mono'] text-sm hover:bg-gray-800 transition-colors"
+                    >
+                      Choose Custom Thumbnail
+                    </button>
+                    <input
+                      ref={thumbnailInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleThumbnailChange}
+                      className="hidden"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <img
+                      src={thumbnailPreviewUrl}
+                      alt="Custom Thumbnail Preview"
+                      className="max-w-full max-h-64 mx-auto rounded-lg mb-4"
+                    />
+                    <div className="flex items-center justify-center space-x-2">
+                      <span className="text-sm font-['Space_Mono'] text-gray-600">
+                        {postData.thumbnailFile.name}
+                      </span>
+                      <button
+                        onClick={removeThumbnailFile}
+                        className="text-red-500 hover:text-red-700 font-['Space_Mono'] text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
