@@ -44,7 +44,8 @@ export default function SpotlightPage() {
             is_featured,
             created_at,
             created_by,
-            profiles!spotlight_collections_created_by_fkey (
+            creator_id,
+            profiles:creator_id (
               username
             ),
             spotlight_items(

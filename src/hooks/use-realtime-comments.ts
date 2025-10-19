@@ -3,7 +3,7 @@
  * Subscribes to live comment events on a post
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import supabase from '@/lib/supabase-client'
 
 export interface Comment {
@@ -116,11 +116,8 @@ export function useRealtimeComments(postId: string) {
     }
   }, [postId])
 
-  return {
-    comments,
-    commentCount,
-    loading,
-    refetch: async () => {
+  const refetch = useCallback(async () => {
+    try {
       const { data, error } = await supabase.rpc('get_post_comments', {
         post_id_param: postId,
         page_size: 20,
@@ -131,7 +128,16 @@ export function useRealtimeComments(postId: string) {
         setComments(data)
         setCommentCount(data.length)
       }
+    } catch (error) {
+      console.error('Failed to refetch comments:', error)
     }
+  }, [postId])
+
+  return {
+    comments,
+    commentCount,
+    loading,
+    refetch
   }
 }
 

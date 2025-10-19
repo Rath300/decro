@@ -14,6 +14,7 @@ type Subgroup = {
   name: string
   slug: string
   description?: string | null
+  cover_url?: string | null
   cover_image_url?: string | null
   member_count?: number
   post_count?: number
@@ -41,6 +42,7 @@ export default function SubgroupIndex() {
             name,
             slug,
             description,
+            cover_url,
             cover_image_url,
             member_count,
             post_count,
@@ -214,9 +216,9 @@ export default function SubgroupIndex() {
                     <div className="border border-gray-200 rounded-lg bg-white hover:shadow-lg transition-all duration-200 overflow-hidden h-full">
                       {/* Cover Image */}
                       <div className="h-32 bg-gray-100 relative">
-                        {s.cover_image_url ? (
+                        {(s.cover_image_url || s.cover_url) ? (
                           <img
-                            src={s.cover_image_url}
+                            src={s.cover_image_url ?? s.cover_url ?? ''}
                             alt={s.name}
                             className="w-full h-full object-cover"
                           />
