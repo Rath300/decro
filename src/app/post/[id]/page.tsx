@@ -257,7 +257,7 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
 
     setLoadingReplies(prev => ({ ...prev, [commentId]: true }))
     try {
-      const { data, error } = await supabase.rpc('get_comment_replies', { 
+      const { data, error } = await supabase.rpc('get_comment_replies_with_nesting', { 
         comment_id_param: commentId, 
         page_size: 20, 
         page_offset: 0 
@@ -367,6 +367,11 @@ function RedditComment({
             <span className="font-['Space_Mono'] font-bold text-sm text-black">
               {comment.username || 'anonymous'}
             </span>
+            {(comment as any).replying_to_username && (
+              <span className="font-['Space_Mono'] text-xs text-gray-400">
+                replying to {(comment as any).replying_to_username}
+              </span>
+            )}
             <span className="font-['Space_Mono'] text-xs text-gray-500">
               {getTimeAgo(comment.created_at)}
             </span>

@@ -734,7 +734,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                   // lazy load replies on open
                   if (!replies[comment.id]) {
                     setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
-                    const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                    const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                     setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
                     setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
                   }
@@ -799,7 +799,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                            await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
                          } catch {}
                         // refresh replies
-                        const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                        const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                         setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
                       }
                     }}
@@ -821,7 +821,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                        try {
                          await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
                        } catch {}
-                      const { data } = await supabase.rpc('get_comment_replies', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                      const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                       setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
                     }}
                   >Reply</button>
@@ -839,6 +839,11 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                           <div className="flex-1 min-w-0">
                             <div className="flex items-baseline gap-2">
                               <span className="font-['Space_Mono'] font-bold text-xs text-black">{r.username || 'Anonymous'}</span>
+                              {(r as any).replying_to_username && (
+                                <span className="font-['Space_Mono'] text-[10px] text-gray-400">
+                                  replying to {(r as any).replying_to_username}
+                                </span>
+                              )}
                               <span className="font-['Space_Mono'] text-[10px] text-gray-500">{getTimeAgo(r.created_at)}</span>
                             </div>
                             <p className="font-['Space_Mono'] text-xs text-gray-800 mt-1 break-words">{r.content}</p>
