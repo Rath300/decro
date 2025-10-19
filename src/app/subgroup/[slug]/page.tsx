@@ -66,9 +66,9 @@ export default function SubgroupDetail() {
                 target_subgroup_id: data.id,
                 external_id_param: user.id
               }),
-              supabase.rpc('is_subgroup_moderator', {
+              supabase.rpc('is_subgroup_moderator_ext', {
                 subgroup_id_param: data.id,
-                user_id_param: user.id
+                external_id_param: user.id
               })
             ])
             
