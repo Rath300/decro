@@ -166,7 +166,7 @@ export default function SubgroupDetail() {
         {/* Header */}
         <div className="mb-6">
           {/* Subgroup Banner */}
-          <div className="relative h-32 bg-gray-100 rounded-lg overflow-hidden mb-4">
+          <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden mb-4">
             {subgroupData.cover_image_url ? (
               <img
                 src={subgroupData.cover_image_url}
@@ -174,16 +174,15 @@ export default function SubgroupDetail() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-gray-100 to-gray-200">
-                <span className="text-2xl text-gray-400">/r/{subgroupData.slug}</span>
+              <div className="w-full h-full bg-gradient-to-r from-gray-100 to-gray-200">
               </div>
             )}
-            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-4">
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold">r/{subgroupData.slug}</h1>
+                  <h1 className="text-3xl font-bold">r/{subgroupData.slug}</h1>
                   {subgroupData.description && (
-                    <p className="text-sm text-gray-300 mt-1">{subgroupData.description}</p>
+                    <p className="text-sm text-gray-300 mt-2">{subgroupData.description}</p>
                   )}
                 </div>
                 <div className="text-right">
@@ -202,7 +201,7 @@ export default function SubgroupDetail() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <Link
-                href="/create-post"
+                href={`/create?subgroup=${encodeURIComponent(subgroupData.id)}`}
                 className="px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm font-medium"
               >
                 Create Post

@@ -92,7 +92,8 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-['Space_Mono'] font-bold text-black mb-4">
           Feedback & Support
@@ -178,6 +179,7 @@ export default function FeedbackPage() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   )

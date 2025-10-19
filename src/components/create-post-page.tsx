@@ -1,8 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
-import { useState, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
 import supabase from '@/lib/supabase-client'
 import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
 import { useAuth } from '@/context/auth-context'
@@ -63,6 +63,7 @@ async function generateVideoThumbnailFile(videoFile: File): Promise<File> {
 
 export default function CreatePostPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuth();
   const [postData, setPostData] = useState({
     title: '',
@@ -89,6 +90,30 @@ export default function CreatePostPage() {
   const [subgroupQuery, setSubgroupQuery] = useState('')
   const [subgroupResults, setSubgroupResults] = useState<{ id: string; name: string; slug: string }[]>([])
   const [selectedSubgroup, setSelectedSubgroup] = useState<{ id: string; name: string; slug: string } | null>(null)
+
+  // Handle URL parameter for subgroup preselection
+  useEffect(() => {
+    const subgroupId = searchParams.get('subgroup')
+    if (subgroupId) {
+      // Fetch the subgroup data to preselect it
+      const fetchSubgroup = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('subgroups')
+            .select('id, name, slug')
+            .eq('id', subgroupId)
+            .single()
+          if (!error && data) {
+            setSelectedSubgroup(data)
+            setSubgroupQuery(data.name)
+          }
+        } catch (error) {
+          console.error('Failed to fetch subgroup:', error)
+        }
+      }
+      fetchSubgroup()
+    }
+  }, [searchParams])
 
   // Debounced subgroup search
   const searchTimer = useRef<any>(null)

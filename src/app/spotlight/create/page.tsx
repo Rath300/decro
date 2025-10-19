@@ -77,13 +77,22 @@ export default function SpotlightCreatePage() {
         coverUrl = uploaded.url
       }
 
+      // Get the profile ID from external ID
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('external_id', user.id)
+        .single()
+
+      if (profileError) throw new Error('Profile not found')
+
       const { data: collection, error: insertErr } = await supabase
         .from('spotlight_collections')
         .insert({
           title: title.trim(),
           description: description.trim() || null,
           cover_image_url: coverUrl,
-          creator_id: user.id,
+          creator_id: profileData.id,
           is_featured: false
         })
         .select('id')
