@@ -18,6 +18,8 @@ type Spotlight = {
   created_at: string
   post_ids: string[]
   post_images: string[]
+  creator_username?: string
+  item_count: number
 }
 
 export default function SpotlightPage() {
@@ -31,7 +33,7 @@ export default function SpotlightPage() {
   useEffect(() => {
     const loadSpotlights = async () => {
       try {
-        // Fetch spotlight collections with their items
+        // Fetch spotlight collections with their items and creator info
         const { data: collections, error } = await supabase
           .from('spotlight_collections')
           .select(`
@@ -41,6 +43,10 @@ export default function SpotlightPage() {
             cover_image_url,
             is_featured,
             created_at,
+            created_by,
+            profiles!spotlight_collections_created_by_fkey (
+              username
+            ),
             spotlight_items(
               post_id,
               posts(media_url)
@@ -51,7 +57,7 @@ export default function SpotlightPage() {
         if (error) throw error
 
         // Transform data
-        const transformed = collections?.map(col => ({
+        const transformed = collections?.map((col: any) => ({
           id: col.id,
           title: col.title,
           description: col.description,
@@ -59,7 +65,9 @@ export default function SpotlightPage() {
           is_featured: col.is_featured,
           created_at: col.created_at,
           post_ids: col.spotlight_items?.map((item: any) => item.post_id) || [],
-          post_images: col.spotlight_items?.map((item: any) => item.posts?.media_url).filter(Boolean) || []
+          post_images: col.spotlight_items?.map((item: any) => item.posts?.media_url).filter(Boolean) || [],
+          creator_username: col.profiles?.username || 'Unknown',
+          item_count: col.spotlight_items?.length || 0
         })) || []
 
         setSpotlights(transformed)
@@ -91,7 +99,7 @@ export default function SpotlightPage() {
             <p className="text-black">No spotlights yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <AnimatePresence>
               {spotlights.map((sp, index) => (
                 <motion.div
@@ -109,19 +117,58 @@ export default function SpotlightPage() {
                     transition: { duration: 0.2 }
                   }}
                   whileTap={{ scale: 0.98 }}
-                  className="border border-black p-3 bg-white"
+                  className="border border-black bg-white cursor-pointer group"
                 >
-                  <h2 className="text-lg font-bold text-black mb-2">{sp.title}</h2>
-                  {sp.description && <p className="text-sm text-gray-700 mb-3">{sp.description}</p>}
-                  <div className="grid grid-cols-2 gap-2 aspect-square">
-                    {sp.cover_image_url ? (
-                      <img src={sp.cover_image_url} alt={sp.title} className="col-span-2 row-span-2 w-full h-full object-cover" />
-                    ) : (
-                      sp.post_images.slice(0, 4).map((url, idx) => (
-                        <img key={idx} src={url} alt="" className="w-full h-full object-cover" />
-                      ))
-                    )}
-                  </div>
+                  <Link href={`/spotlight/${sp.id}`} className="block">
+                    {/* Album Cover */}
+                    <div className="relative aspect-square overflow-hidden">
+                      {sp.cover_image_url ? (
+                        <img 
+                          src={sp.cover_image_url} 
+                          alt={sp.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                        />
+                      ) : sp.post_images.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-1 w-full h-full">
+                          {sp.post_images.slice(0, 4).map((url, idx) => (
+                            <img 
+                              key={idx} 
+                              src={url} 
+                              alt="" 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
+                          <div className="text-center">
+                            <div className="text-2xl mb-2">📁</div>
+                            <div className="text-sm">No Images</div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Play Overlay */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="w-0 h-0 border-l-[8px] border-l-black border-y-[6px] border-y-transparent ml-1"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Album Info */}
+                    <div className="p-4">
+                      <h2 className="text-lg font-bold text-black mb-1 line-clamp-1">{sp.title}</h2>
+                      <p className="text-sm text-gray-600 mb-2">by {sp.creator_username}</p>
+                      {sp.description && (
+                        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{sp.description}</p>
+                      )}
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{sp.item_count} {sp.item_count === 1 ? 'post' : 'posts'}</span>
+                        <span>{new Date(sp.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </Link>
                 </motion.div>
               ))}
             </AnimatePresence>
