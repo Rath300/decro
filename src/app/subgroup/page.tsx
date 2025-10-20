@@ -261,7 +261,7 @@ export default function SubgroupIndex() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                            <span className="text-gray-400 text-lg font-medium">r/{s.slug}</span>
+                            <span className="text-gray-400 text-lg font-medium">d/{s.slug}</span>
                           </div>
                         )}
                       </div>
@@ -271,7 +271,7 @@ export default function SubgroupIndex() {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg font-bold text-black mb-1 truncate">{s.name}</h3>
-                            <p className="text-sm text-gray-500">r/{s.slug}</p>
+                            <p className="text-sm text-gray-500">d/{s.slug}</p>
                           </div>
                         </div>
 

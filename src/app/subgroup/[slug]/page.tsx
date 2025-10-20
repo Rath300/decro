@@ -207,7 +207,7 @@ export default function SubgroupDetail() {
             <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold">r/{subgroupData.slug}</h1>
+                  <h1 className="text-3xl font-bold">d/{subgroupData.slug}</h1>
                   {subgroupData.description && (
                     <p className="text-sm text-gray-300 mt-2">{subgroupData.description}</p>
                   )}

@@ -56,6 +56,8 @@ export default function SpotlightDetailPage() {
 
   const loadSpotlight = async () => {
     try {
+      console.log('Loading spotlight with ID:', spotlightId)
+      
       // Load spotlight collection with creator info - use creator_id for the foreign key
       const { data: spotlightData, error: spotlightError } = await supabase
         .from('spotlight_collections')
@@ -74,7 +76,12 @@ export default function SpotlightDetailPage() {
         .eq('id', spotlightId)
         .single()
 
-      if (spotlightError) throw spotlightError
+      if (spotlightError) {
+        console.error('Failed to load spotlight collection:', spotlightError)
+        throw spotlightError
+      }
+      
+      console.log('Loaded spotlight collection:', spotlightData)
 
       // Transform the data to match our interface
       const transformedSpotlight: SpotlightData | null = spotlightData ? {
@@ -93,7 +100,7 @@ export default function SpotlightDetailPage() {
           id,
           post_id,
           order_index,
-          posts!spotlight_items_post_id_fkey (
+          posts (
             id,
             title,
             description,
@@ -110,7 +117,12 @@ export default function SpotlightDetailPage() {
         .eq('collection_id', spotlightId)
         .order('order_index', { ascending: true })
 
-      if (itemsError) throw itemsError
+      if (itemsError) {
+        console.error('Failed to load spotlight items:', itemsError)
+        throw itemsError
+      }
+
+      console.log('Loaded spotlight items:', itemsData)
       
       // Transform items data to handle nested profiles structure
       const transformedItems: SpotlightItem[] = (itemsData || []).map((item: any) => ({
@@ -124,8 +136,11 @@ export default function SpotlightDetailPage() {
       }))
       
       setItems(transformedItems)
+      console.log('Set items:', transformedItems)
     } catch (error) {
       console.error('Failed to load spotlight:', error)
+      // Set empty items on error to prevent crashing
+      setItems([])
     } finally {
       setLoading(false)
     }
