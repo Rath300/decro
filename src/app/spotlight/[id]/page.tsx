@@ -56,7 +56,7 @@ export default function SpotlightDetailPage() {
 
   const loadSpotlight = async () => {
     try {
-      // Load spotlight collection with creator info
+      // Load spotlight collection with creator info - use creator_id for the foreign key
       const { data: spotlightData, error: spotlightError } = await supabase
         .from('spotlight_collections')
         .select(`
@@ -65,8 +65,9 @@ export default function SpotlightDetailPage() {
           description,
           cover_image_url,
           created_by,
+          creator_id,
           created_at,
-          profiles!spotlight_collections_created_by_fkey (
+          profiles!spotlight_collections_creator_id_fkey (
             username
           )
         `)

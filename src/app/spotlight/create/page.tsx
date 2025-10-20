@@ -95,12 +95,15 @@ export default function SpotlightCreatePage() {
         coverUrl = uploaded.url
       }
 
-      // Create spotlight collection using RPC to handle RLS properly
-      const { data: collectionResult, error: insertErr } = await supabase.rpc('create_spotlight_collection_ext', {
+      // Create spotlight collection with items using RPC to handle RLS properly in a single transaction
+      const postIdsArray = selected.size > 0 ? Array.from(selected) : []
+      
+      const { data: collectionResult, error: insertErr } = await supabase.rpc('create_spotlight_collection_ext_with_items', {
         title_param: title.trim(),
         description_param: description.trim() || null,
         cover_image_url_param: coverUrl,
-        external_id_param: user.id
+        external_id_param: user.id,
+        post_ids_param: postIdsArray
       })
 
       if (insertErr) {
@@ -114,20 +117,6 @@ export default function SpotlightCreatePage() {
 
       if (!collectionResult || !collectionResult.success) {
         throw new Error('Failed to create spotlight collection')
-      }
-
-      const collectionId = collectionResult.collection_id
-
-      if (selected.size > 0) {
-        const items = Array.from(selected).map((postId, idx) => ({
-          collection_id: collectionId,
-          post_id: postId,
-          order_index: idx
-        }))
-        const { error: itemsErr } = await supabase
-          .from('spotlight_items')
-          .insert(items)
-        if (itemsErr) throw itemsErr
       }
 
       router.push('/spotlight')
