@@ -25,6 +25,8 @@ interface UserPost {
   description?: string
   audio_url?: string
   video_url?: string
+  subgroup_id?: string
+  subgroup_name?: string
 }
 
 interface UserStats {
@@ -75,7 +77,7 @@ export default function ProfilePage() {
         setStats(statsData)
       }
 
-      // Load user posts with all necessary fields
+      // Load user posts with all necessary fields including subgroup info
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
@@ -87,7 +89,9 @@ export default function ProfilePage() {
           video_url,
           content_type,
           views,
-          created_at
+          created_at,
+          subgroup_id,
+          subgroups(name)
         `)
         .eq('creator_id', profileId)
         .order('created_at', { ascending: false })
@@ -104,7 +108,8 @@ export default function ProfilePage() {
             return {
               ...post,
               like_count: likesResult.data || 0,
-              comment_count: commentsResult.data || 0
+              comment_count: commentsResult.data || 0,
+              subgroup_name: (post.subgroups as any)?.[0]?.name || null
             }
           })
         )
@@ -292,6 +297,11 @@ export default function ProfilePage() {
                     </button>
                     {/* Always-visible compact stats below the tile */}
                     <div className="mt-1">
+                      {post.subgroup_name && (
+                        <div className="text-[10px] text-gray-500 mb-1 font-['Space_Mono']">
+                          in {post.subgroup_name}
+                        </div>
+                      )}
                       <PostStats
                         postId={post.id}
                         initialViews={post.views}

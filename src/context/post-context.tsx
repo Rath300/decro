@@ -19,6 +19,7 @@ export interface MediaCard {
   isCurated?: boolean;
   views: number;
   subgroupId?: string;
+  subgroupName?: string;
   tags?: string[];
 }
 
@@ -187,6 +188,29 @@ export function PostProvider({ children }: { children: ReactNode }) {
       if (postsError) throw postsError
 
       if (postsData) {
+        // First, get all unique subgroup IDs from posts
+        const subgroupIds = Array.from(new Set(postsData.filter((post: any) => post.subgroup_id).map((post: any) => post.subgroup_id)))
+        
+        // Fetch subgroup names for all unique subgroup IDs
+        let subgroupNames: Record<string, string> = {}
+        if (subgroupIds.length > 0) {
+          try {
+            const { data: subgroupsData } = await supabase
+              .from('subgroups')
+              .select('id, name')
+              .in('id', subgroupIds)
+            
+            if (subgroupsData) {
+              subgroupNames = subgroupsData.reduce((acc, subgroup) => {
+                acc[subgroup.id] = subgroup.name
+                return acc
+              }, {} as Record<string, string>)
+            }
+          } catch (error) {
+            console.warn('Failed to fetch subgroup names:', error)
+          }
+        }
+
         const mapped: MediaCard[] = postsData.map((post: any) => ({
           id: String(post.id),
           type: post.content_type,
@@ -201,6 +225,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
           isCurated: post.is_curated ?? false,
           views: post.views ?? 0,
           subgroupId: post.subgroup_id ?? undefined,
+          subgroupName: post.subgroup_id ? subgroupNames[post.subgroup_id] : undefined,
           tags: Array.isArray(post.tags) ? post.tags : undefined,
         }))
 
@@ -223,6 +248,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
               isCurated: m.isCurated,
               views: m.views,
               subgroupId: m.subgroupId ?? null,
+              subgroupName: m.subgroupName ?? null,
             }))
           )
         } catch (cacheError) {
@@ -254,6 +280,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
               isCurated: r.isCurated,
               views: r.views,
               subgroupId: r.subgroupId ?? undefined,
+              subgroupName: r.subgroupName ?? undefined,
               description: r.description ?? undefined,
             }))
           )

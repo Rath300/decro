@@ -125,14 +125,14 @@ export default function SpotlightPage() {
               placeholder="Search spotlights by title or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm focus:outline-none focus:border-black"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm focus:outline-none focus:border-black text-black bg-white"
             />
             <input
               type="text"
               placeholder="Search by author username..."
               value={searchAuthor}
               onChange={(e) => setSearchAuthor(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm focus:outline-none focus:border-black"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm focus:outline-none focus:border-black text-black bg-white"
             />
           </div>
           {(searchQuery || searchAuthor) && (

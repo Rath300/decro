@@ -26,6 +26,8 @@ interface UserPost {
   description?: string
   audio_url?: string
   video_url?: string
+  subgroup_id?: string
+  subgroup_name?: string
 }
 
 interface UserStats {
@@ -130,10 +132,10 @@ export default function PublicProfilePage() {
       })
       if (statsData) setStats(statsData)
 
-      // Load posts
+      // Load posts with subgroup information
       const { data: postsData } = await supabase
         .from('posts')
-        .select('id, title, media_url, content_type, views, created_at, description, audio_url, video_url')
+        .select('id, title, media_url, content_type, views, created_at, description, audio_url, video_url, subgroup_id, subgroups(name)')
         .eq('creator_id', profileData.id)
         .order('created_at', { ascending: false })
 
@@ -147,7 +149,8 @@ export default function PublicProfilePage() {
             return {
               ...post,
               like_count: likesResult.data || 0,
-              comment_count: commentsResult.data || 0
+              comment_count: commentsResult.data || 0,
+              subgroup_name: (post.subgroups as any)?.[0]?.name || null
             }
           })
         )
@@ -322,31 +325,38 @@ export default function PublicProfilePage() {
         ) : (
           <div className="grid grid-cols-3 gap-4">
             {posts.map((post) => (
-              <button
-                key={post.id}
-                onClick={() => handlePostClick(post)}
-                className="group relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
-              >
-                {post.media_url && (
-                  <img
-                    src={post.media_url}
-                    alt={post.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                )}
-                
-                {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-center">
-                    <PostStats
-                      postId={post.id}
-                      initialViews={post.views}
-                      initialLikes={post.like_count}
-                      initialComments={post.comment_count}
+              <div key={post.id} className="group">
+                <button
+                  onClick={() => handlePostClick(post)}
+                  className="relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
+                >
+                  {post.media_url && (
+                    <img
+                      src={post.media_url}
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                  )}
+                  
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-center">
+                      <PostStats
+                        postId={post.id}
+                        initialViews={post.views}
+                        initialLikes={post.like_count}
+                        initialComments={post.comment_count}
+                      />
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+                {/* Subgroup info below the post */}
+                {post.subgroup_name && (
+                  <div className="mt-1 text-[10px] text-gray-500 font-['Space_Mono']">
+                    in {post.subgroup_name}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}

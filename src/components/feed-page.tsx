@@ -390,16 +390,23 @@ export default function FeedPage() {
                           )}
                           
                           <div className="flex items-center justify-between text-xs text-gray-600">
-                            <a
-                              href={`/profile/${card.creator.toLowerCase().replace(/\s+/g, '_')}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                              }}
-                              className="font-['Space_Mono'] text-blue-600 hover:text-blue-800 transition-colors line-clamp-1"
-                              title={card.creator}
-                            >
-                              {card.creator}
-                            </a>
+                            <div className="flex flex-col">
+                              <a
+                                href={`/profile/${card.creator.toLowerCase().replace(/\s+/g, '_')}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                className="font-['Space_Mono'] text-blue-600 hover:text-blue-800 transition-colors line-clamp-1"
+                                title={card.creator}
+                              >
+                                {card.creator}
+                              </a>
+                              {card.subgroupName && (
+                                <span className="font-['Space_Mono'] text-gray-500 text-[10px]">
+                                  in {card.subgroupName}
+                                </span>
+                              )}
+                            </div>
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -655,6 +662,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [replies, setReplies] = useState<Record<string, RealtimeComment[]>>({});
   const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({});
+  const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set());
+  const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!postId) return;
@@ -723,27 +732,51 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             </p>
             {/* Reply and voting controls */}
             <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+              {/* Show/Hide replies button */}
+              {comment.reply_count && comment.reply_count > 0 && (
+                <button
+                  className="hover:text-black"
+                  onClick={async () => {
+                    const newVisibleReplies = new Set(visibleReplies);
+                    if (newVisibleReplies.has(comment.id)) {
+                      newVisibleReplies.delete(comment.id);
+                      setVisibleReplies(newVisibleReplies);
+                    } else {
+                      newVisibleReplies.add(comment.id);
+                      setVisibleReplies(newVisibleReplies);
+                      // Load replies if not already loaded
+                      if (!replies[comment.id]) {
+                        setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
+                        const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                        setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                        setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
+                      }
+                    }
+                  }}
+                >
+                  {visibleReplies.has(comment.id) ? 'Hide replies' : 'Show replies'}{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+                </button>
+              )}
+              
+              {/* Reply button */}
               <button
                 className="hover:text-black"
-                onClick={async () => {
+                onClick={() => {
                   if (openReplyFor === comment.id) {
                     setOpenReplyFor(null);
-                    return;
-                  }
-                  setOpenReplyFor(comment.id);
-                  // lazy load replies on open
-                  if (!replies[comment.id]) {
-                    setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
-                    const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
-                    setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
-                    setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
+                  } else {
+                    setOpenReplyFor(comment.id);
                   }
                 }}
               >
-                Reply{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+                Reply
               </button>
               <button
-                className="hover:text-red-500 flex items-center gap-1"
+                className={`flex items-center gap-1 transition-all duration-200 ${
+                  likedComments.has(comment.id)
+                    ? 'text-red-500'
+                    : 'hover:text-red-500'
+                }`}
                 onClick={async () => {
                   if (!isAuthenticated || !user?.id) return;
                   try {
@@ -772,14 +805,25 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                       }
                     }
                     
-                    // Update the comment vote score immediately from the response
-                    if (responseData && typeof responseData.vote_score === 'number') {
+                    // Update both the vote score and liked status from the response
+                    if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
                       setMerged(prev => prev.map(c => 
                         c.id === comment.id ? { ...c, vote_score: responseData.vote_score } : c
                       ));
+                      
+                      // Update liked comments state
+                      setLikedComments(prev => {
+                        const next = new Set(prev);
+                        if (responseData.liked) {
+                          next.add(comment.id);
+                        } else {
+                          next.delete(comment.id);
+                        }
+                        return next;
+                      });
                     } else {
-                      console.log('No vote_score in response, refetching...');
-                      // Fallback: refetch if response doesn't have vote_score
+                      console.log('No vote_score or liked in response, refetching...');
+                      // Fallback: refetch if response doesn't have expected fields
                       refetch();
                     }
                   } catch (error) {
@@ -787,7 +831,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                   }
                 }}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill={likedComments.has(comment.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
                 <span>{comment.vote_score || 0}</span>
@@ -847,6 +891,12 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                     }}
                   >Reply</button>
                 </div>
+              </div>
+            )}
+
+            {/* Show replies */}
+            {visibleReplies.has(comment.id) && (replies[comment.id]?.length > 0 || loadingReplies[comment.id]) && (
+              <div className="mt-3">
                 <div className="pl-2 border-l border-gray-200">
                   {loadingReplies[comment.id] ? (
                     <div className="text-xs text-gray-500">Loading replies...</div>

@@ -176,7 +176,7 @@ export default function SettingsPage() {
                   id="current"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                  className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+                  className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
                 />
               </div>
 
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                   id="new"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                  className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+                  className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
                 />
                 <p className="text-xs text-gray-500 mt-1">At least 8 characters</p>
               </div>
@@ -203,7 +203,7 @@ export default function SettingsPage() {
                   id="confirm"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+                  className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
                 />
               </div>
 

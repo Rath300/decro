@@ -233,6 +233,7 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
   const [openReplyFor, setOpenReplyFor] = useState<string | null>(null)
   const [replyText, setReplyText] = useState<Record<string, string>>({})
   const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set())
+  const [likedComments, setLikedComments] = useState<Set<string>>(new Set())
   const { isAuthenticated, user } = useAuth()
 
   useEffect(() => {
@@ -334,6 +335,8 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
           updateVoteScore={updateCommentVoteScore}
           visibleReplies={visibleReplies}
           setVisibleReplies={setVisibleReplies}
+          likedComments={likedComments}
+          setLikedComments={setLikedComments}
         />
       ))}
     </div>
@@ -354,7 +357,9 @@ function RedditComment({
   refetch,
   updateVoteScore,
   visibleReplies,
-  setVisibleReplies
+  setVisibleReplies,
+  likedComments,
+  setLikedComments
 }: { 
   comment: RealtimeComment
   depth: number
@@ -370,6 +375,8 @@ function RedditComment({
   updateVoteScore?: (commentId: string, newVoteScore: number) => void
   visibleReplies: Set<string>
   setVisibleReplies: (setter: (prev: Set<string>) => Set<string>) => void
+  likedComments: Set<string>
+  setLikedComments: (setter: (prev: Set<string>) => Set<string>) => void
 }) {
   const { isAuthenticated, user } = useAuth()
   const maxDepth = 2
@@ -450,7 +457,11 @@ function RedditComment({
             
             {/* Like button */}
             <button
-              className="hover:text-red-500 flex items-center gap-1"
+              className={`flex items-center gap-1 transition-all duration-200 ${
+                likedComments.has(comment.id)
+                  ? 'text-red-500'
+                  : 'hover:text-red-500'
+              }`}
               onClick={async () => {
                 if (!isAuthenticated || !user?.id) return;
                 try {
@@ -479,13 +490,26 @@ function RedditComment({
                     }
                   }
                   
-                  // Update the comment vote score immediately from the response
-                  if (responseData && typeof responseData.vote_score === 'number' && updateVoteScore) {
-                    updateVoteScore(comment.id, responseData.vote_score);
+                  // Update both the vote score and liked status from the response
+                  if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
+                    if (updateVoteScore) {
+                      updateVoteScore(comment.id, responseData.vote_score);
+                    }
+                    
+                    // Update liked comments state
+                    setLikedComments(prev => {
+                      const next = new Set(prev);
+                      if (responseData.liked) {
+                        next.add(comment.id);
+                      } else {
+                        next.delete(comment.id);
+                      }
+                      return next;
+                    });
                   } else {
-                    console.log('No vote_score in response, refetching...');
+                    console.log('No vote_score or liked in response, refetching...');
                     if (refetch) {
-                      // Fallback: refetch if response doesn't have vote_score or no callback
+                      // Fallback: refetch if response doesn't have expected fields
                       refetch();
                     }
                   }
@@ -494,7 +518,7 @@ function RedditComment({
                 }
               }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill={likedComments.has(comment.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
               <span>{comment.vote_score || 0}</span>
@@ -571,6 +595,8 @@ function RedditComment({
                       updateVoteScore={updateVoteScore}
                       visibleReplies={visibleReplies}
                       setVisibleReplies={setVisibleReplies}
+                      likedComments={likedComments}
+                      setLikedComments={setLikedComments}
                     />
                   ))}
                 </div>

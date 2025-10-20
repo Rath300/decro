@@ -80,11 +80,18 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
           {card.description && (
             <p className="mt-1 text-xs text-gray-600 line-clamp-2">{card.description}</p>
           )}
-          {/* Username */}
+          {/* Username and Subgroup */}
           {card.creator && (
-            <p className="mt-1 text-xs text-blue-600 font-medium">
-              by {card.creator}
-            </p>
+            <div className="mt-1">
+              <p className="text-xs text-blue-600 font-medium">
+                by {card.creator}
+              </p>
+              {card.subgroupName && (
+                <p className="text-[10px] text-gray-500 font-medium">
+                  in {card.subgroupName}
+                </p>
+              )}
+            </div>
           )}
           <div className="mt-1 flex items-center justify-between text-xs text-gray-600">
             <button

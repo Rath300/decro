@@ -178,7 +178,7 @@ export default function SubgroupIndex() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search communities by name, description, or topic..."
-              className="w-full p-4 border border-gray-300 rounded-lg text-black focus:border-black focus:outline-none"
+              className="w-full p-4 border border-gray-300 rounded-lg text-black bg-white focus:border-black focus:outline-none"
             />
           </div>
           <div className="flex items-center gap-2">
