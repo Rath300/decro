@@ -271,12 +271,21 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                 onClick={async () => {
                   if (!isAuthenticated || !user?.id) return;
                   try {
-                    await supabase.rpc('toggle_comment_vote_ext', { 
+                    const { data } = await supabase.rpc('toggle_comment_vote_ext', { 
                       comment_id_param: comment.id, 
                       external_id_param: user.id, 
                       direction: 1 
                     });
-                    refetch();
+                    
+                    // Update the comment vote score immediately from the response
+                    if (data && typeof data.vote_score === 'number') {
+                      setMerged(prev => prev.map(c => 
+                        c.id === comment.id ? { ...c, vote_score: data.vote_score } : c
+                      ));
+                    } else {
+                      // Fallback: refetch if response doesn't have vote_score
+                      refetch();
+                    }
                   } catch (error) {
                     console.error('Error toggling comment vote:', error);
                   }

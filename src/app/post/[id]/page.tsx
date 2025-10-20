@@ -295,6 +295,22 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
     return <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">No comments yet. Be the first to comment!</div>
   }
 
+  const updateCommentVoteScore = (commentId: string, newVoteScore: number) => {
+    setMerged(prev => prev.map(c => 
+      c.id === commentId ? { ...c, vote_score: newVoteScore } : c
+    ))
+    // Also update replies if they exist
+    setReplies(prev => {
+      const updated = { ...prev }
+      Object.keys(updated).forEach(parentId => {
+        updated[parentId] = updated[parentId].map(r => 
+          r.id === commentId ? { ...r, vote_score: newVoteScore } : r
+        )
+      })
+      return updated
+    })
+  }
+
   return (
     <div className="space-y-4">
       {merged.map((comment) => (
@@ -314,6 +330,7 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
           replyText={replyText}
           setReplyText={setReplyText}
           refetch={refetch}
+          updateVoteScore={updateCommentVoteScore}
         />
       ))}
     </div>
@@ -331,7 +348,8 @@ function RedditComment({
   setOpenReplyFor,
   replyText,
   setReplyText,
-  refetch
+  refetch,
+  updateVoteScore
 }: { 
   comment: RealtimeComment
   depth: number
@@ -344,6 +362,7 @@ function RedditComment({
   replyText: Record<string, string>
   setReplyText: (text: Record<string, string>) => void
   refetch?: () => void
+  updateVoteScore?: (commentId: string, newVoteScore: number) => void
 }) {
   const { isAuthenticated, user } = useAuth()
   const maxDepth = 2
@@ -407,12 +426,19 @@ function RedditComment({
               onClick={async () => {
                 if (!isAuthenticated || !user?.id) return;
                 try {
-                  await supabase.rpc('toggle_comment_vote_ext', { 
+                  const { data } = await supabase.rpc('toggle_comment_vote_ext', { 
                     comment_id_param: comment.id, 
                     external_id_param: user.id, 
                     direction: 1 
                   });
-                  if (refetch) refetch();
+                  
+                  // Update the comment vote score immediately from the response
+                  if (data && typeof data.vote_score === 'number' && updateVoteScore) {
+                    updateVoteScore(comment.id, data.vote_score);
+                  } else if (refetch) {
+                    // Fallback: refetch if response doesn't have vote_score or no callback
+                    refetch();
+                  }
                 } catch (error) {
                   console.error('Error toggling comment vote:', error);
                 }
@@ -492,6 +518,7 @@ function RedditComment({
                       replyText={replyText}
                       setReplyText={setReplyText}
                       refetch={refetch}
+                      updateVoteScore={updateVoteScore}
                     />
                   ))}
                 </div>
