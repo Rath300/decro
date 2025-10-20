@@ -94,7 +94,7 @@ export default function SpotlightDetailPage() {
       setSpotlight(transformedSpotlight)
 
       // Load spotlight items with post details - simplified query first to test
-      let itemsData, itemsError
+      let itemsData: SpotlightItem[], itemsError: any
       
       // First try a simple query to see if we get any items at all
       const { data: simpleItems, error: simpleError } = await supabase
@@ -140,12 +140,36 @@ export default function SpotlightDetailPage() {
           // Merge the spotlight items with post data
           const mergedItems = simpleItems.map(item => {
             const post = postsData?.find(p => p.id === item.post_id)
-            return {
+            
+            const spotlightItem: SpotlightItem = {
               id: item.id,
               post_id: item.post_id,
               order_index: item.order_index,
-              posts: post
+              posts: post ? {
+                id: post.id,
+                title: post.title,
+                description: post.description,
+                media_url: post.media_url || undefined,
+                content_type: post.content_type,
+                creator_id: post.creator_id,
+                views: post.views,
+                created_at: post.created_at,
+                profiles: Array.isArray(post.profiles) && post.profiles.length > 0 
+                  ? { username: (post.profiles[0] as any).username }
+                  : (post.profiles && !Array.isArray(post.profiles)) 
+                    ? { username: (post.profiles as any).username }
+                    : undefined
+              } : {
+                id: item.post_id,
+                title: 'Unknown',
+                content_type: 'image',
+                creator_id: '',
+                views: 0,
+                created_at: new Date().toISOString()
+              }
             }
+            
+            return spotlightItem
           })
           
           // Sort by order_index
