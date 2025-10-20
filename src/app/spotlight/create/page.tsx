@@ -128,6 +128,7 @@ export default function SpotlightCreatePage() {
       })
 
       console.log('Spotlight creation response:', { collectionResult, insertErr })
+      console.log('Collection result details:', JSON.stringify(collectionResult, null, 2))
 
       if (insertErr) {
         console.error('Failed to create spotlight collection:', insertErr)
@@ -135,12 +136,17 @@ export default function SpotlightCreatePage() {
       }
 
       if (collectionResult && collectionResult.error) {
+        console.error('Function returned error:', collectionResult.error)
         throw new Error(collectionResult.error)
       }
 
       if (!collectionResult || !collectionResult.success) {
+        console.error('Failed creation result:', collectionResult)
         throw new Error(`Failed to create spotlight collection: ${JSON.stringify(collectionResult)}`)
       }
+
+      console.log('Spotlight created successfully! Collection ID:', collectionResult.collection_id)
+      console.log('Items added:', collectionResult.items_added)
 
       router.push('/spotlight')
     } catch (e: any) {

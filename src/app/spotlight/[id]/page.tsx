@@ -57,6 +57,7 @@ export default function SpotlightDetailPage() {
   const loadSpotlight = async () => {
     try {
       console.log('Loading spotlight with ID:', spotlightId)
+      console.log('Starting to load spotlight collection...')
       
       // Load spotlight collection with creator info - use creator_id for the foreign key
       const { data: spotlightData, error: spotlightError } = await supabase
@@ -91,7 +92,9 @@ export default function SpotlightDetailPage() {
           : (spotlightData as any).profiles
       } : null
 
+      console.log('Transformed spotlight:', transformedSpotlight)
       setSpotlight(transformedSpotlight)
+      console.log('Set spotlight state')
 
       // Load spotlight items with post details - simplified query first to test
       let itemsData: SpotlightItem[], itemsError: any
@@ -190,6 +193,7 @@ export default function SpotlightDetailPage() {
       }
 
       console.log('Loaded spotlight items:', itemsData)
+      console.log('Number of items loaded:', itemsData?.length || 0)
       
       // Transform items data to handle nested profiles structure
       const transformedItems: SpotlightItem[] = (itemsData || []).map((item: any) => ({
@@ -204,11 +208,13 @@ export default function SpotlightDetailPage() {
       
       setItems(transformedItems)
       console.log('Set items:', transformedItems)
+      console.log('Spotlight loading completed successfully')
     } catch (error) {
       console.error('Failed to load spotlight:', error)
       // Set empty items on error to prevent crashing
       setItems([])
     } finally {
+      console.log('Setting loading to false')
       setLoading(false)
     }
   }
