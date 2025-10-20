@@ -579,7 +579,7 @@ export default function FeedPage() {
                     </button>
                     
                     <EditPostButton postId={selectedCard.id} />
-                    <DeletePostButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} />
+                    <DeletePostButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={refetchPosts} />
                   </div>
 
                   {/* Comments Section */}
@@ -917,7 +917,7 @@ function EditPostButton({ postId }: { postId: string }) {
 }
 
 // Delete Post Button Component
-function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted: () => void }) {
+function DeletePostButton({ postId, onDeleted, refetchPosts }: { postId: string; onDeleted: () => void; refetchPosts?: (sortBy?: 'created_at' | 'likes' | 'comments') => Promise<void> }) {
   const { user } = useAuth();
   const toast = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -963,13 +963,12 @@ function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted: ()
     setIsDeleting(true);
 
     try {
-      console.log('Attempting to delete post:', postId);
+      console.log('Attempting to delete post:', postId, 'user:', user?.id);
       
-      const { data, error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', postId)
-        .select();
+      const { data, error } = await supabase.rpc('delete_post_ext', {
+        post_id_param: postId,
+        external_id_param: user?.id
+      });
 
       console.log('Delete result:', { data, error });
 
@@ -978,11 +977,22 @@ function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted: ()
         throw error;
       }
 
-      toast.success('Post deleted successfully');
-      onDeleted();
-      
-      // Refresh the page to update the feed
-      window.location.reload();
+      if (data && data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data && data.success) {
+        console.log('Post deleted successfully:', data.deleted_post);
+        toast.success('Post deleted successfully');
+        onDeleted();
+        // Refresh the posts data instead of reloading the page
+        if (refetchPosts) {
+          await refetchPosts('created_at');
+        }
+      } else {
+        toast.error('Unknown error occurred');
+      }
     } catch (error: any) {
       console.error('Failed to delete post:', error);
       toast.error(error.message || 'Failed to delete post');

@@ -23,6 +23,9 @@ interface UserPost {
   like_count: number
   comment_count: number
   created_at: string
+  description?: string
+  audio_url?: string
+  video_url?: string
 }
 
 interface UserStats {
@@ -55,10 +58,34 @@ export default function PublicProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [followLoading, setFollowLoading] = useState(false)
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null)
 
   useEffect(() => {
     loadProfile()
   }, [username])
+
+  // Load current user's profile ID for comparison
+  useEffect(() => {
+    const loadCurrentUserProfileId = async () => {
+      if (currentUser?.id) {
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('external_id', currentUser.id)
+            .single()
+          
+          if (profileData) {
+            setCurrentUserProfileId(profileData.id)
+          }
+        } catch (error) {
+          console.error('Failed to load current user profile ID:', error)
+        }
+      }
+    }
+    
+    loadCurrentUserProfileId()
+  }, [currentUser?.id])
 
   const loadProfile = async () => {
     try {
@@ -106,7 +133,7 @@ export default function PublicProfilePage() {
       // Load posts
       const { data: postsData } = await supabase
         .from('posts')
-        .select('id, title, media_url, content_type, views, created_at')
+        .select('id, title, media_url, content_type, views, created_at, description, audio_url, video_url')
         .eq('creator_id', profileData.id)
         .order('created_at', { ascending: false })
 
@@ -181,8 +208,8 @@ export default function PublicProfilePage() {
     return null
   }
 
-  // Check if viewing own profile
-  const isOwnProfile = currentUser?.id === profile.id
+  // Check if viewing own profile - compare profile UUIDs properly
+  const isOwnProfile = currentUserProfileId === profile.id
 
   return (
     <div className="min-h-screen bg-white text-black font-['Space_Mono']">
@@ -273,18 +300,22 @@ export default function PublicProfilePage() {
               <button
                 key={post.id}
                 onClick={() => {
+                  console.log('Post clicked:', post.id)
                   trackView(post.id)
                   setSelectedCard({
                     id: post.id,
                     type: (post.content_type as any) || 'image',
                     title: post.title,
-                    description: undefined,
+                    description: post.description,
                     imageUrl: post.media_url || '',
                     aspectRatio: 'square' as const,
+                    audioUrl: post.audio_url,
+                    videoUrl: post.video_url,
                     creator: profile?.username || '',
                     date: post.created_at,
                     views: post.views,
                   })
+                  console.log('Setting detail modal to true')
                   setShowDetailModal(true)
                 }}
                 className="group relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"

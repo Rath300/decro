@@ -624,7 +624,7 @@ export default function CreatePostPage() {
               onChange={(e) => setPostData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Tell us about your work..."
               rows={4}
-              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black placeholder-gray-400 resize-none focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black bg-white placeholder-gray-400 resize-none focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
               maxLength={500}
             />
             <div className="text-xs font-['Space_Mono'] text-gray-500 mt-1 text-right">
@@ -652,7 +652,7 @@ export default function CreatePostPage() {
                 }
               }}
               placeholder="e.g., photography, landscape, sunset..."
-              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+              className="w-full p-3 border border-gray-300 font-['Space_Mono'] text-sm text-black bg-white focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
             />
             {postData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">

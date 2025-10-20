@@ -224,7 +224,7 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by title, description, or username..."
-              className="w-full px-4 py-3 pr-24 border-2 border-gray-300 focus:border-black focus:outline-none text-lg"
+              className="w-full px-4 py-3 pr-24 border-2 border-gray-300 focus:border-black focus:outline-none text-lg text-black bg-white"
             />
             <button
               type="submit"

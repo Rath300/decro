@@ -172,10 +172,10 @@ export async function uploadAvatar(file: File): Promise<UploadResult> {
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
     const filePath = fileName
     
-    // Upload to avatars bucket
+    // Upload to media bucket in avatars folder
     const { data, error } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, compressed, {
+      .from('media')
+      .upload(`avatars/${filePath}`, compressed, {
         contentType: file.type,
         cacheControl: '3600',
         upsert: false
@@ -185,12 +185,12 @@ export async function uploadAvatar(file: File): Promise<UploadResult> {
     
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath)
+      .from('media')
+      .getPublicUrl(`avatars/${filePath}`)
     
     return {
       url: publicUrl,
-      path: filePath
+      path: `avatars/${filePath}`
     }
   } catch (error) {
     console.error('Avatar upload failed:', error)

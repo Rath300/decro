@@ -155,7 +155,7 @@ export default function FeedbackPage() {
                         [category.id]: e.target.value
                       }))}
                       placeholder={`Describe your ${category.title.toLowerCase()}...`}
-                      className="w-full p-4 border border-gray-300 rounded-lg resize-none font-['Space_Mono']"
+                      className="w-full p-4 border border-gray-300 rounded-lg resize-none font-['Space_Mono'] text-black bg-white"
                       rows={4}
                     />
                     <div className="flex justify-end gap-3">

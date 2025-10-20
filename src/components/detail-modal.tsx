@@ -18,6 +18,7 @@ export default function DetailModal() {
     handleComment,
     likedCards,
     toggleLike,
+    refetchPosts,
   } = usePosts()
   const { isAuthenticated, user } = useAuth()
   const router = useRouter()
@@ -141,7 +142,7 @@ export default function DetailModal() {
                 <div>
                   <PostStats postId={selectedCard.id} initialViews={selectedCard.views} />
                 </div>
-                <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} />
+                <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={refetchPosts} />
               </div>
 
               {/* Comments */}
@@ -296,7 +297,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                     value={replyText[comment.id] || ''}
                     onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
                     placeholder="Write a reply..."
-                    className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black"
+                    className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black bg-white"
                     rows={2}
                   />
                   <div className="flex gap-2">
@@ -389,7 +390,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
   )
 }
 
-function OwnerDeleteButton({ postId, onDeleted }: { postId: string; onDeleted: () => void }) {
+function OwnerDeleteButton({ postId, onDeleted, refetchPosts }: { postId: string; onDeleted: () => void; refetchPosts?: (sortBy?: 'created_at' | 'likes' | 'comments') => Promise<void> }) {
   const { user } = useAuth()
   const [isOwner, setIsOwner] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -432,24 +433,12 @@ function OwnerDeleteButton({ postId, onDeleted }: { postId: string; onDeleted: (
     if (!confirm('Delete this post? This cannot be undone.')) return
     setIsDeleting(true)
     try {
-      console.log('Attempting to delete post:', postId)
+      console.log('Attempting to delete post:', postId, 'user:', user?.id)
       
-      // First verify ownership before attempting delete
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('external_id', user?.id)
-        .single()
-
-      if (!profileData) {
-        throw new Error('Could not verify ownership')
-      }
-
-      const { data, error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', postId)
-        .select()
+      const { data, error } = await supabase.rpc('delete_post_ext', {
+        post_id_param: postId,
+        external_id_param: user?.id
+      })
 
       console.log('Delete result:', { data, error })
       
@@ -458,12 +447,23 @@ function OwnerDeleteButton({ postId, onDeleted }: { postId: string; onDeleted: (
         throw error
       }
 
-      console.log('Post deleted successfully')
-      onDeleted()
-      window.location.reload()
-    } catch (e) {
+      if (data && data.error) {
+        throw new Error(data.error)
+      }
+
+      if (data && data.success) {
+        console.log('Post deleted successfully:', data.deleted_post)
+        onDeleted()
+        // Refresh the posts data instead of reloading the page
+        if (refetchPosts) {
+          await refetchPosts('created_at')
+        }
+      } else {
+        throw new Error('Unknown error occurred')
+      }
+    } catch (e: any) {
       console.error('Failed to delete post:', e)
-      alert('Failed to delete post. Please try again.')
+      alert('Failed to delete post: ' + (e.message || 'Please try again.'))
     } finally {
       setIsDeleting(false)
     }

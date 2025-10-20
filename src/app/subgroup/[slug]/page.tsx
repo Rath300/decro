@@ -241,7 +241,7 @@ export default function SubgroupDetail() {
                 disabled={followLoading || !user}
                 className={`px-6 py-2 border-2 transition-colors text-sm font-medium ${
                   isFollowing
-                    ? 'border-gray-300 hover:border-red-500 hover:text-red-500'
+                    ? 'border-gray-300 text-black hover:border-red-500 hover:text-red-500'
                     : 'border-black bg-black text-white hover:bg-gray-800'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >

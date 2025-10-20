@@ -208,7 +208,7 @@ export default function EditPostPage() {
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Tell us about your work..."
               rows={4}
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none text-black bg-white"
               maxLength={500}
             />
             <div className="text-xs text-gray-500 mt-1 text-right">

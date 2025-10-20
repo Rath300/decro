@@ -95,31 +95,28 @@ export default function SpotlightCreatePage() {
         coverUrl = uploaded.url
       }
 
-      // Get the profile ID from external ID
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('external_id', user.id)
-        .single()
+      // Create spotlight collection using RPC to handle RLS properly
+      const { data: collectionResult, error: insertErr } = await supabase.rpc('create_spotlight_collection_ext', {
+        title_param: title.trim(),
+        description_param: description.trim() || null,
+        cover_image_url_param: coverUrl,
+        external_id_param: user.id
+      })
 
-      if (profileError) throw new Error('Profile not found')
+      if (insertErr) {
+        console.error('Failed to create spotlight collection:', insertErr)
+        throw insertErr
+      }
 
-      const { data: collection, error: insertErr } = await supabase
-        .from('spotlight_collections')
-        .insert({
-          title: title.trim(),
-          description: description.trim() || null,
-          cover_image_url: coverUrl,
-          creator_id: profileData.id,
-          created_by: user.id, // Add this for RLS compatibility
-          is_featured: false
-        })
-        .select('id')
-        .single()
+      if (collectionResult && collectionResult.error) {
+        throw new Error(collectionResult.error)
+      }
 
-      if (insertErr) throw insertErr
+      if (!collectionResult || !collectionResult.success) {
+        throw new Error('Failed to create spotlight collection')
+      }
 
-      const collectionId = collection.id as string
+      const collectionId = collectionResult.collection_id
 
       if (selected.size > 0) {
         const items = Array.from(selected).map((postId, idx) => ({
