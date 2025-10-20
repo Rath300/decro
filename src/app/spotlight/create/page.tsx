@@ -42,7 +42,7 @@ export default function SpotlightCreatePage() {
           .from('posts')
           .select('id, title, media_url, created_at, description')
           .order('created_at', { ascending: false })
-          .limit(100)
+          .limit(500)
         if (error) throw error
         const postsData = data || []
         setPosts(postsData)
