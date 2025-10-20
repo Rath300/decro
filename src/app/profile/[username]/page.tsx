@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import { usePosts } from '@/context/post-context'
@@ -196,6 +196,31 @@ export default function PublicProfilePage() {
     }
   }
 
+  // Optimized post click handler
+  const handlePostClick = useCallback(async (post: UserPost) => {
+    try {
+      console.log('Post clicked:', post.id)
+      await trackView(post.id)
+      setSelectedCard({
+        id: post.id,
+        type: (post.content_type as any) || 'image',
+        title: post.title,
+        description: post.description,
+        imageUrl: post.media_url || '',
+        aspectRatio: 'square' as const,
+        audioUrl: post.audio_url,
+        videoUrl: post.video_url,
+        creator: profile?.username || '',
+        date: post.created_at,
+        views: post.views,
+      })
+      console.log('Setting detail modal to true')
+      setShowDetailModal(true)
+    } catch (error) {
+      console.error('Failed to open post detail:', error)
+    }
+  }, [trackView, setSelectedCard, setShowDetailModal, profile?.username])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -299,25 +324,7 @@ export default function PublicProfilePage() {
             {posts.map((post) => (
               <button
                 key={post.id}
-                onClick={() => {
-                  console.log('Post clicked:', post.id)
-                  trackView(post.id)
-                  setSelectedCard({
-                    id: post.id,
-                    type: (post.content_type as any) || 'image',
-                    title: post.title,
-                    description: post.description,
-                    imageUrl: post.media_url || '',
-                    aspectRatio: 'square' as const,
-                    audioUrl: post.audio_url,
-                    videoUrl: post.video_url,
-                    creator: profile?.username || '',
-                    date: post.created_at,
-                    views: post.views,
-                  })
-                  console.log('Setting detail modal to true')
-                  setShowDetailModal(true)
-                }}
+                onClick={() => handlePostClick(post)}
                 className="group relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
               >
                 {post.media_url && (

@@ -232,6 +232,7 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
   const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({})
   const [openReplyFor, setOpenReplyFor] = useState<string | null>(null)
   const [replyText, setReplyText] = useState<Record<string, string>>({})
+  const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set())
   const { isAuthenticated, user } = useAuth()
 
   useEffect(() => {
@@ -331,6 +332,8 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
           setReplyText={setReplyText}
           refetch={refetch}
           updateVoteScore={updateCommentVoteScore}
+          visibleReplies={visibleReplies}
+          setVisibleReplies={setVisibleReplies}
         />
       ))}
     </div>
@@ -349,7 +352,9 @@ function RedditComment({
   replyText,
   setReplyText,
   refetch,
-  updateVoteScore
+  updateVoteScore,
+  visibleReplies,
+  setVisibleReplies
 }: { 
   comment: RealtimeComment
   depth: number
@@ -363,6 +368,8 @@ function RedditComment({
   setReplyText: (text: Record<string, string>) => void
   refetch?: () => void
   updateVoteScore?: (commentId: string, newVoteScore: number) => void
+  visibleReplies: Set<string>
+  setVisibleReplies: (setter: (prev: Set<string>) => Set<string>) => void
 }) {
   const { isAuthenticated, user } = useAuth()
   const maxDepth = 2
@@ -404,20 +411,41 @@ function RedditComment({
           
           {/* Comment actions with likes */}
           <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+            {/* Show/Hide replies button */}
+            {comment.reply_count && comment.reply_count > 0 && (
+              <button
+                className="hover:text-black"
+                onClick={async () => {
+                  const newVisibleReplies = new Set(visibleReplies);
+                  if (newVisibleReplies.has(comment.id)) {
+                    newVisibleReplies.delete(comment.id);
+                    setVisibleReplies(() => newVisibleReplies);
+                  } else {
+                    newVisibleReplies.add(comment.id);
+                    setVisibleReplies(() => newVisibleReplies);
+                    // Load replies if not already loaded
+                    if (!(comment.id in replies)) {
+                      loadReplies();
+                    }
+                  }
+                }}
+              >
+                {visibleReplies.has(comment.id) ? 'Hide replies' : 'Show replies'}{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+              </button>
+            )}
+            
+            {/* Reply button */}
             <button
               className="hover:text-black"
-              onClick={async () => {
+              onClick={() => {
                 if (openReplyFor === comment.id) {
                   setOpenReplyFor(null);
-                  return;
-                }
-                setOpenReplyFor(comment.id);
-                if (loadReplies) {
-                  loadReplies();
+                } else {
+                  setOpenReplyFor(comment.id);
                 }
               }}
             >
-              Reply{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+              Reply
             </button>
             
             {/* Like button */}
@@ -426,18 +454,40 @@ function RedditComment({
               onClick={async () => {
                 if (!isAuthenticated || !user?.id) return;
                 try {
-                  const { data } = await supabase.rpc('toggle_comment_vote_ext', { 
+                  const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
                     comment_id_param: comment.id, 
                     external_id_param: user.id, 
                     direction: 1 
                   });
                   
+                  if (rpcError) {
+                    console.error('RPC error:', rpcError);
+                    return;
+                  }
+                  
+                  console.log('Comment vote response:', data);
+                  
+                  // Parse the JSON response if it's a string
+                  let responseData = data;
+                  if (typeof data === 'string') {
+                    try {
+                      responseData = JSON.parse(data);
+                    } catch (e) {
+                      console.error('Failed to parse response:', e);
+                      if (refetch) refetch();
+                      return;
+                    }
+                  }
+                  
                   // Update the comment vote score immediately from the response
-                  if (data && typeof data.vote_score === 'number' && updateVoteScore) {
-                    updateVoteScore(comment.id, data.vote_score);
-                  } else if (refetch) {
-                    // Fallback: refetch if response doesn't have vote_score or no callback
-                    refetch();
+                  if (responseData && typeof responseData.vote_score === 'number' && updateVoteScore) {
+                    updateVoteScore(comment.id, responseData.vote_score);
+                  } else {
+                    console.log('No vote_score in response, refetching...');
+                    if (refetch) {
+                      // Fallback: refetch if response doesn't have vote_score or no callback
+                      refetch();
+                    }
                   }
                 } catch (error) {
                   console.error('Error toggling comment vote:', error);
@@ -498,7 +548,7 @@ function RedditComment({
           )}
 
           {/* Show replies */}
-          {(replies.length > 0 || loadingReplies) && (
+          {visibleReplies.has(comment.id) && (replies.length > 0 || loadingReplies) && (
             <div className="mt-3">
               {loadingReplies ? (
                 <div className="text-xs text-gray-500">Loading replies...</div>
@@ -519,6 +569,8 @@ function RedditComment({
                       setReplyText={setReplyText}
                       refetch={refetch}
                       updateVoteScore={updateVoteScore}
+                      visibleReplies={visibleReplies}
+                      setVisibleReplies={setVisibleReplies}
                     />
                   ))}
                 </div>

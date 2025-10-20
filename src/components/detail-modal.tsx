@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosts } from '@/context/post-context'
 import { useAuth } from '@/context/auth-context'
@@ -28,7 +28,7 @@ export default function DetailModal() {
 
   if (!showDetailModal || !selectedCard) return null
 
-  const handlePortfolioClick = async (creatorId: string) => {
+  const handlePortfolioClick = useCallback(async (creatorId: string) => {
     try {
       const { data } = await supabase
         .from('profiles')
@@ -37,9 +37,9 @@ export default function DetailModal() {
         .single()
       if (data?.username) router.push(`/profile/${data.username}`)
     } catch {}
-  }
+  }, [router])
 
-  const handleCommentSubmit = () => {
+  const handleCommentSubmit = useCallback(() => {
     if (!isAuthenticated) return
     const content = commentText.trim()
     handleComment()
@@ -57,14 +57,18 @@ export default function DetailModal() {
       setOptimisticComments((prev) => [optimistic, ...prev])
       setCommentsRefreshSignal((n) => n + 1)
     }
-  }
+  }, [isAuthenticated, commentText, handleComment, selectedCard, user?.id, user?.name, user?.email, setOptimisticComments, setCommentsRefreshSignal])
+
+  const handleCloseModal = useCallback(() => {
+    setShowDetailModal(false)
+  }, [setShowDetailModal])
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowDetailModal(false)}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleCloseModal}>
       <div className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-['Space_Mono'] font-bold text-black">{selectedCard.title}</h2>
-          <button onClick={() => setShowDetailModal(false)} aria-label="Close" className="text-gray-500 hover:text-black">✕</button>
+          <button onClick={handleCloseModal} aria-label="Close" className="text-gray-500 hover:text-black">✕</button>
         </div>
 
         <div className="flex flex-col lg:flex-row">
@@ -271,18 +275,38 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                 onClick={async () => {
                   if (!isAuthenticated || !user?.id) return;
                   try {
-                    const { data } = await supabase.rpc('toggle_comment_vote_ext', { 
+                    const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
                       comment_id_param: comment.id, 
                       external_id_param: user.id, 
                       direction: 1 
                     });
                     
+                    if (rpcError) {
+                      console.error('RPC error:', rpcError);
+                      return;
+                    }
+                    
+                    console.log('Comment vote response:', data);
+                    
+                    // Parse the JSON response if it's a string
+                    let responseData = data;
+                    if (typeof data === 'string') {
+                      try {
+                        responseData = JSON.parse(data);
+                      } catch (e) {
+                        console.error('Failed to parse response:', e);
+                        refetch();
+                        return;
+                      }
+                    }
+                    
                     // Update the comment vote score immediately from the response
-                    if (data && typeof data.vote_score === 'number') {
+                    if (responseData && typeof responseData.vote_score === 'number') {
                       setMerged(prev => prev.map(c => 
-                        c.id === comment.id ? { ...c, vote_score: data.vote_score } : c
+                        c.id === comment.id ? { ...c, vote_score: responseData.vote_score } : c
                       ));
                     } else {
+                      console.log('No vote_score in response, refetching...');
                       // Fallback: refetch if response doesn't have vote_score
                       refetch();
                     }

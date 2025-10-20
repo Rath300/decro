@@ -5,12 +5,13 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
 import { PostStats } from '@/components/post-stats'
 import { usePosts } from '@/context/post-context'
+import DetailModal from '@/components/detail-modal'
 
 interface UserPost {
   id: string
@@ -21,6 +22,9 @@ interface UserPost {
   like_count: number
   comment_count: number
   created_at: string
+  description?: string
+  audio_url?: string
+  video_url?: string
 }
 
 interface UserStats {
@@ -39,27 +43,28 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'posts' | 'liked'>('posts')
+  const [username, setUsername] = useState<string>('')
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/')
-      return
-    }
-
-    if (!user?.id) return
-
-    loadProfile()
-  }, [user?.id, isAuthenticated])
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!user?.id) return
 
     try {
-      // Map external auth id -> profiles.id
+      // Map external auth id -> profiles.id and get username
       const { data: profileId, error: ensureErr } = await supabase.rpc('ensure_profile', {
         external_id_param: user.id,
       })
       if (ensureErr) throw ensureErr
+
+      // Get username from profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', profileId)
+        .single()
+      
+      if (profileData?.username) {
+        setUsername(profileData.username)
+      }
 
       // Load user stats
       const { data: statsData, error: statsError } = await supabase.rpc('get_user_stats', {
@@ -70,13 +75,16 @@ export default function ProfilePage() {
         setStats(statsData)
       }
 
-      // Load user posts
+      // Load user posts with all necessary fields
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
           id,
           title,
+          description,
           media_url,
+          audio_url,
+          video_url,
           content_type,
           views,
           created_at
@@ -108,7 +116,46 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/')
+      return
+    }
+
+    if (!user?.id) return
+
+    loadProfile()
+  }, [user?.id, isAuthenticated, loadProfile])
+
+  // Optimized post click handler with useCallback
+  const handlePostClick = useCallback(async (post: UserPost) => {
+    try {
+      // Track view
+      await trackView(post.id)
+      
+      // Set selected card with complete data
+      setSelectedCard({
+        id: post.id,
+        type: (post.content_type as any) || 'image',
+        title: post.title,
+        description: post.description,
+        imageUrl: post.media_url || '',
+        aspectRatio: 'square' as const,
+        audioUrl: post.audio_url,
+        videoUrl: post.video_url,
+        creator: username || user?.email?.split('@')[0] || 'Anonymous',
+        date: post.created_at,
+        views: post.views,
+      })
+      
+      // Show modal
+      setShowDetailModal(true)
+    } catch (error) {
+      console.error('Failed to open post detail:', error)
+    }
+  }, [trackView, setSelectedCard, setShowDetailModal, username, user?.email])
 
   if (!isAuthenticated) {
     return null
@@ -221,21 +268,7 @@ export default function ProfilePage() {
                   <div key={post.id} className="group">
                     <button
                       className="relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
-                      onClick={() => {
-                        trackView(post.id)
-                        setSelectedCard({
-                          id: post.id,
-                          type: (post.content_type as any) || 'image',
-                          title: post.title,
-                          description: undefined,
-                          imageUrl: post.media_url || '',
-                          aspectRatio: 'square',
-                          creator: user?.id || '',
-                          date: post.created_at,
-                          views: post.views,
-                        })
-                        setShowDetailModal(true)
-                      }}
+                      onClick={() => handlePostClick(post)}
                     >
                       {post.media_url && (
                         <img
@@ -273,6 +306,7 @@ export default function ProfilePage() {
           </>
         )}
       </main>
+      <DetailModal />
     </div>
   )
 }
