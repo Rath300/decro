@@ -42,14 +42,20 @@ export default function SubgroupDetail() {
             created_by,
             created_at,
             member_count,
-            post_count
+            post_count,
+            profiles!subgroups_created_by_fkey(username)
           `)
           .eq('slug', params.slug)
           .single()
         
         if (data) {
           setSubgroupId(data.id)
-          setSubgroupData(data)
+          // Transform data to include creator username
+          const transformedData = {
+            ...data,
+            creator_username: (data.profiles as any)?.username || null
+          }
+          setSubgroupData(transformedData)
 
           // Get follower count
           const { count } = await supabase
@@ -190,6 +196,9 @@ export default function SubgroupDetail() {
                     {followerCount} members
                   </div>
                   <div className="text-xs text-gray-400">
+                    {subgroupData.creator_username && (
+                      <div className="mb-1">Created by u/{subgroupData.creator_username}</div>
+                    )}
                     Created {getTimeAgo(subgroupData.created_at)}
                   </div>
                 </div>

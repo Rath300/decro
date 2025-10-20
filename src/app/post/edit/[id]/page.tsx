@@ -43,9 +43,21 @@ export default function EditPostPage() {
 
       if (postError) throw postError
 
-      // Check ownership
-      if (post.creator_id !== user?.id) {
-        toast.error('You can only edit your own posts')
+      // Check ownership - need to map external ID to profile UUID
+      if (user?.id) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .single()
+
+        if (profileError || !profileData || post.creator_id !== profileData.id) {
+          toast.error('You can only edit your own posts')
+          router.push('/feed')
+          return
+        }
+      } else {
+        toast.error('You must be logged in to edit posts')
         router.push('/feed')
         return
       }

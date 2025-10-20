@@ -19,6 +19,7 @@ type Subgroup = {
   member_count?: number
   post_count?: number
   created_at: string
+  creator_username?: string
 }
 
 export default function SubgroupIndex() {
@@ -46,12 +47,20 @@ export default function SubgroupIndex() {
             cover_image_url,
             member_count,
             post_count,
-            created_at
+            created_at,
+            created_by,
+            profiles!subgroups_created_by_fkey(username)
           `)
           .order('member_count', { ascending: false })
         
-        setItems(data || [])
-        setFiltered(data || [])
+        // Transform data to include creator username
+        const transformedData = data?.map(item => ({
+          ...item,
+          creator_username: (item.profiles as any)?.username || null
+        })) || []
+        
+        setItems(transformedData)
+        setFiltered(transformedData)
       } catch (error) {
         console.error('Failed to load subgroups:', error)
       } finally {
@@ -242,7 +251,12 @@ export default function SubgroupIndex() {
                           <p className="text-sm text-gray-700 mb-4 line-clamp-2">{s.description}</p>
                         )}
 
-                        {/* Stats */}
+                        {/* Creator and Stats */}
+                        {s.creator_username && (
+                          <div className="text-xs text-gray-500 mb-2">
+                            Created by u/{s.creator_username}
+                          </div>
+                        )}
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <div className="flex items-center gap-4">
                             <span>{s.member_count || 0} members</span>

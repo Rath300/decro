@@ -138,7 +138,8 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white min-h-screen">
+    <div className="w-full bg-white min-h-screen">
+      <div className="max-w-4xl mx-auto p-6">
       {/* Header */}
       <div className="mb-6">
         <button 
@@ -215,6 +216,7 @@ export default function PostDetailPage() {
           optimisticComments={optimisticComments}
         />
       </div>
+      </div>
     </div>
   )
 }
@@ -230,6 +232,10 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
   const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({})
   const [openReplyFor, setOpenReplyFor] = useState<string | null>(null)
   const [replyText, setReplyText] = useState<Record<string, string>>({})
+  const [editingComment, setEditingComment] = useState<string | null>(null)
+  const [editText, setEditText] = useState<Record<string, string>>({})
+  const [isEditing, setIsEditing] = useState(false)
+  const [commentOwnership, setCommentOwnership] = useState<Record<string, boolean>>({})
   const { isAuthenticated, user } = useAuth()
 
   useEffect(() => {
@@ -251,6 +257,32 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
     )
     setMerged([...filteredOptimistic, ...server])
   }, [comments, optimisticComments])
+
+  // Check comment ownership when user changes or comments update
+  useEffect(() => {
+    if (!user?.id || merged.length === 0) return
+    
+    const checkOwnership = async () => {
+      const ownership: Record<string, boolean> = {}
+      
+      // Get current user's profile ID
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('external_id', user.id)
+        .single()
+      
+      if (profileData) {
+        merged.forEach(comment => {
+          ownership[comment.id] = comment.user_id === profileData.id
+        })
+      }
+      
+      setCommentOwnership(ownership)
+    }
+    
+    checkOwnership()
+  }, [user?.id, merged])
 
   const loadReplies = async (commentId: string) => {
     if (loadingReplies[commentId] || replies[commentId] !== undefined) return
@@ -310,6 +342,13 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
           setOpenReplyFor={setOpenReplyFor}
           replyText={replyText}
           setReplyText={setReplyText}
+          editingComment={editingComment}
+          setEditingComment={setEditingComment}
+          editText={editText}
+          setEditText={setEditText}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+          commentOwnership={commentOwnership}
           refetch={refetch}
         />
       ))}
@@ -328,6 +367,13 @@ function RedditComment({
   setOpenReplyFor,
   replyText,
   setReplyText,
+  editingComment,
+  setEditingComment,
+  editText,
+  setEditText,
+  isEditing,
+  setIsEditing,
+  commentOwnership,
   refetch
 }: { 
   comment: RealtimeComment
@@ -340,6 +386,13 @@ function RedditComment({
   setOpenReplyFor: (id: string | null) => void
   replyText: Record<string, string>
   setReplyText: (text: Record<string, string>) => void
+  editingComment: string | null
+  setEditingComment: (id: string | null) => void
+  editText: Record<string, string>
+  setEditText: (text: Record<string, string>) => void
+  isEditing: boolean
+  setIsEditing: (editing: boolean) => void
+  commentOwnership: Record<string, boolean>
   refetch?: () => void
 }) {
   const { isAuthenticated, user } = useAuth()
@@ -376,9 +429,58 @@ function RedditComment({
               {getTimeAgo(comment.created_at)}
             </span>
           </div>
-          <p className="font-['Space_Mono'] text-sm text-gray-800 mb-2 break-words">
-            {comment.content}
-          </p>
+          {/* Comment content or edit input */}
+          {editingComment === comment.id ? (
+            <div className="mb-2">
+              <textarea
+                value={editText[comment.id] || comment.content}
+                onChange={(e) => setEditText({ ...editText, [comment.id]: e.target.value })}
+                className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black bg-white"
+                rows={2}
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={async () => {
+                    const content = editText[comment.id]?.trim() || comment.content;
+                    if (!content || !user?.id) return;
+                    
+                    setIsEditing(true);
+                    try {
+                      await supabase.rpc('update_comment_ext', {
+                        comment_id_param: comment.id,
+                        external_id_param: user.id,
+                        content_param: content
+                      });
+                      setEditingComment(null);
+                      setEditText({ ...editText, [comment.id]: '' });
+                      if (refetch) refetch();
+                    } catch (error) {
+                      console.error('Error updating comment:', error);
+                    } finally {
+                      setIsEditing(false);
+                    }
+                  }}
+                  disabled={isEditing}
+                  className="px-3 py-1 text-xs bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                >
+                  {isEditing ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingComment(null);
+                    setEditText({ ...editText, [comment.id]: '' });
+                  }}
+                  className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="font-['Space_Mono'] text-sm text-gray-800 mb-2 break-words">
+              {comment.content}
+            </p>
+          )}
           
           {/* Comment actions with likes */}
           <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
@@ -420,6 +522,17 @@ function RedditComment({
               </svg>
               <span>{comment.vote_score || 0}</span>
             </button>
+            {commentOwnership[comment.id] && (
+              <button
+                className="hover:text-blue-500"
+                onClick={() => {
+                  setEditingComment(comment.id);
+                  setEditText({ ...editText, [comment.id]: comment.content });
+                }}
+              >
+                Edit
+              </button>
+            )}
           </div>
 
           {/* Reply input */}
@@ -488,6 +601,13 @@ function RedditComment({
                       setOpenReplyFor={setOpenReplyFor}
                       replyText={replyText}
                       setReplyText={setReplyText}
+                      editingComment={editingComment}
+                      setEditingComment={setEditingComment}
+                      editText={editText}
+                      setEditText={setEditText}
+                      isEditing={isEditing}
+                      setIsEditing={setIsEditing}
+                      commentOwnership={commentOwnership}
                       refetch={refetch}
                     />
                   ))}

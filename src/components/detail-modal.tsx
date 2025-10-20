@@ -185,6 +185,10 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
   const [replies, setReplies] = useState<Record<string, RealtimeComment[]>>({})
   const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({})
   const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set())
+  const [editingComment, setEditingComment] = useState<string | null>(null)
+  const [editText, setEditText] = useState<Record<string, string>>({})
+  const [isEditing, setIsEditing] = useState(false)
+  const [commentOwnership, setCommentOwnership] = useState<Record<string, boolean>>({})
 
   useEffect(() => { if (postId) refetch() }, [refreshSignal])
   useEffect(() => {
@@ -194,6 +198,32 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
     const filteredOptimistic = optimistic.filter(o => !server.some(s => s.content === o.content && Math.abs(new Date(s.created_at).getTime() - new Date(o.created_at).getTime()) < 60000))
     setMerged([...filteredOptimistic, ...server])
   }, [comments, optimisticComments])
+
+  // Check comment ownership when user changes or comments update
+  useEffect(() => {
+    if (!user?.id || merged.length === 0) return
+    
+    const checkOwnership = async () => {
+      const ownership: Record<string, boolean> = {}
+      
+      // Get current user's profile ID
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('external_id', user.id)
+        .single()
+      
+      if (profileData) {
+        merged.forEach(comment => {
+          ownership[comment.id] = comment.user_id === profileData.id
+        })
+      }
+      
+      setCommentOwnership(ownership)
+    }
+    
+    checkOwnership()
+  }, [user?.id, merged])
 
   if (loading && merged.length === 0) {
     return <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">Loading comments...</div>
@@ -225,7 +255,61 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
               <span className="font-['Space_Mono'] font-bold text-sm text-black">{comment.username || 'Anonymous'}</span>
               <span className="font-['Space_Mono'] text-xs text-gray-500">{getTimeAgo(comment.created_at)}</span>
             </div>
-            <p className="font-['Space_Mono'] text-sm text-gray-800 mt-1 break-words">{comment.content}</p>
+            {/* Comment content or edit input */}
+            {editingComment === comment.id ? (
+              <div className="mt-1">
+                <textarea
+                  value={editText[comment.id] || comment.content}
+                  onChange={(e) => setEditText(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                  className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black"
+                  rows={2}
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={async () => {
+                      const content = editText[comment.id]?.trim() || comment.content;
+                      if (!content || !user?.id) return;
+                      
+                      setIsEditing(true);
+                      try {
+                        await supabase.rpc('update_comment_ext', {
+                          comment_id_param: comment.id,
+                          external_id_param: user.id,
+                          content_param: content
+                        });
+                        setMerged(prev => prev.map(c => 
+                          c.id === comment.id 
+                            ? { ...c, content, updated_at: new Date().toISOString() }
+                            : c
+                        ));
+                        setEditingComment(null);
+                        setEditText(prev => ({ ...prev, [comment.id]: '' }));
+                        refetch();
+                      } catch (error) {
+                        console.error('Error updating comment:', error);
+                      } finally {
+                        setIsEditing(false);
+                      }
+                    }}
+                    disabled={isEditing}
+                    className="px-3 py-1 text-xs bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {isEditing ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingComment(null);
+                      setEditText(prev => ({ ...prev, [comment.id]: '' }));
+                    }}
+                    className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="font-['Space_Mono'] text-sm text-gray-800 mt-1 break-words">{comment.content}</p>
+            )}
             
             {/* Reply and voting controls */}
             <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
@@ -285,6 +369,17 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                 </svg>
                 <span>{comment.vote_score || 0}</span>
               </button>
+              {commentOwnership[comment.id] && (
+                <button
+                  className="hover:text-blue-500"
+                  onClick={() => {
+                    setEditingComment(comment.id);
+                    setEditText(prev => ({ ...prev, [comment.id]: comment.content }));
+                  }}
+                >
+                  Edit
+                </button>
+              )}
             </div>
 
             {/* Reply input */}

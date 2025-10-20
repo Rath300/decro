@@ -24,7 +24,10 @@ type Spotlight = {
 
 export default function SpotlightPage() {
   const [spotlights, setSpotlights] = useState<Spotlight[]>([])
+  const [filteredSpotlights, setFilteredSpotlights] = useState<Spotlight[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchAuthor, setSearchAuthor] = useState('')
   const { isAuthenticated } = useAuth()
   const router = useRouter()
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -82,12 +85,64 @@ export default function SpotlightPage() {
     loadSpotlights()
   }, [])
 
+  // Filter spotlights based on search queries
+  useEffect(() => {
+    let filtered = [...spotlights]
+
+    // Filter by title/description
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      filtered = filtered.filter(sp => 
+        sp.title.toLowerCase().includes(query) ||
+        (sp.description && sp.description.toLowerCase().includes(query))
+      )
+    }
+
+    // Filter by author
+    if (searchAuthor.trim()) {
+      const authorQuery = searchAuthor.toLowerCase().trim()
+      filtered = filtered.filter(sp => 
+        sp.creator_username?.toLowerCase().includes(authorQuery)
+      )
+    }
+
+    setFilteredSpotlights(filtered)
+  }, [spotlights, searchQuery, searchAuthor])
+
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-black">Spotlight</h1>
           <Link href="/spotlight/create" className="px-3 py-1 border border-black text-black hover:bg-black hover:text-white font-['Space_Mono'] text-sm">Create spotlight</Link>
+        </div>
+
+        {/* Search Section */}
+        <div className="mb-8 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <input
+              type="text"
+              placeholder="Search spotlights by title or description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm focus:outline-none focus:border-black"
+            />
+            <input
+              type="text"
+              placeholder="Search by author username..."
+              value={searchAuthor}
+              onChange={(e) => setSearchAuthor(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm focus:outline-none focus:border-black"
+            />
+          </div>
+          {(searchQuery || searchAuthor) && (
+            <div className="text-sm text-gray-600">
+              Found {filteredSpotlights.length} spotlight{filteredSpotlights.length !== 1 ? 's' : ''}
+              {searchQuery && ` matching "${searchQuery}"`}
+              {searchQuery && searchAuthor && ' and'}
+              {searchAuthor && ` by author "${searchAuthor}"`}
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -99,10 +154,14 @@ export default function SpotlightPage() {
           <div className="text-center py-24 border border-dashed border-black">
             <p className="text-black">No spotlights yet.</p>
           </div>
+        ) : filteredSpotlights.length === 0 ? (
+          <div className="text-center py-24 border border-dashed border-black">
+            <p className="text-black">No spotlights found matching your search.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <AnimatePresence>
-              {spotlights.map((sp, index) => (
+              {filteredSpotlights.map((sp, index) => (
                 <motion.div
                   key={sp.id}
                   initial={{ opacity: 0, y: 20 }}

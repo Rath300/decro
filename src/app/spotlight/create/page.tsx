@@ -93,6 +93,7 @@ export default function SpotlightCreatePage() {
           description: description.trim() || null,
           cover_image_url: coverUrl,
           creator_id: profileData.id,
+          created_by: user.id, // Add this for RLS compatibility
           is_featured: false
         })
         .select('id')
