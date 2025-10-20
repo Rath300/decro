@@ -98,20 +98,33 @@ export default function SpotlightCreatePage() {
       // Create spotlight collection with items using RPC to handle RLS properly in a single transaction
       const postIdsArray = selected.size > 0 ? Array.from(selected) : []
       
+      // Validate that we have UUID format for post IDs
+      const validatedPostIds = postIdsArray.filter(id => {
+        // Basic UUID validation
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        return typeof id === 'string' && uuidRegex.test(id)
+      })
+      
       console.log('Creating spotlight with params:', {
         title_param: title.trim(),
         description_param: description.trim() || null,
         cover_image_url_param: coverUrl,
         external_id_param: user.id,
-        post_ids_param: postIdsArray
+        post_ids_param: validatedPostIds,
+        original_selected_size: selected.size,
+        filtered_ids_count: validatedPostIds.length
       })
+      
+      if (selected.size > 0 && validatedPostIds.length === 0) {
+        throw new Error('Selected post IDs are not in valid UUID format')
+      }
       
       const { data: collectionResult, error: insertErr } = await supabase.rpc('create_spotlight_collection_ext_with_items', {
         title_param: title.trim(),
         description_param: description.trim() || null,
         cover_image_url_param: coverUrl,
         external_id_param: user.id,
-        post_ids_param: postIdsArray
+        post_ids_param: validatedPostIds
       })
 
       console.log('Spotlight creation response:', { collectionResult, insertErr })

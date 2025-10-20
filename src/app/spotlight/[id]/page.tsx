@@ -93,14 +93,31 @@ export default function SpotlightDetailPage() {
 
       setSpotlight(transformedSpotlight)
 
-      // Load spotlight items with post details
-      const { data: itemsData, error: itemsError } = await supabase
+      // Load spotlight items with post details - simplified query first to test
+      let itemsData, itemsError
+      
+      // First try a simple query to see if we get any items at all
+      const { data: simpleItems, error: simpleError } = await supabase
         .from('spotlight_items')
-        .select(`
-          id,
-          post_id,
-          order_index,
-          posts (
+        .select('id, post_id, order_index')
+        .eq('collection_id', spotlightId)
+        .order('order_index', { ascending: true })
+        
+      console.log('Simple spotlight items query result:', { simpleItems, simpleError })
+      
+      if (simpleError) {
+        console.error('Simple query failed:', simpleError)
+        throw simpleError
+      }
+      
+      if (simpleItems && simpleItems.length > 0) {
+        // If we have items, now get the detailed post info
+        // Try a simpler approach first - get posts separately to avoid foreign key issues
+        const postIds = simpleItems.map(item => item.post_id)
+        
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
+          .select(`
             id,
             title,
             description,
@@ -112,10 +129,36 @@ export default function SpotlightDetailPage() {
             profiles!posts_creator_id_fkey (
               username
             )
-          )
-        `)
-        .eq('collection_id', spotlightId)
-        .order('order_index', { ascending: true })
+          `)
+          .in('id', postIds)
+          
+        if (postsError) {
+          console.error('Failed to load posts for spotlight:', postsError)
+          itemsData = []
+          itemsError = postsError
+        } else {
+          // Merge the spotlight items with post data
+          const mergedItems = simpleItems.map(item => {
+            const post = postsData?.find(p => p.id === item.post_id)
+            return {
+              id: item.id,
+              post_id: item.post_id,
+              order_index: item.order_index,
+              posts: post
+            }
+          })
+          
+          // Sort by order_index
+          mergedItems.sort((a, b) => a.order_index - b.order_index)
+          
+          itemsData = mergedItems
+          itemsError = null
+        }
+      } else {
+        // No items found
+        itemsData = []
+        itemsError = null
+      }
 
       if (itemsError) {
         console.error('Failed to load spotlight items:', itemsError)
