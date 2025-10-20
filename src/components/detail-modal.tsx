@@ -26,8 +26,6 @@ export default function DetailModal() {
   const [commentsRefreshSignal, setCommentsRefreshSignal] = useState(0)
   const [optimisticComments, setOptimisticComments] = useState<RealtimeComment[]>([])
 
-  if (!showDetailModal || !selectedCard) return null
-
   const handlePortfolioClick = useCallback(async (creatorId: string) => {
     try {
       const { data } = await supabase
@@ -57,11 +55,13 @@ export default function DetailModal() {
       setOptimisticComments((prev) => [optimistic, ...prev])
       setCommentsRefreshSignal((n) => n + 1)
     }
-  }, [isAuthenticated, commentText, handleComment, selectedCard, user?.id, user?.name, user?.email, setOptimisticComments, setCommentsRefreshSignal])
+  }, [isAuthenticated, commentText, handleComment, selectedCard, user?.id, user?.name, user?.email])
 
   const handleCloseModal = useCallback(() => {
     setShowDetailModal(false)
   }, [setShowDetailModal])
+
+  if (!showDetailModal || !selectedCard) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleCloseModal}>

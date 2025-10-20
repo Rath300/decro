@@ -100,8 +100,22 @@ export function PostProvider({ children }: { children: ReactNode }) {
       } else {
         await db.likes.delete([cardId, user.id])
       }
+
+      // The like state is already updated optimistically above
+      // UI will refresh automatically through the likedCards state
     } catch (e) {
       console.warn('toggleLike failed, queuing for offline sync:', e)
+      
+      // Revert optimistic update on error
+      setLikedCards(prev => {
+        const next = new Set(prev)
+        if (isCurrentlyLiked) {
+          next.add(cardId)
+        } else {
+          next.delete(cardId)
+        }
+        return next
+      })
       
       // Queue for offline sync
       try {

@@ -742,35 +742,56 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
               >
                 Reply{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
               </button>
-              <div className="inline-flex items-center gap-1">
-                 <button
-                  title="Upvote"
-                  className="hover:text-black"
-                  onClick={async () => {
-                    if (!isAuthenticated || !user?.id) return;
-                    // optimistic +1
-                    setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, vote_score: (c.vote_score ?? 0) + 1 }) : c));
-                     try {
-                       await supabase.rpc('toggle_comment_vote_ext', { comment_id_param: comment.id, external_id_param: user.id, direction: 1 });
-                     } catch {}
-                    refetch();
-                  }}
-                >▲</button>
-                <span className="tabular-nums">{comment.vote_score ?? 0}</span>
-                 <button
-                  title="Downvote"
-                  className="hover:text-black"
-                  onClick={async () => {
-                    if (!isAuthenticated || !user?.id) return;
-                    // optimistic -1
-                    setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, vote_score: (c.vote_score ?? 0) - 1 }) : c));
-                     try {
-                       await supabase.rpc('toggle_comment_vote_ext', { comment_id_param: comment.id, external_id_param: user.id, direction: -1 });
-                     } catch {}
-                    refetch();
-                  }}
-                >▼</button>
-              </div>
+              <button
+                className="hover:text-red-500 flex items-center gap-1"
+                onClick={async () => {
+                  if (!isAuthenticated || !user?.id) return;
+                  try {
+                    const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
+                      comment_id_param: comment.id, 
+                      external_id_param: user.id, 
+                      direction: 1 
+                    });
+                    
+                    if (rpcError) {
+                      console.error('RPC error:', rpcError);
+                      return;
+                    }
+                    
+                    console.log('Comment vote response:', data);
+                    
+                    // Parse the JSON response if it's a string
+                    let responseData = data;
+                    if (typeof data === 'string') {
+                      try {
+                        responseData = JSON.parse(data);
+                      } catch (e) {
+                        console.error('Failed to parse response:', e);
+                        refetch();
+                        return;
+                      }
+                    }
+                    
+                    // Update the comment vote score immediately from the response
+                    if (responseData && typeof responseData.vote_score === 'number') {
+                      setMerged(prev => prev.map(c => 
+                        c.id === comment.id ? { ...c, vote_score: responseData.vote_score } : c
+                      ));
+                    } else {
+                      console.log('No vote_score in response, refetching...');
+                      // Fallback: refetch if response doesn't have vote_score
+                      refetch();
+                    }
+                  } catch (error) {
+                    console.error('Error toggling comment vote:', error);
+                  }
+                }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <span>{comment.vote_score || 0}</span>
+              </button>
             </div>
             {openReplyFor === comment.id && (
               <div className="mt-2 space-y-2">
