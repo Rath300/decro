@@ -206,7 +206,7 @@ export default function EditProfilePage() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+                  className="px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors disabled:opacity-50 text-black bg-white"
                 >
                   {uploading ? 'Uploading...' : 'Change Photo'}
                 </button>
@@ -233,7 +233,7 @@ export default function EditProfilePage() {
               value={formData.username}
               onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
               placeholder="your_username"
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
               maxLength={30}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -252,7 +252,7 @@ export default function EditProfilePage() {
               value={formData.full_name}
               onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
               placeholder="John Doe"
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
               maxLength={100}
             />
           </div>
@@ -268,7 +268,7 @@ export default function EditProfilePage() {
               onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
               placeholder="Tell us about yourself..."
               rows={4}
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none text-black bg-white"
               maxLength={500}
             />
             <div className="text-xs text-gray-500 mt-1 text-right">
@@ -292,7 +292,7 @@ export default function EditProfilePage() {
             <button
               onClick={() => router.back()}
               disabled={saving || uploading}
-              className="px-6 py-3 text-sm border-2 border-gray-300 hover:border-black transition-colors disabled:opacity-50"
+              className="px-6 py-3 text-sm border-2 border-gray-300 hover:border-black transition-colors disabled:opacity-50 text-black bg-white"
             >
               Cancel
             </button>

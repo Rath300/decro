@@ -242,7 +242,10 @@ export default function SpotlightDetailPage() {
           >
             {currentItem.posts.content_type === 'text' ? (
               <Link href={`/post/${currentItem.post_id}`} className="block p-8">
-                <h2 className="text-2xl font-bold text-black mb-4">{currentItem.posts.title}</h2>
+                <h2 className="text-2xl font-bold text-black mb-2">{currentItem.posts.title}</h2>
+                {currentItem.posts.profiles?.username && (
+                  <p className="text-sm text-blue-600 mb-4">by {currentItem.posts.profiles.username}</p>
+                )}
                 {currentItem.posts.description && (
                   <p className="text-gray-700 whitespace-pre-wrap">{currentItem.posts.description}</p>
                 )}
@@ -262,9 +265,12 @@ export default function SpotlightDetailPage() {
                   )}
                 </Link>
                 <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-4">
-                  <h2 className="text-xl font-bold mb-2">{currentItem.posts.title}</h2>
+                  <h2 className="text-xl font-bold mb-1">{currentItem.posts.title}</h2>
+                  {currentItem.posts.profiles?.username && (
+                    <p className="text-sm text-blue-300 mb-2">by {currentItem.posts.profiles.username}</p>
+                  )}
                   {currentItem.posts.description && (
-                    <p className="text-sm text-gray-200 line-clamp-2">{currentItem.posts.description}</p>
+                    <p className="text-sm text-gray-200 line-clamp-2 mb-2">{currentItem.posts.description}</p>
                   )}
                   <div className="mt-2">
                     <PostStats postId={currentItem.post_id} initialViews={currentItem.posts.views} />

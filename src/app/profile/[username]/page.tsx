@@ -12,6 +12,7 @@ import { usePosts } from '@/context/post-context'
 import supabase from '@/lib/supabase-client'
 import { PostStats } from '@/components/post-stats'
 import { useToast } from '@/hooks/use-toast'
+import DetailModal from '@/components/detail-modal'
 
 interface UserPost {
   id: string
@@ -312,6 +313,7 @@ export default function PublicProfilePage() {
           </div>
         )}
       </main>
+      <DetailModal />
     </div>
   )
 }

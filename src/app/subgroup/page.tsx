@@ -36,7 +36,7 @@ export default function SubgroupIndex() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await supabase
+        const { data, error: queryError } = await supabase
           .from('subgroups')
           .select(`
             id,
@@ -48,16 +48,37 @@ export default function SubgroupIndex() {
             member_count,
             post_count,
             created_at,
-            created_by,
-            profiles!subgroups_created_by_fkey(username)
+            created_by
           `)
           .order('member_count', { ascending: false })
+
+        if (queryError) {
+          console.error('Failed to load subgroups query:', queryError)
+          throw queryError
+        }
         
-        // Transform data to include creator username
-        const transformedData = data?.map(item => ({
-          ...item,
-          creator_username: (item.profiles as any)?.username || null
-        })) || []
+        console.log('Loaded subgroups data:', data)
+        
+        // Transform data to include creator username by fetching separately
+        const transformedData = await Promise.all((data || []).map(async (item) => {
+          let creator_username = null;
+          if (item.created_by) {
+            try {
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('external_id', item.created_by)
+                .single();
+              creator_username = profileData?.username || null;
+            } catch (e) {
+              // Ignore error, keep username as null
+            }
+          }
+          return {
+            ...item,
+            creator_username
+          };
+        }))
         
         setItems(transformedData)
         setFiltered(transformedData)

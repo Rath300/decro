@@ -80,6 +80,12 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
           {card.description && (
             <p className="mt-1 text-xs text-gray-600 line-clamp-2">{card.description}</p>
           )}
+          {/* Username */}
+          {card.creator && (
+            <p className="mt-1 text-xs text-blue-600 font-medium">
+              by {card.creator}
+            </p>
+          )}
           <div className="mt-1 flex items-center justify-between text-xs text-gray-600">
             <button
               onClick={(e) => { e.stopPropagation(); toggleLike(card.id) }}

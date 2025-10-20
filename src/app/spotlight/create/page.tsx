@@ -11,6 +11,7 @@ interface PostRow {
   title: string
   media_url: string | null
   created_at: string
+  description?: string | null
 }
 
 export default function SpotlightCreatePage() {
@@ -21,6 +22,8 @@ export default function SpotlightCreatePage() {
   const [description, setDescription] = useState('')
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [posts, setPosts] = useState<PostRow[]>([])
+  const [filteredPosts, setFilteredPosts] = useState<PostRow[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -37,11 +40,13 @@ export default function SpotlightCreatePage() {
       try {
         const { data, error } = await supabase
           .from('posts')
-          .select('id, title, media_url, created_at')
+          .select('id, title, media_url, created_at, description')
           .order('created_at', { ascending: false })
-          .limit(50)
+          .limit(100)
         if (error) throw error
-        setPosts(data || [])
+        const postsData = data || []
+        setPosts(postsData)
+        setFilteredPosts(postsData)
       } catch (e) {
         console.error('Failed to load posts for spotlight:', e)
       } finally {
@@ -50,6 +55,19 @@ export default function SpotlightCreatePage() {
     }
     loadPosts()
   }, [])
+
+  // Filter posts based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredPosts(posts)
+    } else {
+      const filtered = posts.filter(post => 
+        post.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setFilteredPosts(filtered)
+    }
+  }, [searchQuery, posts])
 
   const togglePost = (postId: string) => {
     setSelected(prev => {
@@ -136,7 +154,7 @@ export default function SpotlightCreatePage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-black focus:outline-none focus:bg-gray-50"
+              className="w-full px-3 py-2 border-2 border-black focus:outline-none focus:bg-gray-50 text-black bg-white"
               placeholder="My favorite posts"
               required
             />
@@ -147,7 +165,7 @@ export default function SpotlightCreatePage() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-black focus:outline-none focus:bg-gray-50"
+              className="w-full px-3 py-2 border-2 border-black focus:outline-none focus:bg-gray-50 text-black bg-white"
               placeholder="Why this collection matters..."
               rows={3}
             />
@@ -167,14 +185,27 @@ export default function SpotlightCreatePage() {
               <label className="block text-sm">Select posts to include</label>
               <span className="text-xs text-gray-600">{selected.size} selected</span>
             </div>
+            
+            {/* Search input for posts */}
+            <div className="mb-4">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search posts by title or description..."
+                className="w-full px-3 py-2 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
+              />
+            </div>
 
             {loading ? (
               <div className="text-gray-600">Loading posts...</div>
             ) : posts.length === 0 ? (
               <div className="text-gray-600">No posts yet. Create a post first.</div>
+            ) : filteredPosts.length === 0 ? (
+              <div className="text-gray-600">No posts match your search.</div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {posts.map((p) => (
+                {filteredPosts.map((p) => (
                   <button
                     key={p.id}
                     type="button"

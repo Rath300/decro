@@ -230,7 +230,7 @@ export default function CreateSubgroupPage() {
               value={formData.name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="e.g., Street Photography"
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
               maxLength={50}
             />
           </div>
@@ -248,7 +248,7 @@ export default function CreateSubgroupPage() {
                 value={formData.slug}
                 onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
                 placeholder="street-photography"
-                className="flex-1 p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm"
+                className="flex-1 p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
                 maxLength={50}
               />
             </div>
@@ -268,7 +268,7 @@ export default function CreateSubgroupPage() {
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="What is this subgroup about?"
               rows={4}
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none text-black bg-white"
               maxLength={500}
             />
             <div className="text-xs text-gray-500 mt-1 text-right">
@@ -287,7 +287,7 @@ export default function CreateSubgroupPage() {
               onChange={(e) => setFormData(prev => ({ ...prev, rules: e.target.value }))}
               placeholder="Community guidelines and rules..."
               rows={4}
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none"
+              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none text-black bg-white"
               maxLength={1000}
             />
             <div className="text-xs text-gray-500 mt-1 text-right">

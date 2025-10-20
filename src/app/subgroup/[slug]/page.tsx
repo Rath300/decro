@@ -42,18 +42,33 @@ export default function SubgroupDetail() {
             created_by,
             created_at,
             member_count,
-            post_count,
-            profiles!subgroups_created_by_fkey(username)
+            post_count
           `)
           .eq('slug', params.slug)
           .single()
         
         if (data) {
           setSubgroupId(data.id)
+          
+          // Get creator username separately
+          let creator_username = null;
+          if (data.created_by) {
+            try {
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('external_id', data.created_by)
+                .single();
+              creator_username = profileData?.username || null;
+            } catch (e) {
+              // Ignore error, keep username as null
+            }
+          }
+          
           // Transform data to include creator username
           const transformedData = {
             ...data,
-            creator_username: (data.profiles as any)?.username || null
+            creator_username
           }
           setSubgroupData(transformedData)
 
