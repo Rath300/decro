@@ -963,12 +963,20 @@ function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted: ()
     setIsDeleting(true);
 
     try {
-      const { error } = await supabase
+      console.log('Attempting to delete post:', postId);
+      
+      const { data, error } = await supabase
         .from('posts')
         .delete()
-        .eq('id', postId);
+        .eq('id', postId)
+        .select();
 
-      if (error) throw error;
+      console.log('Delete result:', { data, error });
+
+      if (error) {
+        console.error('Delete error details:', error);
+        throw error;
+      }
 
       toast.success('Post deleted successfully');
       onDeleted();

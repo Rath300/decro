@@ -64,14 +64,21 @@ export default function SubgroupIndex() {
           let creator_username = null;
           if (item.created_by) {
             try {
-              const { data: profileData } = await supabase
+              const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
                 .select('username')
                 .eq('external_id', item.created_by)
-                .single();
-              creator_username = profileData?.username || null;
+                .maybeSingle(); // Use maybeSingle() instead of single() to avoid errors when no match
+              
+              if (!profileError && profileData) {
+                creator_username = profileData.username;
+              } else {
+                // If profile not found, use the external_id as fallback username
+                creator_username = item.created_by;
+              }
             } catch (e) {
-              // Ignore error, keep username as null
+              console.warn('Could not fetch username for:', item.created_by, e);
+              creator_username = item.created_by; // Use external_id as fallback
             }
           }
           return {
@@ -179,7 +186,7 @@ export default function SubgroupIndex() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:border-black focus:outline-none"
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:border-black focus:outline-none text-black"
             >
               <option value="members">Most Members</option>
               <option value="posts">Most Active</option>

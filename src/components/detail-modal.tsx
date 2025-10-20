@@ -432,12 +432,38 @@ function OwnerDeleteButton({ postId, onDeleted }: { postId: string; onDeleted: (
     if (!confirm('Delete this post? This cannot be undone.')) return
     setIsDeleting(true)
     try {
-      const { error } = await supabase.from('posts').delete().eq('id', postId)
-      if (error) throw error
+      console.log('Attempting to delete post:', postId)
+      
+      // First verify ownership before attempting delete
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('external_id', user?.id)
+        .single()
+
+      if (!profileData) {
+        throw new Error('Could not verify ownership')
+      }
+
+      const { data, error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId)
+        .select()
+
+      console.log('Delete result:', { data, error })
+      
+      if (error) {
+        console.error('Delete error details:', error)
+        throw error
+      }
+
+      console.log('Post deleted successfully')
       onDeleted()
       window.location.reload()
     } catch (e) {
       console.error('Failed to delete post:', e)
+      alert('Failed to delete post. Please try again.')
     } finally {
       setIsDeleting(false)
     }

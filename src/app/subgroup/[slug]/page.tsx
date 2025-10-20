@@ -54,14 +54,20 @@ export default function SubgroupDetail() {
           let creator_username = null;
           if (data.created_by) {
             try {
-              const { data: profileData } = await supabase
+              const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
                 .select('username')
                 .eq('external_id', data.created_by)
-                .single();
-              creator_username = profileData?.username || null;
+                .maybeSingle(); // Use maybeSingle() to avoid 406 errors
+              
+              if (!profileError && profileData) {
+                creator_username = profileData.username;
+              } else {
+                creator_username = data.created_by; // Use external_id as fallback
+              }
             } catch (e) {
-              // Ignore error, keep username as null
+              console.warn('Could not fetch username for:', data.created_by, e);
+              creator_username = data.created_by; // Use external_id as fallback
             }
           }
           
