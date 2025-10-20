@@ -14,6 +14,7 @@ export interface CachedPost {
   views: number
   subgroupId?: string | null
   subgroupName?: string | null
+  subgroupSlug?: string | null
   description?: string | null
 }
 
@@ -34,7 +35,7 @@ export class LocalDb extends Dexie {
 
   constructor() {
     super('decro-local')
-    // v1: initial schema; v2: add subgroupId to posts index; v3: add userHistory; v4: add subgroupName
+    // v1: initial schema; v2: add subgroupId to posts index; v3: add userHistory; v4: add subgroupName; v5: add subgroupSlug
     this.version(1).stores({
       posts: 'id, date',
       likes: '[postId+userId]',
@@ -67,6 +68,17 @@ export class LocalDb extends Dexie {
     }).upgrade(tx => {
       return (tx.table('posts') as any).toCollection().modify((p: any) => {
         if (p.subgroupName === undefined) p.subgroupName = null
+      })
+    })
+    this.version(5).stores({
+      posts: 'id, date, subgroupId',
+      likes: '[postId+userId]',
+      comments: '++id, postId, userId, createdAt',
+      outbox: '++id,type',
+      userHistory: '++id, userId, action, targetId, targetType, timestamp',
+    }).upgrade(tx => {
+      return (tx.table('posts') as any).toCollection().modify((p: any) => {
+        if (p.subgroupSlug === undefined) p.subgroupSlug = null
       })
     })
   }

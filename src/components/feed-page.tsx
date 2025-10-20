@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { usePosts } from '@/context/post-context';
 import type { MediaCard } from '@/context/post-context';
 import { useAuth } from '@/context/auth-context';
@@ -401,10 +402,16 @@ export default function FeedPage() {
                               >
                                 {card.creator}
                               </a>
-                              {card.subgroupName && (
-                                <span className="font-['Space_Mono'] text-gray-500 text-[10px]">
+                              {card.subgroupName && card.subgroupSlug && (
+                                <Link 
+                                  href={`/subgroup/${card.subgroupSlug}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                  className="font-['Space_Mono'] text-gray-500 text-[10px] hover:text-blue-600 transition-colors"
+                                >
                                   in {card.subgroupName}
-                                </span>
+                                </Link>
                               )}
                             </div>
                             <button 

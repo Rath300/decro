@@ -20,6 +20,7 @@ export interface MediaCard {
   views: number;
   subgroupId?: string;
   subgroupName?: string;
+  subgroupSlug?: string;
   tags?: string[];
 }
 
@@ -191,13 +192,14 @@ export function PostProvider({ children }: { children: ReactNode }) {
         // First, get all unique subgroup IDs from posts
         const subgroupIds = Array.from(new Set(postsData.filter((post: any) => post.subgroup_id).map((post: any) => post.subgroup_id)))
         
-        // Fetch subgroup names for all unique subgroup IDs
+        // Fetch subgroup names and slugs for all unique subgroup IDs
         let subgroupNames: Record<string, string> = {}
+        let subgroupSlugs: Record<string, string> = {}
         if (subgroupIds.length > 0) {
           try {
             const { data: subgroupsData } = await supabase
               .from('subgroups')
-              .select('id, name')
+              .select('id, name, slug')
               .in('id', subgroupIds)
             
             if (subgroupsData) {
@@ -205,9 +207,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 acc[subgroup.id] = subgroup.name
                 return acc
               }, {} as Record<string, string>)
+              subgroupSlugs = subgroupsData.reduce((acc, subgroup) => {
+                acc[subgroup.id] = subgroup.slug
+                return acc
+              }, {} as Record<string, string>)
             }
           } catch (error) {
-            console.warn('Failed to fetch subgroup names:', error)
+            console.warn('Failed to fetch subgroup data:', error)
           }
         }
 
@@ -226,6 +232,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
           views: post.views ?? 0,
           subgroupId: post.subgroup_id ?? undefined,
           subgroupName: post.subgroup_id ? subgroupNames[post.subgroup_id] : undefined,
+          subgroupSlug: post.subgroup_id ? subgroupSlugs[post.subgroup_id] : undefined,
           tags: Array.isArray(post.tags) ? post.tags : undefined,
         }))
 
@@ -249,6 +256,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
               views: m.views,
               subgroupId: m.subgroupId ?? null,
               subgroupName: m.subgroupName ?? null,
+              subgroupSlug: m.subgroupSlug ?? null,
             }))
           )
         } catch (cacheError) {
@@ -281,6 +289,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
               views: r.views,
               subgroupId: r.subgroupId ?? undefined,
               subgroupName: r.subgroupName ?? undefined,
+              subgroupSlug: r.subgroupSlug ?? undefined,
               description: r.description ?? undefined,
             }))
           )

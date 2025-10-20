@@ -2,13 +2,18 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { usePosts } from '@/context/post-context'
 import { useAuth } from '@/context/auth-context'
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments'
 import { PostStats } from '@/components/post-stats'
 import supabase from '@/lib/supabase-client'
 
-export default function DetailModal() {
+interface DetailModalProps {
+  refetchPosts?: (sortBy?: 'created_at' | 'likes' | 'comments') => Promise<void>
+}
+
+export default function DetailModal({ refetchPosts: customRefetchPosts }: DetailModalProps) {
   const {
     showDetailModal,
     setShowDetailModal,
@@ -20,6 +25,9 @@ export default function DetailModal() {
     toggleLike,
     refetchPosts,
   } = usePosts()
+  
+  // Use custom refetch function if provided, otherwise use context one
+  const effectiveRefetchPosts = customRefetchPosts || refetchPosts
   const { isAuthenticated, user } = useAuth()
   const router = useRouter()
 
@@ -113,9 +121,9 @@ export default function DetailModal() {
                 </button>
               </div>
 
-              {selectedCard.subgroupName && (
+              {selectedCard.subgroupName && selectedCard.subgroupSlug && (
                 <div className="text-sm font-['Space_Mono'] text-gray-500">
-                  in {selectedCard.subgroupName}
+                  in <Link href={`/subgroup/${selectedCard.subgroupSlug}`} className="hover:text-blue-600 transition-colors">{selectedCard.subgroupName}</Link>
                 </div>
               )}
 
@@ -152,7 +160,7 @@ export default function DetailModal() {
                 <div>
                   <PostStats postId={selectedCard.id} initialViews={selectedCard.views} />
                 </div>
-                <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={refetchPosts} />
+                <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={effectiveRefetchPosts} />
               </div>
 
               {/* Comments */}

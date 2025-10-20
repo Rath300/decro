@@ -7,6 +7,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
 import { PostStats } from '@/components/post-stats'
@@ -27,6 +29,7 @@ interface UserPost {
   video_url?: string
   subgroup_id?: string
   subgroup_name?: string
+  subgroup_slug?: string
 }
 
 interface UserStats {
@@ -46,6 +49,65 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'posts' | 'liked'>('posts')
   const [username, setUsername] = useState<string>('')
+  const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'most_liked'>('newest')
+  const [displayedPosts, setDisplayedPosts] = useState<UserPost[]>([])
+
+  // Function to refresh posts after deletion
+  const refreshPosts = useCallback(async () => {
+    if (!user?.id) return
+    
+    try {
+      // Map external auth id -> profiles.id
+      const { data: profileId, error: ensureErr } = await supabase.rpc('ensure_profile', {
+        external_id_param: user.id,
+      })
+      if (ensureErr) throw ensureErr
+
+      // Load user posts with all necessary fields including subgroup info
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          title,
+          description,
+          media_url,
+          audio_url,
+          video_url,
+          content_type,
+          views,
+          created_at,
+          subgroup_id,
+          subgroups(name, slug)
+        `)
+        .eq('creator_id', profileId)
+        .order('created_at', { ascending: false })
+
+      if (!postsError && postsData) {
+        // Get like and comment counts for each post
+        const postsWithStats = await Promise.all(
+          postsData.map(async (post) => {
+            const [likesResult, commentsResult] = await Promise.all([
+              supabase.rpc('get_like_count', { post_id_param: post.id }),
+              supabase.rpc('get_comment_count', { post_id_param: post.id })
+            ])
+
+            return {
+              ...post,
+              like_count: likesResult.data || 0,
+              comment_count: commentsResult.data || 0,
+              subgroup_name: (post.subgroups as any)?.[0]?.name || null,
+              subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
+            }
+          })
+        )
+
+        setPosts(postsWithStats)
+        setDisplayedPosts(postsWithStats)
+      }
+    } catch (error) {
+      console.error('Failed to refresh posts:', error)
+    }
+  }, [user?.id])
 
   const loadProfile = useCallback(async () => {
     if (!user?.id) return
@@ -91,7 +153,7 @@ export default function ProfilePage() {
           views,
           created_at,
           subgroup_id,
-          subgroups(name)
+          subgroups(name, slug)
         `)
         .eq('creator_id', profileId)
         .order('created_at', { ascending: false })
@@ -109,12 +171,15 @@ export default function ProfilePage() {
               ...post,
               like_count: likesResult.data || 0,
               comment_count: commentsResult.data || 0,
-              subgroup_name: (post.subgroups as any)?.[0]?.name || null
+              subgroup_name: (post.subgroups as any)?.[0]?.name || null,
+              subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
             }
           })
         )
 
         setPosts(postsWithStats)
+        // Initialize displayed posts with the same data
+        setDisplayedPosts(postsWithStats)
       }
     } catch (error) {
       console.error('Failed to load profile:', error)
@@ -134,13 +199,44 @@ export default function ProfilePage() {
     loadProfile()
   }, [user?.id, isAuthenticated, loadProfile])
 
-  // Optimized post click handler with useCallback
+  // Handle sorting
+  const handleSort = (mode: 'newest' | 'oldest' | 'most_liked') => {
+    setSortMode(mode)
+    let sorted = [...posts]
+    
+    switch (mode) {
+      case 'newest':
+        sorted = sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        break
+      case 'oldest':
+        sorted = sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+        break
+      case 'most_liked':
+        sorted = sorted.sort((a, b) => b.like_count - a.like_count)
+        break
+    }
+    
+    setDisplayedPosts(sorted)
+  }
+
+  // Update displayed posts when posts or sort mode changes
+  useEffect(() => {
+    handleSort(sortMode)
+  }, [posts, sortMode])
+
+  // Optimized post click handler with useCallback - handle text posts like feed page
   const handlePostClick = useCallback(async (post: UserPost) => {
     try {
       // Track view
       await trackView(post.id)
       
-      // Set selected card with complete data
+      // For text posts, redirect to Reddit-style forum page like feed page does
+      if (post.content_type === 'text') {
+        router.push(`/post/${post.id}`)
+        return
+      }
+      
+      // Set selected card with complete data for other content types
       setSelectedCard({
         id: post.id,
         type: (post.content_type as any) || 'image',
@@ -153,6 +249,8 @@ export default function ProfilePage() {
         creator: username || user?.email?.split('@')[0] || 'Anonymous',
         date: post.created_at,
         views: post.views,
+        subgroupName: post.subgroup_name,
+        subgroupSlug: post.subgroup_slug,
       })
       
       // Show modal
@@ -160,7 +258,7 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('Failed to open post detail:', error)
     }
-  }, [trackView, setSelectedCard, setShowDetailModal, username, user?.email])
+  }, [trackView, setSelectedCard, setShowDetailModal, username, user?.email, router])
 
   if (!isAuthenticated) {
     return null
@@ -256,7 +354,33 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Posts Grid */}
+            {/* Sort Controls - similar to feed page */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-['Space_Mono'] text-gray-600">Sort by:</span>
+                <div className="flex space-x-2">
+                  {[
+                    { id: 'newest', label: 'Newest' },
+                    { id: 'oldest', label: 'Oldest' },
+                    { id: 'most_liked', label: 'Most Liked' }
+                  ].map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleSort(option.id as 'newest' | 'oldest' | 'most_liked')}
+                      className={`px-3 py-1 text-xs font-['Space_Mono'] border border-black transition-colors ${
+                        sortMode === option.id
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-50'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Posts Grid - use masonry layout like feed page */}
             {posts.length === 0 ? (
               <div className="text-center py-12 border border-dashed border-gray-300">
                 <p className="text-gray-600">No posts yet</p>
@@ -268,19 +392,46 @@ export default function ProfilePage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-4">
-                {posts.map((post) => (
-                  <div key={post.id} className="group">
+              <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+                <AnimatePresence>
+                  {(displayedPosts.length > 0 ? displayedPosts : posts).map((post, index) => (
+                    <motion.div
+                      key={post.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ 
+                        duration: 0.3, 
+                        delay: index * 0.05,
+                        ease: "easeOut"
+                      }}
+                      whileHover={{ 
+                        scale: 1.02,
+                        transition: { duration: 0.2 }
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      className="group break-inside-avoid mb-4"
+                    >
                     <button
                       className="relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
                       onClick={() => handlePostClick(post)}
                     >
-                      {post.media_url && (
+                      {post.media_url && post.content_type !== 'text' ? (
                         <img
                           src={post.media_url}
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
+                      ) : (
+                        // Text post or no media - show title as cover
+                        <div className="w-full h-full bg-white border border-gray-200 flex items-center justify-center p-4">
+                          <div className="text-center">
+                            <h4 className="text-sm md:text-base font-['Space_Mono'] text-black line-clamp-2">{post.title || 'Post'}</h4>
+                            {post.description && (
+                              <p className="mt-2 text-xs md:text-sm text-gray-600 line-clamp-3">{post.description}</p>
+                            )}
+                          </div>
+                        </div>
                       )}
                       
                       {/* Overlay on hover */}
@@ -297,9 +448,9 @@ export default function ProfilePage() {
                     </button>
                     {/* Always-visible compact stats below the tile */}
                     <div className="mt-1">
-                      {post.subgroup_name && (
+                      {post.subgroup_name && post.subgroup_slug && (
                         <div className="text-[10px] text-gray-500 mb-1 font-['Space_Mono']">
-                          in {post.subgroup_name}
+                          in <Link href={`/subgroup/${post.subgroup_slug}`} className="hover:text-blue-600 transition-colors">{post.subgroup_name}</Link>
                         </div>
                       )}
                       <PostStats
@@ -309,14 +460,15 @@ export default function ProfilePage() {
                         initialComments={post.comment_count}
                       />
                     </div>
-                  </div>
-                ))}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             )}
           </>
         )}
       </main>
-      <DetailModal />
+      <DetailModal refetchPosts={refreshPosts} />
     </div>
   )
 }
