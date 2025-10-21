@@ -662,7 +662,6 @@ function RedditComment({
             )}
           </div>
         </div>
-      )}
     </div>
   )
 }
