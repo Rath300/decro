@@ -266,7 +266,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
           setLikedComments(prev => {
             // Merge with existing liked comments to avoid overwriting optimistic updates
             const newSet = new Set(prev);
-            likedIds.forEach(id => newSet.add(id));
+            likedIds.forEach((id: string) => newSet.add(id));
             return newSet;
           });
         }
