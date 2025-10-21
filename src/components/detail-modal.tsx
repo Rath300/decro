@@ -458,7 +458,7 @@ function RedditComment({
                         responseData = JSON.parse(data);
                       } catch (e) {
                         console.error('Failed to parse response:', e);
-                        refetch();
+                        refetch?.();
                         return;
                       }
                     }
@@ -482,7 +482,7 @@ function RedditComment({
                     } else {
                       console.log('No vote_score or liked in response, refetching...');
                       // Fallback: refetch if response doesn't have expected fields
-                      refetch();
+                      refetch?.();
                     }
                   } catch (error) {
                     console.error('Error toggling comment vote:', error);
