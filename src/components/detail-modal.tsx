@@ -264,7 +264,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
 
   return (
     <div className="space-y-4">
-      {merged.map((comment) => (
+      {merged.map((comment: RealtimeComment) => (
         <RedditComment
           key={comment.id}
           comment={comment}
