@@ -32,12 +32,23 @@ export function useNotifications() {
       return
     }
 
+    let profileId: string = ''
+
     const loadNotifications = async () => {
       try {
+        // Convert external ID to profile UUID
+        const { data: profileUuid, error: profileError } = await supabase.rpc('ensure_profile', {
+          external_id_param: user.id,
+        })
+        
+        if (profileError) throw profileError
+        
+        profileId = profileUuid
+
         const { data, error } = await supabase
           .from('notifications')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', profileId)
           .order('created_at', { ascending: false })
           .limit(50)
 
@@ -45,40 +56,49 @@ export function useNotifications() {
 
         setNotifications(data || [])
         setUnreadCount(data?.filter((n: any) => !n.read).length || 0)
+
+        // Set up real-time subscription with profile UUID
+        const channel = supabase
+          .channel(`notifications-${user.id}`)
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${profileId}` },
+            (payload) => {
+              const n = payload.new as Notification
+              setNotifications(prev => [n, ...prev])
+              setUnreadCount(prev => prev + 1)
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${profileId}` },
+            (payload) => {
+              const n = payload.new as Notification
+              setNotifications(prev => prev.map(x => x.id === n.id ? (n as Notification) : x))
+              if (n.read) setUnreadCount(prev => Math.max(0, prev - 1))
+            }
+          )
+          .subscribe()
+
+        return channel
       } catch (error) {
         // keep silent but avoid crash
         console.error('Failed to load notifications:', error)
+        return null
       } finally {
         setLoading(false)
       }
     }
 
-    loadNotifications()
-
-    const channel = supabase
-      .channel(`notifications-${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          const n = payload.new as Notification
-          setNotifications(prev => [n, ...prev])
-          setUnreadCount(prev => prev + 1)
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          const n = payload.new as Notification
-          setNotifications(prev => prev.map(x => x.id === n.id ? (n as Notification) : x))
-          if (n.read) setUnreadCount(prev => Math.max(0, prev - 1))
-        }
-      )
-      .subscribe()
+    let channel: any = null
+    loadNotifications().then(ch => {
+      channel = ch
+    })
 
     return () => {
-      channel.unsubscribe()
+      if (channel) {
+        channel.unsubscribe()
+      }
     }
   }, [user?.id])
 
@@ -101,10 +121,17 @@ export function useNotifications() {
   const markAllAsRead = async () => {
     if (!user?.id) return
     try {
+      // Convert external ID to profile UUID
+      const { data: profileId, error: profileError } = await supabase.rpc('ensure_profile', {
+        external_id_param: user.id,
+      })
+      
+      if (profileError) throw profileError
+
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
-        .eq('user_id', user.id)
+        .eq('user_id', profileId)
         .eq('read', false)
 
       if (error) throw error

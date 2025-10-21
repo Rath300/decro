@@ -693,6 +693,47 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
     setMerged([...filteredOptimistic, ...server]);
   }, [comments, optimisticComments]);
 
+  // Initialize liked comments state when comments change and user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id || !merged.length) return;
+
+    const initializeLikedComments = async () => {
+      try {
+        // Get profile UUID for current user
+        const { data: profileId, error: profileError } = await supabase.rpc('ensure_profile', {
+          external_id_param: user.id,
+        });
+        
+        if (profileError || !profileId) return;
+
+        // Check which comments the user has liked
+        const commentIds = merged.map(c => c.id);
+        if (commentIds.length === 0) return;
+
+        const { data: likedCommentData, error: likedError } = await supabase
+          .from('comment_votes')
+          .select('comment_id')
+          .eq('user_id', profileId)
+          .in('comment_id', commentIds)
+          .eq('direction', 1);
+
+        if (!likedError && likedCommentData) {
+          const likedSet = new Set(likedCommentData.map(item => item.comment_id));
+          setLikedComments(prev => {
+            // Merge with existing liked comments to avoid overwriting optimistic updates
+            const newSet = new Set(prev);
+            likedSet.forEach(id => newSet.add(id));
+            return newSet;
+          });
+        }
+      } catch (error) {
+        console.error('Error initializing liked comments:', error);
+      }
+    };
+
+    initializeLikedComments();
+  }, [merged, isAuthenticated, user?.id]);
+
   if (loading && (!merged || merged.length === 0)) {
     return (
       <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">
