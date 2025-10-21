@@ -446,26 +446,51 @@ export default function SpotlightDetailPage() {
                   className="cursor-pointer"
                   onClick={() => currentItem.posts.content_type === 'music' ? handleAudioPlay(currentItem) : handlePostClick(currentItem)}
                 >
-                  {currentItem.posts.content_type === 'music' && currentItem.posts.media_url ? (
+                  {currentItem.posts.content_type === 'music' ? (
                     <div className="relative">
-                      <div className="w-full h-80 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                        <div className="text-center text-white">
-                          <div className="w-20 h-20 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                            {playingAudio === currentItem.post_id ? (
-                              <div className="flex space-x-1">
-                                <div className="w-1 bg-white h-6 animate-pulse"></div>
-                                <div className="w-1 bg-white h-8 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                                <div className="w-1 bg-white h-6 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                              </div>
-                            ) : (
-                              <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"/>
-                              </svg>
-                            )}
+                      {currentItem.posts.media_url ? (
+                        <div className="relative w-full h-80">
+                          <img
+                            src={currentItem.posts.media_url}
+                            alt={currentItem.posts.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                            <div className="w-20 h-20 bg-black bg-opacity-60 rounded-full flex items-center justify-center">
+                              {playingAudio === currentItem.post_id ? (
+                                <div className="flex space-x-1">
+                                  <div className="w-1 bg-white h-6 animate-pulse"></div>
+                                  <div className="w-1 bg-white h-8 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                                  <div className="w-1 bg-white h-6 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                </div>
+                              ) : (
+                                <svg className="w-8 h-8 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z"/>
+                                </svg>
+                              )}
+                            </div>
                           </div>
-                          <h3 className="text-xl font-bold">{currentItem.posts.title}</h3>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="w-full h-80 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                          <div className="text-center text-white">
+                            <div className="w-20 h-20 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                              {playingAudio === currentItem.post_id ? (
+                                <div className="flex space-x-1">
+                                  <div className="w-1 bg-white h-6 animate-pulse"></div>
+                                  <div className="w-1 bg-white h-8 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                                  <div className="w-1 bg-white h-6 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                </div>
+                              ) : (
+                                <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z"/>
+                                </svg>
+                              )}
+                            </div>
+                            <h3 className="text-xl font-bold">{currentItem.posts.title}</h3>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : currentItem.posts.media_url ? (
                     <img
@@ -579,23 +604,50 @@ export default function SpotlightDetailPage() {
                     onClick={() => item.posts.content_type === 'music' ? handleAudioPlay(item) : handlePostClick(item)}
                   >
                     {/* Media Display */}
-                    {item.posts.content_type === 'music' && item.posts.media_url ? (
-                      <div className="relative aspect-square bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                        <div className="text-center text-white">
-                          <div className="w-16 h-16 mx-auto mb-3 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                            {playingAudio === item.post_id ? (
-                              <div className="flex space-x-1">
-                                <div className="w-1 bg-white h-5 animate-pulse"></div>
-                                <div className="w-1 bg-white h-7 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                                <div className="w-1 bg-white h-5 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    {item.posts.content_type === 'music' ? (
+                      <div className="relative aspect-square overflow-hidden">
+                        {item.posts.media_url ? (
+                          <>
+                            <img
+                              src={item.posts.media_url}
+                              alt={item.posts.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                              <div className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center">
+                                {playingAudio === item.post_id ? (
+                                  <div className="flex space-x-1">
+                                    <div className="w-1 bg-white h-5 animate-pulse"></div>
+                                    <div className="w-1 bg-white h-7 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                                    <div className="w-1 bg-white h-5 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                  </div>
+                                ) : (
+                                  <svg className="w-6 h-6 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                  </svg>
+                                )}
                               </div>
-                            ) : (
-                              <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"/>
-                              </svg>
-                            )}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="relative aspect-square bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                            <div className="text-center text-white">
+                              <div className="w-16 h-16 mx-auto mb-3 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                {playingAudio === item.post_id ? (
+                                  <div className="flex space-x-1">
+                                    <div className="w-1 bg-white h-5 animate-pulse"></div>
+                                    <div className="w-1 bg-white h-7 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                                    <div className="w-1 bg-white h-5 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                  </div>
+                                ) : (
+                                  <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     ) : item.posts.content_type === 'text' ? (
                       <div className="aspect-square bg-gray-50 flex items-center justify-center p-4">

@@ -29,6 +29,8 @@ export default function PostDetailPage() {
   const [commentsRefreshSignal, setCommentsRefreshSignal] = useState(0)
   const [optimisticComments, setOptimisticComments] = useState<RealtimeComment[]>([])
   const [newComment, setNewComment] = useState('')
+  const [isOwner, setIsOwner] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     loadPost()
@@ -66,6 +68,19 @@ export default function PostDetailPage() {
         creator_id: postWithProfile.creator_id,
         creator_username: postWithProfile.profiles?.username
       })
+
+      // Check if current user owns this post
+      if (user?.id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .single()
+        
+        if (profileData?.id === postWithProfile.creator_id) {
+          setIsOwner(true)
+        }
+      }
     } catch (error) {
       console.error('Error loading post:', error)
     } finally {
@@ -103,6 +118,34 @@ export default function PostDetailPage() {
       })
     } catch (error) {
       console.error('Error adding comment:', error)
+    }
+  }
+
+  const handleDeletePost = async () => {
+    if (!isOwner || !post || !user?.id) return
+    
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return
+    }
+
+    setDeleting(true)
+    try {
+      const { error } = await supabase.rpc('delete_post_ext', {
+        post_id_param: post.id,
+        external_id_param: user.id
+      })
+
+      if (error) {
+        throw error
+      }
+
+      // Redirect to feed after successful deletion
+      router.push('/feed')
+    } catch (error) {
+      console.error('Error deleting post:', error)
+      alert('Failed to delete post. Please try again.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -171,8 +214,17 @@ export default function PostDetailPage() {
             </div>
           )}
 
-          <div className="mt-6">
+          <div className="mt-6 flex items-center justify-between">
             <PostStats postId={post.id} initialViews={post.views} showDetailed />
+            {isOwner && (
+              <button
+                onClick={handleDeletePost}
+                disabled={deleting}
+                className="px-3 py-2 text-sm border border-red-500 text-red-600 hover:bg-red-50 disabled:opacity-50 rounded-lg transition-colors"
+              >
+                {deleting ? 'Deleting...' : 'Delete Post'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -518,7 +570,12 @@ function RedditComment({
                 }
               }}
             >
-              <svg className="w-4 h-4" fill={likedComments.has(comment.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <svg 
+                className={`w-4 h-4 ${likedComments.has(comment.id) ? 'text-red-500' : 'text-gray-600'}`} 
+                fill={likedComments.has(comment.id) ? 'currentColor' : 'none'} 
+                stroke={likedComments.has(comment.id) ? 'currentColor' : 'currentColor'} 
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
               <span>{comment.vote_score || 0}</span>
@@ -560,8 +617,12 @@ function RedditComment({
                 </button>
                 <button
                   onClick={() => {
-                    setOpenReplyFor(null);
+                    // Clear the reply text first, then close the input
                     setReplyText({ ...replyText, [comment.id]: '' });
+                    // Use setTimeout to ensure state update happens before closing
+                    setTimeout(() => {
+                      setOpenReplyFor(null);
+                    }, 0);
                   }}
                   className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
                 >
