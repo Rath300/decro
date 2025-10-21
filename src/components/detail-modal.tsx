@@ -275,8 +275,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             if (!isAuthenticated || !user?.id) return
             // Implementation will be handled by reply input
           }}
-          replies={replies[commentId] || []}
-          loadingReplies={loadingReplies[commentId]}
+          replies={replies}
+          loadingReplies={loadingReplies}
           loadReplies={() => {
             if (!(commentId in replies)) {
               loadReplies(commentId)
@@ -328,8 +328,8 @@ function RedditComment({
   comment: RealtimeComment
   depth: number
   onReply: (content: string) => void
-  replies: RealtimeComment[]
-  loadingReplies: boolean
+  replies: Record<string, RealtimeComment[]>
+  loadingReplies: Record<string, boolean>
   loadReplies: () => void
   openReplyFor: string | null
   setOpenReplyFor: (id: string | null) => void
@@ -402,7 +402,7 @@ function RedditComment({
                       return newVisibleReplies;
                     });
                     
-                    if (shouldShow && !replies[commentId]) {
+                    if (shouldShow && !replies[commentId as string]) {
                       // lazy load replies on open
                       setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
                       const { data, error } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: commentId, page_size: 20, page_offset: 0 });
