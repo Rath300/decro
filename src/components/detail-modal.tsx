@@ -336,7 +336,7 @@ function RedditComment({
   openReplyFor: string | null
   setOpenReplyFor: (id: string | null) => void
   replyText: Record<string, string>
-  setReplyText: (text: Record<string, string>) => void
+  setReplyText: (setter: ((prev: Record<string, string>) => Record<string, string>) | Record<string, string>) => void
   refetch?: () => void
   updateVoteScore?: (commentId: string, newVoteScore: number) => void
   visibleReplies: Set<string>
@@ -500,7 +500,7 @@ function RedditComment({
                 <div className="space-y-2">
                   <textarea
                     value={replyText[commentId] || ''}
-                    onChange={(e) => setReplyText(prev => ({ ...prev, [commentId]: e.target.value }))}
+                    onChange={(e) => setReplyText((prev: Record<string, string>) => ({ ...prev, [commentId]: e.target.value }))}
                     placeholder="Write a reply..."
                     className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black bg-white"
                     rows={2}
@@ -511,7 +511,7 @@ function RedditComment({
                         const content = replyText[commentId]?.trim();
                         if (!content || !isAuthenticated || !user?.id) return;
                         
-                        setReplyText(prev => ({ ...prev, [commentId]: '' }));
+                        setReplyText((prev: Record<string, string>) => ({ ...prev, [commentId]: '' }));
                         setReplies(prev => ({
                           ...prev,
                           [commentId]: [
@@ -547,7 +547,7 @@ function RedditComment({
                     <button
                       onClick={() => {
                         setOpenReplyFor(null);
-                        setReplyText(prev => ({ ...prev, [commentId]: '' }));
+                        setReplyText((prev: Record<string, string>) => ({ ...prev, [commentId]: '' }));
                       }}
                       className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
                     >
