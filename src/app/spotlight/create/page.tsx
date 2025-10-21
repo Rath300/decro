@@ -96,13 +96,28 @@ export default function SpotlightCreatePage() {
       }
 
       // Create spotlight collection with items using RPC to handle RLS properly in a single transaction
+      console.log('Selected posts before processing:', selected)
+      console.log('Selected size:', selected.size)
+      console.log('Selected as array:', Array.from(selected))
+      
       const postIdsArray = selected.size > 0 ? Array.from(selected) : []
       
-      // Validate that we have UUID format for post IDs
+      // More permissive UUID validation - sometimes UUIDs might have different formats
       const validatedPostIds = postIdsArray.filter(id => {
-        // Basic UUID validation
+        if (typeof id !== 'string') {
+          console.warn('Non-string post ID found:', id, typeof id)
+          return false
+        }
+        
+        // More flexible UUID validation that handles different UUID versions
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-        return typeof id === 'string' && uuidRegex.test(id)
+        const isValidUuid = uuidRegex.test(id)
+        
+        if (!isValidUuid) {
+          console.warn('Invalid UUID format for post ID:', id)
+        }
+        
+        return isValidUuid
       })
       
       console.log('Creating spotlight with params:', {
@@ -112,11 +127,22 @@ export default function SpotlightCreatePage() {
         external_id_param: user.id,
         post_ids_param: validatedPostIds,
         original_selected_size: selected.size,
-        filtered_ids_count: validatedPostIds.length
+        postIdsArray: postIdsArray,
+        filtered_ids_count: validatedPostIds.length,
+        postIdsArray_length: postIdsArray.length
       })
       
       if (selected.size > 0 && validatedPostIds.length === 0) {
+        console.error('No valid post IDs found after validation:', {
+          selected: Array.from(selected),
+          postIdsArray,
+          validatedPostIds
+        })
         throw new Error('Selected post IDs are not in valid UUID format')
+      }
+      
+      if (validatedPostIds.length === 0) {
+        console.warn('No posts selected for spotlight creation')
       }
       
       const { data: collectionResult, error: insertErr } = await supabase.rpc('create_spotlight_collection_ext_with_items', {
