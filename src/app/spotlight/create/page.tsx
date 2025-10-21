@@ -85,6 +85,11 @@ export default function SpotlightCreatePage() {
       alert('Please enter a title')
       return
     }
+    
+    if (selected.size === 0) {
+      alert('Please select at least one post to include in the spotlight')
+      return
+    }
 
     setIsSubmitting(true)
 
@@ -278,10 +283,10 @@ export default function SpotlightCreatePage() {
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || selected.size === 0}
               className="px-4 py-2 border-2 border-black bg-black text-white hover:bg-gray-800 disabled:opacity-50"
             >
-              {isSubmitting ? 'Creating...' : 'Create Spotlight'}
+              {isSubmitting ? 'Creating...' : selected.size === 0 ? 'Select Posts First' : 'Create Spotlight'}
             </button>
             <button
               type="button"
