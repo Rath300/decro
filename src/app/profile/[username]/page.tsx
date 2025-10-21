@@ -355,17 +355,24 @@ export default function PublicProfilePage() {
                 Edit Profile
               </button>
             ) : (
-              <button
-                onClick={handleFollow}
-                disabled={followLoading}
-                className={`px-4 py-2 border-2 transition-colors ${
-                  isFollowing
-                    ? 'border-gray-300 hover:border-red-500 hover:text-red-500'
-                    : 'border-black bg-black text-white hover:bg-gray-800'
-                }`}
-              >
-                {followLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className={`px-4 py-2 border-2 transition-colors ${
+                    isFollowing
+                      ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
+                      : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  {followLoading ? '...' : isFollowing ? 'Connected' : 'Connect'}
+                </button>
+                <button
+                  className="px-4 py-2 border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Collab
+                </button>
+              </div>
             )}
           </div>
 

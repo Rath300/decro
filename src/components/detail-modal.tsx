@@ -71,79 +71,79 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
 
   if (!showDetailModal || !selectedCard) return null
 
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    if (seconds < 60) return 'just now'
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
+    return date.toLocaleDateString()
+  }
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleCloseModal}>
-      <div className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-['Space_Mono'] font-bold text-black">{selectedCard.title}</h2>
-          <button onClick={handleCloseModal} aria-label="Close" className="text-gray-500 hover:text-black">✕</button>
+    <div className="fixed inset-0 bg-white z-50 overflow-y-auto" onClick={handleCloseModal}>
+      <div className="max-w-4xl mx-auto p-6 bg-white" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <button 
+              onClick={handleCloseModal}
+              className="text-sm text-gray-500 hover:text-black"
+            >
+              ← Back
+            </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row">
-          {/* Media or Forum-style body */}
-          <div className="lg:w-2/3 p-6">
-            <div className="relative">
-              {selectedCard.imageUrl || (['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl) ? (
-                <> 
-                  {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
-                    <video src={selectedCard.videoUrl} controls className="w-full h-auto rounded" />
-                  ) : (
-                    <img src={selectedCard.imageUrl} alt={selectedCard.title} className="w-full h-auto rounded" />
-                  )}
+          {/* Post Header - Reddit Style */}
+          <div className="border border-gray-200 rounded-lg p-6">
+            <h1 className="text-2xl font-['Space_Mono'] font-bold text-black mb-4">
+              {selectedCard.title}
+            </h1>
+            
+            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+              <button
+                onClick={() => handlePortfolioClick(selectedCard.creator)}
+                className="text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                Posted by {selectedCard.creator}
+              </button>
+              <span>•</span>
+              <span>{getTimeAgo(selectedCard.date)}</span>
+              <span>•</span>
+              <span>{selectedCard.views} views</span>
+              {selectedCard.subgroupName && selectedCard.subgroupSlug && (
+                <>
+                  <span>•</span>
+                  <span className="text-blue-600">
+                    in <Link href={`/subgroup/${selectedCard.subgroupSlug}`} className="hover:underline">{selectedCard.subgroupName}</Link>
+                  </span>
                 </>
-              ) : (
-                // Forum-style body for text-only posts
-                <div className="border border-gray-200 rounded p-4">
-                  <h3 className="text-lg font-['Space_Mono'] font-bold text-black mb-2">{selectedCard.title}</h3>
-                  {selectedCard.description ? (
-                    <p className="text-sm font-['Space_Mono'] text-gray-800 whitespace-pre-wrap">{selectedCard.description}</p>
-                  ) : (
-                    <p className="text-sm font-['Space_Mono'] text-gray-500">No body content provided.</p>
-                  )}
-                </div>
               )}
-            </div>
           </div>
 
-          {/* Info */}
-          <div className="lg:w-1/3 p-6 border-l border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-['Space_Mono'] font-bold text-black">{selectedCard.title}</h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handlePortfolioClick(selectedCard.creator)}
-                  className="font-['Space_Mono'] text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  {selectedCard.creator}
-                </button>
+            {/* Media Display */}
+            {selectedCard.imageUrl || (['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl) ? (
+              <div className="mb-4">
+                {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
+                  <video src={selectedCard.videoUrl} controls className="w-full max-h-96 rounded-lg" />
+                ) : (
+                  <img src={selectedCard.imageUrl} alt={selectedCard.title} className="w-full max-h-96 object-contain rounded-lg bg-gray-100" />
+                )}
               </div>
-
-              {selectedCard.subgroupName && selectedCard.subgroupSlug && (
-                <div className="text-sm font-['Space_Mono'] text-gray-500">
-                  in <Link href={`/subgroup/${selectedCard.subgroupSlug}`} className="hover:text-blue-600 transition-colors">{selectedCard.subgroupName}</Link>
-                </div>
-              )}
-
-              <div className="text-sm font-['Space_Mono'] text-gray-600 mb-2">
-                {new Date(selectedCard.date).toLocaleDateString()} • {selectedCard.views} views
-              </div>
+            ) : null}
 
               {selectedCard.description && (
-                <p className="text-sm text-gray-700 font-['Space_Mono']">{selectedCard.description}</p>
-              )}
-              {selectedCard.tags && selectedCard.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedCard.tags.map((tag) => (
-                    <span key={tag} className="px-2 py-1 bg-black text-white text-xs font-['Space_Mono']">#{tag}</span>
-                  ))}
+              <div className="prose max-w-none mb-4">
+                <p className="text-gray-800 whitespace-pre-wrap font-['Space_Mono']">
+                  {selectedCard.description}
+                </p>
                 </div>
               )}
 
               {/* Actions */}
-              <div className="border-t border-gray-200 pt-4 mb-4 flex items-center gap-3">
+            <div className="flex items-center gap-4 border-t border-gray-200 pt-4">
                 <button
                   onClick={() => toggleLike(selectedCard.id)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
@@ -157,38 +157,46 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
                   </svg>
                   <span className="font-['Space_Mono'] text-sm">{likedCards.has(selectedCard.id) ? 'Liked' : 'Like'}</span>
                 </button>
-                <div>
-                  <PostStats postId={selectedCard.id} initialViews={selectedCard.views} />
+              <PostStats postId={selectedCard.id} initialViews={selectedCard.views} showDetailed />
+              <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={effectiveRefetchPosts} />
+            </div>
                 </div>
-                <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={effectiveRefetchPosts} />
               </div>
 
-              {/* Comments */}
-              <div className="border-t border-gray-200 pt-4">
-                <h3 className="text-sm font-['Space_Mono'] font-medium text-black mb-3">Comments</h3>
-                <div className="flex space-x-2 mb-4">
-                  <input
-                    type="text"
+        {/* Comments Section */}
+        <div className="border border-gray-200 rounded-lg p-6">
+          <h2 className="text-lg font-['Space_Mono'] font-bold text-black mb-4">
+            Comments
+          </h2>
+
+          {/* Comment Input */}
+          {isAuthenticated ? (
+            <div className="mb-6">
+              <textarea
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Add a comment..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                    onKeyPress={(e) => { if (e.key === 'Enter') handleCommentSubmit() }}
+                className="w-full p-3 border border-gray-300 rounded-lg resize-none text-black bg-white"
+                rows={3}
                   />
+              <div className="flex justify-end mt-2">
                   <button
                     onClick={handleCommentSubmit}
                     disabled={!commentText.trim()}
-                    className={`p-2 rounded-lg transition-all duration-200 ${
-                      commentText.trim() ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
+                  className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    ➤
+                  Comment
                   </button>
-                </div>
-                <CommentsList postId={selectedCard.id} refreshSignal={commentsRefreshSignal} optimisticComments={optimisticComments} />
               </div>
             </div>
+          ) : (
+            <div className="mb-6 p-4 border border-gray-200 rounded-lg text-center text-gray-500">
+              Please sign in to comment
           </div>
+          )}
+
+          {/* Comments List */}
+          <CommentsList postId={selectedCard.id} refreshSignal={commentsRefreshSignal} optimisticComments={optimisticComments} />
         </div>
       </div>
     </div>
@@ -215,6 +223,26 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
     setMerged([...filteredOptimistic, ...server])
   }, [comments, optimisticComments])
 
+  const loadReplies = async (commentId: string) => {
+    setLoadingReplies(prev => ({ ...prev, [commentId]: true }))
+    try {
+      const { data, error } = await supabase.rpc('get_comment_replies_with_nesting', { 
+        comment_id_param: commentId, 
+        page_size: 20, 
+        page_offset: 0 
+      })
+      if (error) {
+        console.error('Error loading replies:', error)
+      } else {
+        setReplies(prev => ({ ...prev, [commentId]: (data || []) as any }))
+      }
+    } catch (error) {
+      console.error('Error loading replies:', error)
+    } finally {
+      setLoadingReplies(prev => ({ ...prev, [commentId]: false }))
+    }
+  }
+
 
   if (loading && merged.length === 0) {
     return <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">Loading comments...</div>
@@ -235,18 +263,121 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
   }
 
   return (
-    <div className="space-y-3 max-h-64 overflow-y-auto">
+    <div className="space-y-4">
       {merged.map((comment) => (
-        <div key={comment.id} className="flex gap-3">
+        <RedditComment
+          key={comment.id}
+          comment={comment}
+          depth={0}
+          onReply={(content: string) => {
+            if (!isAuthenticated || !user?.id) return
+            // Implementation will be handled by reply input
+          }}
+          replies={replies[comment.id] || []}
+          loadingReplies={loadingReplies[comment.id]}
+          loadReplies={() => {
+            if (!(comment.id in replies)) {
+              loadReplies(comment.id)
+            }
+          }}
+          openReplyFor={openReplyFor}
+          setOpenReplyFor={setOpenReplyFor}
+          replyText={replyText}
+          setReplyText={setReplyText}
+          refetch={refetch}
+          updateVoteScore={(commentId, score) => {
+            setMerged(prev => prev.map(c => 
+              c.id === commentId ? { ...c, vote_score: score } : c
+            ))
+          }}
+          visibleReplies={visibleReplies}
+          setVisibleReplies={setVisibleReplies}
+          likedComments={likedComments}
+          setLikedComments={setLikedComments}
+          setReplies={setReplies}
+          commentId={comment.id}
+        />
+      ))}
+    </div>
+  )
+}
+
+function RedditComment({ 
+  comment, 
+  depth, 
+  onReply,
+  replies,
+  loadingReplies,
+  loadReplies,
+  openReplyFor,
+  setOpenReplyFor,
+  replyText,
+  setReplyText,
+  refetch,
+  updateVoteScore,
+  visibleReplies,
+  setVisibleReplies,
+  likedComments,
+  setLikedComments,
+  setReplies,
+  commentId
+}: { 
+  comment: RealtimeComment
+  depth: number
+  onReply: (content: string) => void
+  replies: RealtimeComment[]
+  loadingReplies: boolean
+  loadReplies: () => void
+  openReplyFor: string | null
+  setOpenReplyFor: (id: string | null) => void
+  replyText: Record<string, string>
+  setReplyText: (text: Record<string, string>) => void
+  refetch?: () => void
+  updateVoteScore?: (commentId: string, newVoteScore: number) => void
+  visibleReplies: Set<string>
+  setVisibleReplies: (setter: (prev: Set<string>) => Set<string>) => void
+  likedComments: Set<string>
+  setLikedComments: (setter: (prev: Set<string>) => Set<string>) => void
+  setReplies: (setter: (prev: Record<string, RealtimeComment[]>) => Record<string, RealtimeComment[]>) => void
+  commentId: string
+}) {
+  const { isAuthenticated, user } = useAuth()
+  const maxDepth = 2
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    if (seconds < 60) return 'just now'
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d`
+    return date.toLocaleDateString()
+  }
+
+  return (
+    <div className={`${depth > 0 ? 'ml-6 border-l-2 border-gray-100 pl-4' : ''}`}>
+      <div className="flex gap-3">
           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
             {comment.username?.[0]?.toUpperCase() || '?'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2">
-              <span className="font-['Space_Mono'] font-bold text-sm text-black">{comment.username || 'Anonymous'}</span>
-              <span className="font-['Space_Mono'] text-xs text-gray-500">{getTimeAgo(comment.created_at)}</span>
-            </div>
-            <p className="font-['Space_Mono'] text-sm text-gray-800 mt-1 break-words">{comment.content}</p>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="font-['Space_Mono'] font-bold text-sm text-black">
+              {comment.username || 'anonymous'}
+            </span>
+            {(comment as any).replying_to_username && (
+              <span className="font-['Space_Mono'] text-xs text-gray-400">
+                replying to {(comment as any).replying_to_username}
+              </span>
+            )}
+            <span className="font-['Space_Mono'] text-xs text-gray-500">
+              {getTimeAgo(comment.created_at)}
+            </span>
+          </div>
+          <p className="font-['Space_Mono'] text-sm text-gray-800 mb-2 break-words">
+            {comment.content}
+          </p>
             
             {/* Reply and voting controls */}
             <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
@@ -421,27 +552,99 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
 
             {/* Show replies */}
             {visibleReplies.has(comment.id) && (
-              <div className="mt-3 pl-2 border-l border-gray-200">
+              <div className="mt-4 space-y-3">
                 {loadingReplies[comment.id] ? (
-                  <div className="text-xs text-gray-500">Loading replies...</div>
+                  <div className="text-sm text-gray-500">Loading replies...</div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {(replies[comment.id] || []).map(r => (
-                      <div key={r.id} className="flex gap-2">
-                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600 flex-shrink-0">
-                          {r.username?.[0]?.toUpperCase() || '?'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline gap-2">
-                            <span className="font-['Space_Mono'] font-bold text-xs text-black">{r.username || 'Anonymous'}</span>
-                            {(r as any).replying_to_username && (
-                              <span className="font-['Space_Mono'] text-[10px] text-gray-400">
-                                replying to {(r as any).replying_to_username}
-                              </span>
-                            )}
-                            <span className="font-['Space_Mono'] text-[10px] text-gray-500">{getTimeAgo(r.created_at)}</span>
+                      <div key={r.id} className="ml-6 border-l-2 border-gray-100 pl-4">
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+                            {r.username?.[0]?.toUpperCase() || '?'}
                           </div>
-                          <p className="font-['Space_Mono'] text-xs text-gray-800 mt-1 break-words">{r.content}</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-2 mb-1">
+                              <span className="font-['Space_Mono'] font-bold text-sm text-black">
+                                {r.username || 'anonymous'}
+                              </span>
+                              {(r as any).replying_to_username && (
+                                <span className="font-['Space_Mono'] text-xs text-gray-400">
+                                  replying to {(r as any).replying_to_username}
+                                </span>
+                              )}
+                              <span className="font-['Space_Mono'] text-xs text-gray-500">
+                                {getTimeAgo(r.created_at)}
+                              </span>
+                            </div>
+                            <p className="font-['Space_Mono'] text-sm text-gray-800 mb-2 break-words">
+                              {r.content}
+                            </p>
+                            
+                            {/* Reply like button */}
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                              <button
+                                className={`flex items-center gap-1 transition-all duration-200 ${
+                                  likedComments.has(r.id)
+                                    ? 'text-red-500'
+                                    : 'hover:text-red-500'
+                                }`}
+                                onClick={async () => {
+                                  if (!isAuthenticated || !user?.id) return
+                                  try {
+                                    const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
+                                      comment_id_param: r.id, 
+                                      external_id_param: user.id, 
+                                      direction: 1 
+                                    })
+                                    
+                                    if (rpcError) {
+                                      console.error('RPC error:', rpcError)
+                                      return
+                                    }
+                                    
+                                    let responseData = data
+                                    if (typeof data === 'string') {
+                                      try {
+                                        responseData = JSON.parse(data)
+                                      } catch (e) {
+                                        console.error('Failed to parse response:', e)
+                                        return
+                                      }
+                                    }
+                                    
+                                    if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
+                                      // Update replies state
+                                      setReplies(prev => ({
+                                        ...prev,
+                                        [commentId]: prev[commentId]?.map(reply => 
+                                          reply.id === r.id ? { ...reply, vote_score: responseData.vote_score } : reply
+                                        ) || []
+                                      }))
+                                      
+                                      // Update liked comments state
+                                      setLikedComments(prev => {
+                                        const next = new Set(prev)
+                                        if (responseData.liked) {
+                                          next.add(r.id)
+                                        } else {
+                                          next.delete(r.id)
+                                        }
+                                        return next
+                                      })
+                                    }
+                                  } catch (error) {
+                                    console.error('Error toggling reply vote:', error)
+                                  }
+                                }}
+                              >
+                                <svg className="w-4 h-4" fill={likedComments.has(r.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                <span>{r.vote_score || 0}</span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -451,7 +654,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             )}
           </div>
         </div>
-      ))}
+      )}
     </div>
   )
 }
@@ -477,10 +680,10 @@ function OwnerDeleteButton({ postId, onDeleted, refetchPosts }: { postId: string
 
         // Check if the post creator matches the profile ID
         const { data, error } = await supabase
-          .from('posts')
-          .select('creator_id')
-          .eq('id', postId)
-          .single()
+      .from('posts')
+      .select('creator_id')
+      .eq('id', postId)
+      .single()
 
         if (!error && data && data.creator_id === profileData.id) {
           setIsOwner(true)
@@ -519,7 +722,7 @@ function OwnerDeleteButton({ postId, onDeleted, refetchPosts }: { postId: string
 
       if (data && data.success) {
         console.log('Post deleted successfully:', data.deleted_post)
-        onDeleted()
+      onDeleted()
         // Refresh the posts data instead of reloading the page
         if (refetchPosts) {
           await refetchPosts('created_at')
