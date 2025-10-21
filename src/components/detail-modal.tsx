@@ -465,9 +465,7 @@ function RedditComment({
                     
                     // Update both the vote score and liked status from the response
                     if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
-                      setMerged(prev => prev.map(c => 
-                        c.id === commentId ? { ...c, vote_score: responseData.vote_score } : c
-                      ));
+                      updateVoteScore?.(commentId, responseData.vote_score);
                       
                       // Update liked comments state
                       setLikedComments(prev => {
