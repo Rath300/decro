@@ -446,7 +446,10 @@ export default function FeedPage() {
                             />
                             <button
                               className="ml-2 px-2 py-1 text-xs bg-black text-white border border-black hover:bg-gray-800 transition-colors"
-                              onClick={(e) => { e.stopPropagation(); setSelectedCard(card); setShowDetailModal(true) }}
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                router.push(`/post/${card.id}`);
+                              }}
                             >
                               View details
                             </button>

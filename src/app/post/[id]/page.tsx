@@ -16,6 +16,9 @@ interface PostData {
   views: number
   creator_id: string
   creator_username?: string
+  media_url?: string
+  audio_url?: string
+  video_url?: string
 }
 
 export default function PostDetailPage() {
@@ -45,6 +48,9 @@ export default function PostDetailPage() {
           title,
           description,
           content_type,
+          media_url,
+          audio_url,
+          video_url,
           created_at,
           views,
           creator_id,
@@ -63,6 +69,9 @@ export default function PostDetailPage() {
         title: postWithProfile.title,
         description: postWithProfile.description,
         content_type: postWithProfile.content_type,
+        media_url: postWithProfile.media_url,
+        audio_url: postWithProfile.audio_url,
+        video_url: postWithProfile.video_url,
         created_at: postWithProfile.created_at,
         views: postWithProfile.views,
         creator_id: postWithProfile.creator_id,
@@ -213,6 +222,52 @@ export default function PostDetailPage() {
               </p>
             </div>
           )}
+
+          {/* Media Display */}
+          {post.media_url || post.audio_url || post.video_url ? (
+            <div className="my-6">
+              {post.content_type === 'music' && post.audio_url ? (
+                <div className="relative">
+                  {/* Show cover image if available */}
+                  {post.media_url ? (
+                    <div className="relative">
+                      <img
+                        src={post.media_url}
+                        alt={post.title}
+                        className="w-full max-h-96 object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                        <audio controls className="w-full max-w-md">
+                          <source src={post.audio_url} type="audio/mpeg" />
+                          Your browser does not support the audio element.
+                        </audio>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-64 bg-gradient-to-br from-purple-400 to-pink-400 rounded-lg flex items-center justify-center">
+                      <audio controls>
+                        <source src={post.audio_url} type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  )}
+                </div>
+              ) : ['video', 'film'].includes(post.content_type) && post.video_url ? (
+                <video 
+                  src={post.video_url} 
+                  controls 
+                  className="w-full max-h-96 rounded-lg"
+                  poster={post.media_url}
+                />
+              ) : post.media_url ? (
+                <img 
+                  src={post.media_url} 
+                  alt={post.title} 
+                  className="w-full max-h-96 object-contain rounded-lg bg-gray-100" 
+                />
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="mt-6 flex items-center justify-between">
             <PostStats postId={post.id} initialViews={post.views} showDetailed />
