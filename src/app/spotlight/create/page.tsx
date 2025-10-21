@@ -114,8 +114,9 @@ export default function SpotlightCreatePage() {
           return false
         }
         
-        // More flexible UUID validation that handles different UUID versions
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        // More flexible UUID validation that handles different UUID versions including test UUIDs
+        // Allow UUIDs with any version digit (0-f) since test data may use different formats
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
         const isValidUuid = uuidRegex.test(id)
         
         if (!isValidUuid) {
