@@ -386,25 +386,29 @@ function RedditComment({
                 <button
                   className="hover:text-black"
                   onClick={async () => {
+                    const shouldShow = !visibleReplies.has(comment.id);
+                    
                     // Toggle replies visibility
-                    const newVisibleReplies = new Set(visibleReplies);
-                    if (newVisibleReplies.has(comment.id)) {
-                      newVisibleReplies.delete(comment.id);
-                      setVisibleReplies(newVisibleReplies);
-                    } else {
-                      newVisibleReplies.add(comment.id);
-                      setVisibleReplies(newVisibleReplies);
-                      // lazy load replies on open
-                      if (!replies[comment.id]) {
-                        setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
-                        const { data, error } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
-                        if (error) {
-                          console.error('Error loading replies:', error);
-                        } else {
-                          setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
-                        }
-                        setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
+                    setVisibleReplies(prev => {
+                      const newVisibleReplies = new Set(prev);
+                      if (newVisibleReplies.has(comment.id)) {
+                        newVisibleReplies.delete(comment.id);
+                      } else {
+                        newVisibleReplies.add(comment.id);
                       }
+                      return newVisibleReplies;
+                    });
+                    
+                    if (shouldShow && !replies[comment.id]) {
+                      // lazy load replies on open
+                      setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
+                      const { data, error } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                      if (error) {
+                        console.error('Error loading replies:', error);
+                      } else {
+                        setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                      }
+                      setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
                     }
                   }}
                 >
