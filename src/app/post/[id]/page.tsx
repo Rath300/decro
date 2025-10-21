@@ -350,17 +350,36 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
   useEffect(() => {
     const server = comments || []
     const optimistic = optimisticComments || []
-    if (optimistic.length === 0) {
-      setMerged(server)
+    
+    // Filter out problematic comments (anonymous, null usernames, old dates)
+    const filterValidComments = (commentsList: RealtimeComment[]) => {
+      return commentsList.filter(comment => {
+        // Skip if no username or anonymous-like usernames
+        if (!comment.username || 
+            comment.username === 'anonymous' || 
+            comment.username === 'Anonymous' ||
+            comment.username.trim() === '' ||
+            comment.created_at < '2020-01-01') {
+          return false;
+        }
+        return true;
+      });
+    };
+    
+    const validServerComments = filterValidComments(server);
+    const validOptimisticComments = filterValidComments(optimistic);
+    
+    if (validOptimisticComments.length === 0) {
+      setMerged(validServerComments)
       return
     }
-    const filteredOptimistic = optimistic.filter(o => 
-      !server.some(s => 
+    const filteredOptimistic = validOptimisticComments.filter(o => 
+      !validServerComments.some(s => 
         s.content === o.content && 
         Math.abs(new Date(s.created_at).getTime() - new Date(o.created_at).getTime()) < 60000
       )
     )
-    setMerged([...filteredOptimistic, ...server])
+    setMerged([...filteredOptimistic, ...validServerComments])
   }, [comments, optimisticComments])
 
   // Initialize liked comments state when comments change and user is authenticated
@@ -369,30 +388,22 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
 
     const initializeLikedComments = async () => {
       try {
-        // Get profile UUID for current user
-        const { data: profileId, error: profileError } = await supabase.rpc('ensure_profile', {
-          external_id_param: user.id,
-        });
-        
-        if (profileError || !profileId) return;
-
         // Check which comments the user has liked
         const commentIds = merged.map(c => c.id);
         if (commentIds.length === 0) return;
 
         const { data: likedCommentData, error: likedError } = await supabase
-          .from('comment_votes')
-          .select('comment_id')
-          .eq('user_id', profileId)
-          .in('comment_id', commentIds)
-          .eq('direction', 1);
+          .rpc('get_user_liked_comment_ids', {
+            external_id_param: user.id,
+            comment_ids_param: commentIds
+          });
 
         if (!likedError && likedCommentData) {
-          const likedSet = new Set(likedCommentData.map(item => item.comment_id));
+          const likedIds = likedCommentData.map((item: any) => item.comment_id as string);
           setLikedComments(prev => {
             // Merge with existing liked comments to avoid overwriting optimistic updates
             const newSet = new Set(prev);
-            likedSet.forEach(id => newSet.add(id));
+            likedIds.forEach((id: string) => newSet.add(id));
             return newSet;
           });
         }
