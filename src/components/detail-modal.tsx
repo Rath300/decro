@@ -297,6 +297,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
           likedComments={likedComments}
           setLikedComments={setLikedComments}
           setReplies={setReplies}
+          setLoadingReplies={setLoadingReplies}
           commentId={commentId}
         />
         );
@@ -323,6 +324,7 @@ function RedditComment({
   likedComments,
   setLikedComments,
   setReplies,
+  setLoadingReplies,
   commentId
 }: { 
   comment: RealtimeComment
@@ -342,6 +344,7 @@ function RedditComment({
   likedComments: Set<string>
   setLikedComments: (setter: (prev: Set<string>) => Set<string>) => void
   setReplies: (setter: (prev: Record<string, RealtimeComment[]>) => Record<string, RealtimeComment[]>) => void
+  setLoadingReplies: (setter: (prev: Record<string, boolean>) => Record<string, boolean>) => void
   commentId: string
 }) {
   const { isAuthenticated, user } = useAuth()
