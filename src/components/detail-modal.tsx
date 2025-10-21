@@ -264,20 +264,22 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
 
   return (
     <div className="space-y-4">
-      {merged.map((comment: RealtimeComment) => (
+      {merged.map((comment: RealtimeComment) => {
+        const commentId = comment.id;
+        return (
         <RedditComment
-          key={comment.id}
+          key={commentId}
           comment={comment}
           depth={0}
           onReply={(content: string) => {
             if (!isAuthenticated || !user?.id) return
             // Implementation will be handled by reply input
           }}
-          replies={replies[comment.id] || []}
-          loadingReplies={loadingReplies[comment.id]}
+          replies={replies[commentId] || []}
+          loadingReplies={loadingReplies[commentId]}
           loadReplies={() => {
-            if (!(comment.id in replies)) {
-              loadReplies(comment.id)
+            if (!(commentId in replies)) {
+              loadReplies(commentId)
             }
           }}
           openReplyFor={openReplyFor}
@@ -295,9 +297,10 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
           likedComments={likedComments}
           setLikedComments={setLikedComments}
           setReplies={setReplies}
-          commentId={comment.id}
+          commentId={commentId}
         />
-      ))}
+        );
+      })}
     </div>
   )
 }
@@ -386,46 +389,46 @@ function RedditComment({
                 <button
                   className="hover:text-black"
                   onClick={async () => {
-                    const shouldShow = !visibleReplies.has(comment.id);
+                    const shouldShow = !visibleReplies.has(commentId);
                     
                     // Toggle replies visibility
                     setVisibleReplies(prev => {
                       const newVisibleReplies = new Set(prev);
-                      if (newVisibleReplies.has(comment.id)) {
-                        newVisibleReplies.delete(comment.id);
+                      if (newVisibleReplies.has(commentId)) {
+                        newVisibleReplies.delete(commentId);
                       } else {
-                        newVisibleReplies.add(comment.id);
+                        newVisibleReplies.add(commentId);
                       }
                       return newVisibleReplies;
                     });
                     
-                    if (shouldShow && !replies[comment.id]) {
+                    if (shouldShow && !replies[commentId]) {
                       // lazy load replies on open
-                      setLoadingReplies(prev => ({ ...prev, [comment.id]: true }));
-                      const { data, error } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
+                      setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
+                      const { data, error } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: commentId, page_size: 20, page_offset: 0 });
                       if (error) {
                         console.error('Error loading replies:', error);
                       } else {
-                        setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                        setReplies(prev => ({ ...prev, [commentId]: (data || []) as any }));
                       }
-                      setLoadingReplies(prev => ({ ...prev, [comment.id]: false }));
+                      setLoadingReplies(prev => ({ ...prev, [commentId]: false }));
                     }
                   }}
                 >
-                  {visibleReplies.has(comment.id) ? 'Hide replies' : 'Show replies'}{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
+                  {visibleReplies.has(commentId) ? 'Hide replies' : 'Show replies'}{typeof comment.reply_count === 'number' ? ` (${comment.reply_count})` : ''}
                 </button>
               )}
               <button
                 className="hover:text-black"
                 onClick={() => {
-                  setOpenReplyFor(openReplyFor === comment.id ? null : comment.id);
+                  setOpenReplyFor(openReplyFor === commentId ? null : commentId);
                 }}
               >
                 Reply
               </button>
               <button
                 className={`flex items-center gap-1 transition-all duration-200 ${
-                  likedComments.has(comment.id)
+                  likedComments.has(commentId)
                     ? 'text-red-500'
                     : 'hover:text-red-500'
                 }`}
@@ -433,7 +436,7 @@ function RedditComment({
                   if (!isAuthenticated || !user?.id) return;
                   try {
                     const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
-                      comment_id_param: comment.id, 
+                      comment_id_param: commentId, 
                       external_id_param: user.id, 
                       direction: 1 
                     });
@@ -460,16 +463,16 @@ function RedditComment({
                     // Update both the vote score and liked status from the response
                     if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
                       setMerged(prev => prev.map(c => 
-                        c.id === comment.id ? { ...c, vote_score: responseData.vote_score } : c
+                        c.id === commentId ? { ...c, vote_score: responseData.vote_score } : c
                       ));
                       
                       // Update liked comments state
                       setLikedComments(prev => {
                         const next = new Set(prev);
                         if (responseData.liked) {
-                          next.add(comment.id);
+                          next.add(commentId);
                         } else {
-                          next.delete(comment.id);
+                          next.delete(commentId);
                         }
                         return next;
                       });
@@ -483,7 +486,7 @@ function RedditComment({
                   }
                 }}
               >
-                <svg className="w-4 h-4" fill={likedComments.has(comment.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill={likedComments.has(commentId) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
                 <span>{comment.vote_score || 0}</span>
@@ -491,12 +494,12 @@ function RedditComment({
             </div>
 
             {/* Reply input */}
-            {openReplyFor === comment.id && (
+            {openReplyFor === commentId && (
               <div className="mt-3 pl-2 border-l-2 border-gray-200">
                 <div className="space-y-2">
                   <textarea
-                    value={replyText[comment.id] || ''}
-                    onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                    value={replyText[commentId] || ''}
+                    onChange={(e) => setReplyText(prev => ({ ...prev, [commentId]: e.target.value }))}
                     placeholder="Write a reply..."
                     className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black bg-white"
                     rows={2}
@@ -504,13 +507,13 @@ function RedditComment({
                   <div className="flex gap-2">
                     <button
                       onClick={async () => {
-                        const content = replyText[comment.id]?.trim();
+                        const content = replyText[commentId]?.trim();
                         if (!content || !isAuthenticated || !user?.id) return;
                         
-                        setReplyText(prev => ({ ...prev, [comment.id]: '' }));
+                        setReplyText(prev => ({ ...prev, [commentId]: '' }));
                         setReplies(prev => ({
                           ...prev,
-                          [comment.id]: [
+                          [commentId]: [
                             {
                               id: `temp-${Date.now()}`,
                               content,
@@ -523,15 +526,15 @@ function RedditComment({
                               vote_score: 0,
                               reply_count: 0
                             } as RealtimeComment,
-                            ...(prev[comment.id] || [])
+                            ...(prev[commentId] || [])
                           ]
                         }));
                         
                         try {
-                          await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                          await supabase.rpc('add_reply_ext', { comment_id_param: commentId, external_id_param: user.id, content_param: content });
                           // Refresh replies
-                          const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
-                          setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                          const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: commentId, page_size: 20, page_offset: 0 });
+                          setReplies(prev => ({ ...prev, [commentId]: (data || []) as any }));
                         } catch (error) {
                           console.error('Error adding reply:', error);
                         }
@@ -543,7 +546,7 @@ function RedditComment({
                     <button
                       onClick={() => {
                         setOpenReplyFor(null);
-                        setReplyText(prev => ({ ...prev, [comment.id]: '' }));
+                        setReplyText(prev => ({ ...prev, [commentId]: '' }));
                       }}
                       className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
                     >
@@ -555,13 +558,13 @@ function RedditComment({
             )}
 
             {/* Show replies */}
-            {visibleReplies.has(comment.id) && (
+            {visibleReplies.has(commentId) && (
               <div className="mt-4 space-y-3">
-                {loadingReplies[comment.id] ? (
+                {loadingReplies[commentId] ? (
                   <div className="text-sm text-gray-500">Loading replies...</div>
                 ) : (
                   <div className="space-y-3">
-                    {(replies[comment.id] || []).map(r => (
+                    {(replies[commentId] || []).map(r => (
                       <div key={r.id} className="ml-6 border-l-2 border-gray-100 pl-4">
                         <div className="flex gap-3">
                           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
