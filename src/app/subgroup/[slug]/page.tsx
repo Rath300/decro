@@ -11,6 +11,7 @@ import { useAuth } from '@/context/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useUserHistory } from '@/hooks/use-user-history'
 
 export default function SubgroupDetail() {
   const params = useParams() as { slug: string }
@@ -18,6 +19,7 @@ export default function SubgroupDetail() {
   const { posts } = usePosts()
   const { user } = useAuth()
   const toast = useToast()
+  const { trackAction } = useUserHistory()
   const [subgroupId, setSubgroupId] = useState<string | null>(null)
   const [subgroupData, setSubgroupData] = useState<any>(null)
   const [isFollowing, setIsFollowing] = useState(false)
@@ -77,6 +79,11 @@ export default function SubgroupDetail() {
             creator_username
           }
           setSubgroupData(transformedData)
+
+          // Track subgroup visit
+          if (user?.id) {
+            trackAction('view', params.slug, 'subgroup')
+          }
 
           // Get follower count
           const { count } = await supabase

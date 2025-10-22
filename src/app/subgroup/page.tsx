@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
 import AuthModal from '@/components/auth-modal'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useUserHistory } from '@/hooks/use-user-history'
 
 type Subgroup = { 
   id: string
@@ -28,7 +29,8 @@ export default function SubgroupIndex() {
   const [filtered, setFiltered] = useState<Subgroup[]>([])
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState<'name' | 'members' | 'posts' | 'recent'>('members')
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+  const { trackAction } = useUserHistory()
   const router = useRouter()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authAction, setAuthAction] = useState('')
@@ -137,6 +139,13 @@ export default function SubgroupIndex() {
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
     if (seconds < 2592000) return `${Math.floor(seconds / 604800)}w ago`
     return date.toLocaleDateString()
+  }
+
+  const handleSubgroupClick = (subgroup: Subgroup) => {
+    // Track subgroup visit
+    if (user?.id) {
+      trackAction('view', subgroup.slug, 'subgroup')
+    }
   }
 
   if (loading) {
@@ -249,7 +258,7 @@ export default function SubgroupIndex() {
                     transition: { duration: 0.2 }
                   }}
                 >
-                  <Link href={`/subgroup/${s.slug}`} className="block">
+                  <Link href={`/subgroup/${s.slug}`} className="block" onClick={() => handleSubgroupClick(s)}>
                     <div className="border border-gray-200 rounded-lg bg-white hover:shadow-lg transition-all duration-200 overflow-hidden h-full">
                       {/* Cover Image */}
                       <div className="h-32 bg-gray-100 relative">

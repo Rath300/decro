@@ -44,39 +44,66 @@ export function useUserHistory() {
 
         setHistory(recentHistory)
 
-        // Fetch real data from Supabase
-        const [subgroupsResult, postsResult, likesResult] = await Promise.all([
-          // Get recent subgroups visited
-          supabase
-            .from('subgroups')
-            .select('id, name, slug')
-            .order('created_at', { ascending: false })
-            .limit(5),
-          
-          // Get recent posts viewed
-          supabase
-            .from('posts')
-            .select('id, title, created_at')
-            .order('created_at', { ascending: false })
-            .limit(5),
-          
-          // Get liked posts
-          supabase
-            .rpc('get_user_liked_posts_ext', { external_id_param: user.id })
-        ])
+        // Get user's actual recent activity from local history
+        const recentSubgroupVisits = recentHistory
+          .filter(item => item.targetType === 'subgroup' && item.action === 'view')
+          .slice(0, 5)
+          .map(item => ({
+            name: item.targetId, // This is the slug
+            slug: item.targetId,
+            link: `/subgroup/${item.targetId}`
+          }))
 
-        // Process subgroups
-        const recentSubgroups = subgroupsResult.data?.map(subgroup => ({
-          name: subgroup.name,
-          slug: subgroup.slug,
-          link: `/subgroup/${subgroup.slug}`
-        })) || []
+        const recentPostViews = recentHistory
+          .filter(item => item.targetType === 'post' && item.action === 'view')
+          .slice(0, 5)
 
-        // Process recent posts
-        const recentPosts = postsResult.data?.map(post => ({
-          title: post.title,
-          link: `/feed#${post.id}`
-        })) || []
+        // Get liked posts from Supabase
+        const likesResult = await supabase
+          .rpc('get_user_liked_posts_ext', { external_id_param: user.id })
+
+        // Process recent posts by fetching their titles
+        const recentPosts = []
+        for (const historyItem of recentPostViews) {
+          try {
+            const { data: postData } = await supabase
+              .from('posts')
+              .select('id, title')
+              .eq('id', historyItem.targetId)
+              .single()
+            
+            if (postData) {
+              recentPosts.push({
+                title: postData.title,
+                link: `/feed#${postData.id}`
+              })
+            }
+          } catch (error) {
+            console.warn('Failed to fetch post title for history item:', error)
+          }
+        }
+
+        // Process subgroups by fetching their names
+        const recentSubgroups = []
+        for (const historyItem of recentSubgroupVisits) {
+          try {
+            const { data: subgroupData } = await supabase
+              .from('subgroups')
+              .select('id, name, slug')
+              .eq('slug', historyItem.slug)
+              .single()
+            
+            if (subgroupData) {
+              recentSubgroups.push({
+                name: subgroupData.name,
+                slug: subgroupData.slug,
+                link: `/subgroup/${subgroupData.slug}`
+              })
+            }
+          } catch (error) {
+            console.warn('Failed to fetch subgroup name for history item:', error)
+          }
+        }
 
         // Process liked posts
         const likedPosts = (likesResult.data as any[] | undefined)?.map((like: any) => ({
