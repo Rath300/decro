@@ -6,6 +6,7 @@ import { useAuth } from '@/context/auth-context'
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments'
 import { PostStats } from '@/components/post-stats'
 import supabase from '@/lib/supabase-client'
+import { useUserHistory } from '@/hooks/use-user-history'
 
 interface PostData {
   id: string
@@ -25,6 +26,7 @@ export default function PostDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { user, isAuthenticated } = useAuth()
+  const { trackAction } = useUserHistory()
   const postId = params.id as string
 
   const [post, setPost] = useState<PostData | null>(null)
@@ -77,6 +79,21 @@ export default function PostDetailPage() {
         creator_id: postWithProfile.creator_id,
         creator_username: postWithProfile.profiles?.username
       })
+
+      // Track view for this post
+      if (user?.id) {
+        trackAction('view', postId, 'post')
+      }
+
+      // Track view in Supabase (for view count)
+      try {
+        await supabase.rpc('track_view', {
+          post_id_param: postId,
+          user_id_param: user?.id || null
+        })
+      } catch (error) {
+        console.warn('Failed to track view in Supabase:', error)
+      }
 
       // Check if current user owns this post
       if (user?.id) {
