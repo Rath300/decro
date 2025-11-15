@@ -1,6 +1,39 @@
 import { betterAuth } from "better-auth"
 import { Pool } from "pg"
 
+const normalizeOrigin = (value?: string | null): string | undefined => {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed.replace(/^\/*/, '')}`
+  try {
+    return new URL(withScheme).origin
+  } catch {
+    console.warn(`[better-auth] Ignoring invalid trusted origin: ${value}`)
+    return undefined
+  }
+}
+
+const vercelOrigin = normalizeOrigin(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined)
+const siteOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL)
+const extraOrigins = (process.env.BETTER_AUTH_EXTRA_ORIGINS || '')
+  .split(',')
+  .map((origin) => normalizeOrigin(origin))
+  .filter((origin): origin is string => Boolean(origin))
+
+const localOrigin = 'http://localhost:3000'
+
+const trustedOrigins = Array.from(
+  new Set(
+    [
+      process.env.NODE_ENV === 'production' ? vercelOrigin : localOrigin,
+      siteOrigin,
+      localOrigin,
+      ...extraOrigins,
+    ].filter((origin): origin is string => Boolean(origin))
+  )
+)
+
 export const auth = betterAuth({
   database: new Pool({ 
     connectionString: process.env.DATABASE_URL 
@@ -20,11 +53,7 @@ export const auth = betterAuth({
       httpOnly: true,
     } as any,
   },
-  trustedOrigins: [
-    process.env.NODE_ENV === 'production' && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
-    process.env.NEXT_PUBLIC_SITE_URL || '',
-    'http://localhost:3000',
-  ].filter(Boolean) as string[],
+  trustedOrigins,
   emailVerification: {
     sendVerificationEmail: async (data: any) => {
       console.log('Email verification sent to:', data.user.email)
