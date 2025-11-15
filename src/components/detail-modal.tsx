@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth-context'
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments'
 import { PostStats } from '@/components/post-stats'
 import supabase from '@/lib/supabase-client'
+import { useToast } from '@/hooks/use-toast'
 
 interface DetailModalProps {
   refetchPosts?: (sortBy?: 'created_at' | 'likes' | 'comments') => Promise<void>
@@ -213,36 +214,125 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
   const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({})
   const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set())
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set())
+  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null)
+
+  const sanitizeCommentList = useCallback((commentsList: RealtimeComment[]): RealtimeComment[] => {
+    return commentsList.map((comment) => {
+      const usernameCandidate = comment.username?.trim()
+      const fallbackUsername =
+        (!usernameCandidate || usernameCandidate.toLowerCase() === 'anonymous')
+          ? (comment.full_name?.trim() || (comment.user_id ? `user-${String(comment.user_id).slice(0, 8)}` : 'member'))
+          : usernameCandidate
+
+      const createdValid = comment.created_at && !Number.isNaN(Date.parse(comment.created_at))
+      const updatedValid = comment.updated_at && !Number.isNaN(Date.parse(comment.updated_at))
+      const normalizedCreated = createdValid
+        ? comment.created_at
+        : updatedValid
+          ? (comment.updated_at as string)
+          : new Date().toISOString()
+      const normalizedUpdated = updatedValid ? comment.updated_at : normalizedCreated
+
+      return {
+        ...comment,
+        username: fallbackUsername,
+        created_at: normalizedCreated,
+        updated_at: normalizedUpdated,
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      setCurrentProfileId(null)
+      return
+    }
+
+    let cancelled = false
+
+    const resolveProfileId = async () => {
+      try {
+        const { data, error } = await supabase.rpc('ensure_profile', { external_id_param: user.id })
+        if (!cancelled && !error && data) {
+          setCurrentProfileId(data as string)
+          return
+        }
+      } catch (ensureError) {
+        console.warn('ensure_profile failed in CommentsList:', ensureError)
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .limit(1)
+          .maybeSingle()
+
+        if (!cancelled && !error && data?.id) {
+          setCurrentProfileId(data.id)
+        }
+      } catch (fallbackError) {
+        if (!cancelled) {
+          console.warn('Failed to resolve current profile id:', fallbackError)
+        }
+      }
+    }
+
+    resolveProfileId()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated, user?.id])
 
   useEffect(() => { if (postId) refetch() }, [refreshSignal])
   useEffect(() => {
     const server = comments || []
     const optimistic = optimisticComments || []
-    
-    // Filter out problematic comments (anonymous, null usernames, old dates)
-    const filterValidComments = (commentsList: RealtimeComment[]) => {
-      return commentsList.filter(comment => {
-        // Skip if no username or anonymous-like usernames
-        if (!comment.username || 
-            comment.username === 'anonymous' || 
-            comment.username === 'Anonymous' ||
-            comment.username.trim() === '' ||
-            comment.created_at < '2020-01-01') {
-          return false;
+
+    const sanitizeComments = (commentsList: RealtimeComment[]): RealtimeComment[] => {
+      return commentsList.map((comment) => {
+        const usernameCandidate = comment.username?.trim()
+        const fallbackUsername =
+          (!usernameCandidate || usernameCandidate.toLowerCase() === 'anonymous')
+            ? (comment.full_name?.trim() || (comment.user_id ? `user-${String(comment.user_id).slice(0, 8)}` : 'member'))
+            : usernameCandidate
+
+        const createdValid = comment.created_at && !Number.isNaN(Date.parse(comment.created_at))
+        const updatedValid = comment.updated_at && !Number.isNaN(Date.parse(comment.updated_at))
+        const normalizedCreated = createdValid
+          ? comment.created_at
+          : updatedValid
+            ? (comment.updated_at as string)
+            : new Date().toISOString()
+        const normalizedUpdated = updatedValid ? comment.updated_at : normalizedCreated
+
+        return {
+          ...comment,
+          username: fallbackUsername,
+          created_at: normalizedCreated,
+          updated_at: normalizedUpdated,
         }
-        return true;
-      });
-    };
-    
-    const validServerComments = filterValidComments(server);
-    const validOptimisticComments = filterValidComments(optimistic);
-    
-    if (validOptimisticComments.length === 0) { 
-      setMerged(validServerComments); 
-      return 
+      })
     }
-    const filteredOptimistic = validOptimisticComments.filter(o => !validServerComments.some(s => s.content === o.content && Math.abs(new Date(s.created_at).getTime() - new Date(o.created_at).getTime()) < 60000))
-    setMerged([...filteredOptimistic, ...validServerComments])
+
+    const sanitizedServer = sanitizeCommentList(server)
+    const sanitizedOptimistic = sanitizeCommentList(optimistic)
+
+    if (sanitizedOptimistic.length === 0) {
+      setMerged(sanitizedServer)
+      return
+    }
+
+    const filteredOptimistic = sanitizedOptimistic.filter((optimisticComment) => {
+      return !sanitizedServer.some((serverComment) => {
+        const timestampsDiff = Math.abs(new Date(serverComment.created_at).getTime() - new Date(optimisticComment.created_at).getTime())
+        return serverComment.content === optimisticComment.content && timestampsDiff < 60000
+      })
+    })
+
+    setMerged([...filteredOptimistic, ...sanitizedServer])
   }, [comments, optimisticComments])
 
   // Initialize liked comments state when comments change and user is authenticated
@@ -289,7 +379,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
       if (error) {
         console.error('Error loading replies:', error)
       } else {
-        setReplies(prev => ({ ...prev, [commentId]: (data || []) as any }))
+        const sanitizedReplies = sanitizeCommentList((data as RealtimeComment[] | null) || [])
+        setReplies(prev => ({ ...prev, [commentId]: sanitizedReplies }))
       }
     } catch (error) {
       console.error('Error loading replies:', error)
@@ -297,6 +388,35 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
       setLoadingReplies(prev => ({ ...prev, [commentId]: false }))
     }
   }
+
+  const handleRemoveComment = useCallback((commentId: string, parentId?: string) => {
+    if (parentId) {
+      setReplies(prev => ({
+        ...prev,
+        [parentId]: (prev[parentId] || []).filter(reply => reply.id !== commentId)
+      }))
+      setMerged(prev => prev.map(comment => {
+        if (comment.id === parentId) {
+          const nextCount = Math.max(0, (comment.reply_count ?? 1) - 1)
+          return { ...comment, reply_count: nextCount }
+        }
+        return comment
+      }))
+    } else {
+      setMerged(prev => prev.filter(comment => comment.id !== commentId))
+      setReplies(prev => {
+        const next = { ...prev }
+        delete next[commentId]
+        return next
+      })
+    }
+
+    setLikedComments(prev => {
+      const next = new Set(prev)
+      next.delete(commentId)
+      return next
+    })
+  }, [])
 
 
   if (loading && merged.length === 0) {
@@ -326,6 +446,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
           key={commentId}
           comment={comment}
           depth={0}
+          currentProfileId={currentProfileId}
           onReply={(content: string) => {
             if (!isAuthenticated || !user?.id) return
             // Implementation will be handled by reply input
@@ -354,6 +475,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
           setReplies={setReplies}
           setLoadingReplies={setLoadingReplies}
           commentId={commentId}
+          onDeleteComment={handleRemoveComment}
+          sanitizeCommentList={sanitizeCommentList}
         />
         );
       })}
@@ -364,6 +487,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
 function RedditComment({ 
   comment, 
   depth, 
+  currentProfileId,
   onReply,
   replies,
   loadingReplies,
@@ -380,10 +504,13 @@ function RedditComment({
   setLikedComments,
   setReplies,
   setLoadingReplies,
-  commentId
+  commentId,
+  onDeleteComment,
+  sanitizeCommentList
 }: { 
   comment: RealtimeComment
   depth: number
+  currentProfileId: string | null
   onReply: (content: string) => void
   replies: Record<string, RealtimeComment[]>
   loadingReplies: Record<string, boolean>
@@ -401,9 +528,74 @@ function RedditComment({
   setReplies: (setter: (prev: Record<string, RealtimeComment[]>) => Record<string, RealtimeComment[]>) => void
   setLoadingReplies: (setter: (prev: Record<string, boolean>) => Record<string, boolean>) => void
   commentId: string
+  onDeleteComment: (commentId: string, parentId?: string) => void
+  sanitizeCommentList: (comments: RealtimeComment[]) => RealtimeComment[]
 }) {
   const { isAuthenticated, user } = useAuth()
+  const toast = useToast()
   const maxDepth = 2
+
+  const canDelete = useMemo(() => {
+    if (!user?.id) return false
+    if (currentProfileId && comment.user_id) {
+      return comment.user_id === currentProfileId || comment.user_id === user.id
+    }
+    return comment.user_id === user.id
+  }, [comment.user_id, currentProfileId, user?.id])
+
+  const handleDeleteComment = async () => {
+    if (!isAuthenticated || !user?.id || !canDelete) return
+    const confirmed = window.confirm('Delete this comment?')
+    if (!confirmed) return
+
+    try {
+      const { data, error } = await supabase.rpc('delete_comment_ext', {
+        comment_id_param: commentId,
+        external_id_param: user.id
+      })
+
+      if (error) throw error
+      if (data && data.success === false) {
+        throw new Error(data.error || 'Failed to delete comment')
+      }
+
+      onDeleteComment(commentId)
+      toast.success('Comment deleted')
+      refetch?.()
+    } catch (error) {
+      console.error('Failed to delete comment:', error)
+      toast.error('Failed to delete comment')
+    }
+  }
+
+  const handleDeleteReply = async (replyId: string) => {
+    if (!isAuthenticated || !user?.id) return
+    const reply = replies[commentId]?.find(r => r.id === replyId)
+    const canDeleteReply = reply && (reply.user_id === currentProfileId || reply?.user_id === user.id)
+    if (!canDeleteReply) return
+
+    const confirmed = window.confirm('Delete this reply?')
+    if (!confirmed) return
+
+    try {
+      const { data, error } = await supabase.rpc('delete_comment_ext', {
+        comment_id_param: replyId,
+        external_id_param: user.id
+      })
+
+      if (error) throw error
+      if (data && data.success === false) {
+        throw new Error(data.error || 'Failed to delete reply')
+      }
+
+      onDeleteComment(replyId, commentId)
+      toast.success('Reply deleted')
+      refetch?.()
+    } catch (error) {
+      console.error('Failed to delete reply:', error)
+      toast.error('Failed to delete reply')
+    }
+  }
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
@@ -467,7 +659,8 @@ function RedditComment({
                       if (error) {
                         console.error('Error loading replies:', error);
                       } else {
-                        setReplies(prev => ({ ...prev, [commentId]: (data || []) as any }));
+                        const sanitizedReplies = sanitizeCommentList((data as RealtimeComment[] | null) || [])
+                        setReplies(prev => ({ ...prev, [commentId]: sanitizedReplies }));
                       }
                       setLoadingReplies(prev => ({ ...prev, [commentId]: false }));
                     }
@@ -484,6 +677,14 @@ function RedditComment({
               >
                 Reply
               </button>
+              {canDelete && (
+                <button
+                  className="hover:text-red-500"
+                  onClick={handleDeleteComment}
+                >
+                  Delete
+                </button>
+              )}
               <button
                 className={`flex items-center gap-1 transition-all duration-200 ${
                   likedComments.has(commentId)
@@ -572,21 +773,23 @@ function RedditComment({
                         if (!content || !isAuthenticated || !user?.id) return;
                         
                         setReplyText((prev: Record<string, string>) => ({ ...prev, [commentId]: '' }));
+                        const optimisticReply: RealtimeComment = {
+                          id: `temp-${Date.now()}`,
+                          content,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
+                          user_id: (currentProfileId || user.id) as string,
+                          username: user.name || user.email?.split('@')[0] || 'You',
+                          full_name: user.name || null,
+                          avatar_url: null,
+                          vote_score: 0,
+                          reply_count: 0
+                        }
+                        const sanitizedOptimistic = sanitizeCommentList([optimisticReply])[0]
                         setReplies(prev => ({
                           ...prev,
                           [commentId]: [
-                            {
-                              id: `temp-${Date.now()}`,
-                              content,
-                              created_at: new Date().toISOString(),
-                              updated_at: new Date().toISOString(),
-                              user_id: user.id,
-                              username: user.name || user.email?.split('@')[0] || 'You',
-                              full_name: user.name || null,
-                              avatar_url: null,
-                              vote_score: 0,
-                              reply_count: 0
-                            } as RealtimeComment,
+                            sanitizedOptimistic,
                             ...(prev[commentId] || [])
                           ]
                         }));
@@ -595,7 +798,8 @@ function RedditComment({
                           await supabase.rpc('add_reply_ext', { comment_id_param: commentId, external_id_param: user.id, content_param: content });
                           // Refresh replies
                           const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: commentId, page_size: 20, page_offset: 0 });
-                          setReplies(prev => ({ ...prev, [commentId]: (data || []) as any }));
+                          const sanitized = sanitizeCommentList((data as RealtimeComment[] | null) || [])
+                          setReplies(prev => ({ ...prev, [commentId]: sanitized }));
                         } catch (error) {
                           console.error('Error adding reply:', error);
                         }
@@ -720,6 +924,14 @@ function RedditComment({
                                 </svg>
                                 <span>{r.vote_score || 0}</span>
                               </button>
+                              {((currentProfileId && r.user_id === currentProfileId) || r.user_id === user?.id) && (
+                                <button
+                                  className="text-red-500 hover:text-red-600"
+                                  onClick={() => handleDeleteReply(r.id)}
+                                >
+                                  Delete
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>

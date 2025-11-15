@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'Decro - Sign Up',
   description: 'Create your Decro account',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/decky.png',
   },
 }
 

@@ -20,6 +20,8 @@ export default function EditProfilePage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [profileId, setProfileId] = useState<string | null>(null)
+  const [originalUsername, setOriginalUsername] = useState<string>('')
 
   const [formData, setFormData] = useState({
     username: '',
@@ -43,20 +45,48 @@ export default function EditProfilePage() {
     if (!user?.id) return
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, full_name, bio, avatar_url')
-        .eq('id', user.id)
-        .single()
+      let resolvedProfileId = profileId
+
+      if (!resolvedProfileId) {
+        try {
+          const { data: ensuredId } = await supabase
+            .rpc('ensure_profile', { external_id_param: user.id })
+          if (ensuredId) {
+            resolvedProfileId = ensuredId as string
+            setProfileId(resolvedProfileId)
+          }
+        } catch (ensureError) {
+          console.warn('ensure_profile failed, falling back to direct lookup:', ensureError)
+        }
+      }
+
+      const query = resolvedProfileId
+        ? supabase
+            .from('profiles')
+            .select('id, username, full_name, bio, avatar_url, external_id')
+            .eq('id', resolvedProfileId)
+            .limit(1)
+        : supabase
+            .from('profiles')
+            .select('id, username, full_name, bio, avatar_url, external_id')
+            .eq('external_id', user.id)
+            .limit(1)
+
+      const { data, error } = await query.maybeSingle()
 
       if (!error && data) {
+        if (data.id) {
+          setProfileId(data.id)
+        }
+        const safeUsername = data.username || user.email?.split('@')[0] || ''
         setFormData({
-          username: data.username || '',
+          username: safeUsername,
           full_name: data.full_name || '',
           bio: data.bio || '',
           avatar_url: data.avatar_url || ''
         })
         setAvatarPreview(data.avatar_url || '')
+        setOriginalUsername(safeUsername)
       }
     } catch (error) {
       console.error('Failed to load profile:', error)
@@ -80,18 +110,29 @@ export default function EditProfilePage() {
   }
 
   const checkUsernameAvailable = async (username: string): Promise<boolean> => {
-    if (!username || username === formData.username) return true
+    const normalized = username.trim().toLowerCase()
+    if (!normalized) return true
+    if (normalized === (originalUsername || '').toLowerCase()) return true
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('id')
-        .eq('username', username.toLowerCase())
-        .neq('id', user?.id)
-        .single()
+        .eq('username', normalized)
 
-      return !data
-    } catch {
+      if (profileId) {
+        query = query.neq('id', profileId)
+      }
+
+      const { data, error } = await query.limit(1)
+
+      if (error && error.code !== 'PGRST116') {
+        throw error
+      }
+
+      return !data || data.length === 0
+    } catch (err) {
+      console.warn('Username availability check failed:', err)
       return true
     }
   }
@@ -143,20 +184,44 @@ export default function EditProfilePage() {
         setUploading(false)
       }
 
+      let targetProfileId = profileId
+
+      if (!targetProfileId) {
+        try {
+          const { data: ensuredId, error: ensureError } = await supabase
+            .rpc('ensure_profile', { external_id_param: user.id })
+          if (ensureError) throw ensureError
+          if (ensuredId) {
+            targetProfileId = ensuredId as string
+            setProfileId(targetProfileId)
+          }
+        } catch (ensureError) {
+          console.error('Failed to resolve profile id:', ensureError)
+          throw ensureError
+        }
+      }
+
+      const usernameNormalized = formData.username.trim().toLowerCase()
+
       // Update profile
-      const { error } = await supabase
+      const updateBuilder = supabase
         .from('profiles')
         .update({
-          username: formData.username.toLowerCase(),
+          username: usernameNormalized,
           full_name: formData.full_name.trim() || null,
           bio: formData.bio.trim() || null,
-          avatar_url: avatarUrl || null
+          avatar_url: avatarUrl || null,
+          external_id: user.id
         })
-        .eq('id', user.id)
+
+      const { error } = targetProfileId
+        ? await updateBuilder.eq('id', targetProfileId)
+        : await updateBuilder.eq('external_id', user.id)
 
       if (error) throw error
 
       toast.success('Profile updated successfully!')
+      setOriginalUsername(usernameNormalized)
       router.push('/profile')
     } catch (error: any) {
       console.error('Failed to update profile:', error)
