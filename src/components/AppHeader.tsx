@@ -31,12 +31,12 @@ export default function AppHeader() {
       <div className="relative">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between py-2">
           <div className="flex items-center gap-4">
-            <Link href="/feed" className="flex items-center gap-2">
+            <Link href="/feed" className="inline-flex items-center">
               <Image
                 src="/decky.png"
                 alt="Decro logo"
-                width={32}
-                height={32}
+                width={40}
+                height={40}
                 priority
               />
             </Link>
