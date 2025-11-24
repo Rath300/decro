@@ -36,7 +36,7 @@ export default function Identity() {
     )
   }
   
-  return <a href="/" className="text-sm leading-6 text-black hover:underline font-['Space_Mono']">Sign In</a>
+  return <a href="/signup" className="text-sm leading-6 text-black hover:underline font-['Space_Mono']">Sign In</a>
 }
 
 

@@ -8,6 +8,9 @@ const PUBLIC_PATHS = [
   '/feed',
   '/spotlight',
   '/subgroup',
+  '/feedback',
+  '/post',
+  '/search',
 ]
 
 export function middleware(req: NextRequest) {
@@ -23,10 +26,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  const isPublic = PUBLIC_PATHS.includes(pathname)
+  // Check if path starts with any public path (allows /spotlight/[id], /subgroup/[slug], etc.)
+  const isPublic = PUBLIC_PATHS.some(publicPath => pathname === publicPath || pathname.startsWith(publicPath + '/'))
+  
   // Better Auth session cookies typically contain "better-auth.session"
   const hasSession = Array.from(req.cookies.getAll()).some(c => c.name.includes('better-auth.session'))
 
+  // Only redirect to home if not public and no session
   if (!isPublic && !hasSession) {
     const url = req.nextUrl.clone()
     url.pathname = '/'

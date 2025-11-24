@@ -188,9 +188,12 @@ export default function ProfilePage() {
     }
   }, [user?.id])
 
+  const [showAuthModal, setShowAuthModal] = useState(false)
+
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/')
+      // Show modal instead of redirecting
+      setShowAuthModal(true)
       return
     }
 
@@ -261,7 +264,38 @@ export default function ProfilePage() {
   }, [trackView, setSelectedCard, setShowDetailModal, username, user?.email, router])
 
   if (!isAuthenticated) {
-    return null
+    return (
+      <div className="min-h-screen bg-white text-black font-['Space_Mono'] flex items-center justify-center">
+        <div className="max-w-md w-full mx-4 border border-black p-8 bg-white">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
+              👤
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Sign up to view profiles</h2>
+            <p className="text-gray-600 text-sm">
+              Join Decro to discover creators, view their work, and connect with the community.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <a 
+              href="/signup" 
+              className="block w-full text-center px-4 py-3 bg-black text-white hover:bg-gray-800 transition-colors font-medium"
+            >
+              Create Account
+            </a>
+            <a 
+              href="/" 
+              className="block w-full text-center px-4 py-3 border border-black text-black hover:bg-gray-50 transition-colors"
+            >
+              Sign In
+            </a>
+          </div>
+          <p className="text-xs text-gray-500 text-center mt-4">
+            Already have an account? <a href="/" className="text-black hover:underline">Sign in</a>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (

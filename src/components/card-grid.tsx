@@ -61,7 +61,20 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
                 </div>
               </div>
             ) : (
-              <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <img 
+                src={card.imageUrl} 
+                alt={card.title} 
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                loading="lazy"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = '<div class="w-full h-full bg-gray-200 flex items-center justify-center"><span class="text-gray-500 text-sm">Image unavailable</span></div>';
+                  }
+                }}
+              />
             )}
             {card.type === 'music' && card.audioUrl && (
               <button

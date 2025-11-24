@@ -38,7 +38,7 @@ export default function FeedPage() {
   // Global header handles navigation; keep state for legacy references if any
   const [activeTab, setActiveTab] = useState('feed');
   const [displayedCards, setDisplayedCards] = useState<MediaCard[]>([]);
-  const [sortMode, setSortMode] = useState<'random' | 'newest' | 'curated'>('random');
+  const [sortMode, setSortMode] = useState<'random' | 'newest'>('random');
   const [showStats, setShowStats] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalAction, setAuthModalAction] = useState('');
@@ -51,9 +51,6 @@ export default function FeedPage() {
     } else if (sortMode === 'newest') {
       const sorted = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setDisplayedCards(sorted);
-    } else if (sortMode === 'curated') {
-      const filtered = [...posts].filter(card => card.isCurated);
-      setDisplayedCards(filtered);
     } else {
       setDisplayedCards(posts);
     }
@@ -157,7 +154,7 @@ export default function FeedPage() {
     }
   };
 
-  const handleSort = async (mode: 'random' | 'newest' | 'curated') => {
+  const handleSort = async (mode: 'random' | 'newest') => {
     console.log('Sorting by:', mode); // Debug log
     setSortMode(mode);
     let sorted: MediaCard[];
@@ -169,9 +166,6 @@ export default function FeedPage() {
       case 'newest':
         await refetchPosts('created_at');
         sorted = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        break;
-      case 'curated':
-        sorted = [...posts].filter(card => card.isCurated);
         break;
       default:
         sorted = posts;
@@ -237,11 +231,6 @@ export default function FeedPage() {
     </div>
   );
 
-  const CuratedBadge = () => (
-    <div className="absolute top-2 left-2 bg-yellow-400 text-black px-2 py-1 text-xs font-['Space_Mono'] font-bold border border-black">
-      CURATED
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
@@ -254,12 +243,11 @@ export default function FeedPage() {
             <div className="flex space-x-2">
               {[
                 { id: 'random', label: 'Random' },
-                { id: 'newest', label: 'Newest' },
-                { id: 'curated', label: 'Curated' }
+                { id: 'newest', label: 'Newest' }
               ].map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => handleSort(option.id as 'random' | 'newest' | 'curated')}
+                  onClick={() => handleSort(option.id as 'random' | 'newest')}
                   className={`px-3 py-1 text-xs font-['Space_Mono'] border border-black transition-colors ${
                     sortMode === option.id
                       ? 'bg-black text-white'
@@ -294,7 +282,7 @@ export default function FeedPage() {
             <p className="text-black font-['Space_Mono'] text-sm mt-2">Be the first to <a href="/create" className="underline">create a post</a>.</p>
           </div>
         ) : (
-        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 space-y-8">
           <AnimatePresence>
             {displayedCards.map((card, index) => (
               <motion.div
@@ -312,7 +300,7 @@ export default function FeedPage() {
                   transition: { duration: 0.2 }
                 }}
                 whileTap={{ scale: 0.98 }}
-                className="break-inside-avoid mb-4 group cursor-pointer"
+                className="break-inside-avoid mb-8 group cursor-pointer"
               >
                               {/* Floating Media Card - No card background */}
                 <div 
@@ -333,11 +321,17 @@ export default function FeedPage() {
                     src={card.imageUrl}
                     alt={card.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = '<div class="w-full h-full bg-gray-200 flex items-center justify-center"><span class="text-gray-500 text-sm">Image unavailable</span></div>';
+                      }
+                    }}
                   />
                 )}
-                
-                {/* Curated badge */}
-                {card.isCurated && <CuratedBadge />}
                 
                 {/* Audio waveform overlay for music cards */}
                 {card.type === 'music' && card.audioUrl && (
@@ -467,7 +461,7 @@ export default function FeedPage() {
             End of feed • No infinite scroll • Hand-curated content
           </p>
           <p className="text-xs font-['Space_Mono'] text-gray-400 mt-2">
-            This is not an algorithmic feed. Content is manually organized.
+            This is not an algorithmic feed. Content is chronologically organized.
           </p>
         </div>
       </main>
@@ -505,12 +499,16 @@ export default function FeedPage() {
                       src={selectedCard.imageUrl}
                       alt={selectedCard.title}
                       className="w-full h-auto rounded-lg"
+                      loading="eager"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = '<div class="w-full h-auto min-h-[300px] bg-gray-200 flex items-center justify-center rounded-lg"><span class="text-gray-500">Image unavailable</span></div>';
+                        }
+                      }}
                     />
-                  )}
-                  {selectedCard.isCurated && (
-                    <div className="absolute top-4 left-4 bg-yellow-400 text-black px-3 py-1 text-sm font-['Space_Mono'] font-bold border border-black">
-                      CURATED
-                    </div>
                   )}
                 </div>
               </div>
@@ -793,11 +791,11 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
               {comment.content}
             </p>
             {/* Reply and voting controls */}
-            <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+            <div className="mt-2 flex items-center gap-3 text-xs">
               {/* Show/Hide replies button */}
               {comment.reply_count && comment.reply_count > 0 && (
                 <button
-                  className="hover:text-black"
+                  className="text-gray-500 hover:text-black font-['Space_Mono'] transition-colors"
                   onClick={async () => {
                     const newVisibleReplies = new Set(visibleReplies);
                     if (newVisibleReplies.has(comment.id)) {
@@ -822,7 +820,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
               
               {/* Reply button */}
               <button
-                className="hover:text-black"
+                className="text-gray-500 hover:text-black font-['Space_Mono'] transition-colors"
                 onClick={() => {
                   if (openReplyFor === comment.id) {
                     setOpenReplyFor(null);
@@ -905,19 +903,25 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
               </button>
             </div>
             {openReplyFor === comment.id && (
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2">
+              <div className="mt-2">
+                <div className="flex items-start gap-2">
                   <input
                     type="text"
                     value={replyText[comment.id] || ''}
                     onChange={(e) => setReplyText(prev => ({ ...prev, [comment.id]: e.target.value }))}
                     placeholder="Write a reply..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                     onKeyPress={async (e) => {
-                      if (e.key === 'Enter') {
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded font-['Space_Mono'] text-xs text-black placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                    onKeyPress={async (e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
                         const content = (replyText[comment.id] || '').trim();
-                        if (!content || !isAuthenticated || !user?.id) return;
-                        // optimistic bump reply count and add local reply shell
+                        if (!content) return;
+                        if (!isAuthenticated || !user?.id) {
+                          alert('Please sign in to reply');
+                          return;
+                        }
+                        
+                        // Optimistic update
                         setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, reply_count: (c.reply_count ?? 0) + 1 }) : c));
                         setReplies(prev => ({
                           ...prev,
@@ -927,20 +931,32 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                           ]
                         }));
                         setReplyText(prev => ({ ...prev, [comment.id]: '' }));
-                         try {
-                           await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
-                         } catch {}
-                        // refresh replies
+                        
+                        // Submit reply
+                        try {
+                          await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                        } catch (error) {
+                          console.error('Failed to add reply:', error);
+                        }
+                        
+                        // Refresh replies
                         const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                         setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
                       }
                     }}
                   />
-                   <button
-                    className="px-3 py-2 text-xs bg-black text-white rounded"
+                  <button
+                    disabled={!(replyText[comment.id] || '').trim()}
+                    className="px-3 py-2 text-xs font-['Space_Mono'] bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                     onClick={async () => {
                       const content = (replyText[comment.id] || '').trim();
-                      if (!content || !isAuthenticated || !user?.id) return;
+                      if (!content) return;
+                      if (!isAuthenticated || !user?.id) {
+                        alert('Please sign in to reply');
+                        return;
+                      }
+                      
+                      // Optimistic update
                       setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, reply_count: (c.reply_count ?? 0) + 1 }) : c));
                       setReplies(prev => ({
                         ...prev,
@@ -950,13 +966,21 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                         ]
                       }));
                       setReplyText(prev => ({ ...prev, [comment.id]: '' }));
-                       try {
-                         await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
-                       } catch {}
+                      
+                      // Submit reply
+                      try {
+                        await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                      } catch (error) {
+                        console.error('Failed to add reply:', error);
+                      }
+                      
+                      // Refresh replies
                       const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                       setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
                     }}
-                  >Reply</button>
+                  >
+                    Reply
+                  </button>
                 </div>
               </div>
             )}

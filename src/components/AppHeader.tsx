@@ -9,7 +9,7 @@ function Tab({ href, label, active }: { href: string; label: string; active: boo
   return (
     <Link
       href={href}
-      className={`px-14 py-2 border border-black -mb-px text-sm transition-transform duration-150 active:translate-y-[1px] ${
+      className={`px-14 py-2 border border-black -mb-px text-sm font-['Space_Mono'] leading-6 transition-transform duration-150 active:translate-y-[1px] ${
         active ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
       }`}
     >
@@ -47,8 +47,8 @@ export default function AppHeader() {
               <Tab href="/profile" label="Profile" active={isProfile} />
             </div>
           </div>
-          <div className="flex items-center gap-4 leading-6 font-['Space_Mono']">
-            <Link href="/create" className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black">
+          <div className="flex items-center gap-4">
+            <Link href="/create" className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black font-['Space_Mono'] leading-6">
               +
             </Link>
             <Identity />
