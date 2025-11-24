@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
+import VersionIndicator from '@/components/VersionIndicator'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
@@ -58,6 +59,7 @@ export default function LoginForm() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <VersionIndicator />
       {/* Main card without border */}
       <div className="login-card p-6 sm:p-8 lg:p-12">
         {/* Sign In Title - Back at the top */}
