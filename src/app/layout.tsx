@@ -6,10 +6,12 @@ import { ToastContainer } from '@/components/toast'
 import RootChrome from '@/components/RootChrome'
 
 export const metadata: Metadata = {
-  title: 'Decro - Sign Up',
-  description: 'Create your Decro account',
+  title: 'Decro - Social Media',
+  description: 'Share your creativity with the world',
   icons: {
     icon: '/decky.png',
+    shortcut: '/decky.png',
+    apple: '/decky.png',
   },
 }
 
