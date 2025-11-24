@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, ReactNode } from 'react'
-import { client } from '@/lib/auth-client'
+import { useSession as useNextAuthSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react'
 
 interface User {
   id: string
@@ -21,11 +21,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { 
-    data: session, 
-    isPending: loading, 
-    error 
-  } = client.useSession()
+  const { data: session, status } = useNextAuthSession()
+  const loading = status === 'loading'
 
   const user: User | null = session?.user ? {
     id: session.user.id,
@@ -52,15 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const result = await client.signIn.email({
+      const result = await nextAuthSignIn('credentials', {
         email,
         password,
+        redirect: false,
       })
 
-      if (result.data?.user) {
+      if (result?.ok) {
         return { success: true }
       } else {
-        return { success: false, error: result.error?.message || 'Sign in failed' }
+        return { success: false, error: result?.error || 'Sign in failed' }
       }
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' }
@@ -69,16 +67,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, name?: string) => {
     try {
-      const result = await client.signUp.email({
-        email,
-        password,
-        name: name ?? '',
+      // Call signup API
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name: name || '' }),
       })
 
-      if (result.data?.user) {
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Sign up failed' }
+      }
+
+      // Auto sign-in after signup
+      const signInResult = await nextAuthSignIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (signInResult?.ok) {
         return { success: true }
       } else {
-        return { success: false, error: result.error?.message || 'Sign up failed' }
+        return { success: false, error: 'User created but sign-in failed' }
       }
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' }
@@ -87,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      await client.signOut()
+      await nextAuthSignOut({ redirect: false })
     } catch (error) {
       console.error('Sign out failed:', error)
     }
@@ -112,7 +124,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
+    // During prerendering, return a default empty auth state instead of throwing
+    if (typeof window === 'undefined') {
+      return {
+        user: null,
+        loading: true,
+        isAuthenticated: false,
+        signIn: async () => ({ success: false, error: 'Not initialized' }),
+        signUp: async () => ({ success: false, error: 'Not initialized' }),
+        signOut: async () => {},
+      }
+    }
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
-} 
+}

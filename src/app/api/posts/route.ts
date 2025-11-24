@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase-client'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
+import { getServerSession } from 'next-auth/next'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
