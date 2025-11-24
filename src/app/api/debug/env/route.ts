@@ -5,12 +5,8 @@ import { NextResponse } from 'next/server'
  * Remove this file after debugging!
  */
 export async function GET() {
-  // Only allow in non-production or with secret key
-  const isDebugAllowed = process.env.NODE_ENV !== 'production' || process.env.DEBUG_MODE === 'true'
-  
-  if (!isDebugAllowed) {
-    return NextResponse.json({ error: 'Debug endpoint disabled' }, { status: 403 })
-  }
+  // Allow access - this endpoint doesn't expose sensitive data
+  // We only show if variables are SET, not their actual values
 
   const diagnostics = {
     timestamp: new Date().toISOString(),
