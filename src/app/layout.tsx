@@ -9,7 +9,11 @@ export const metadata: Metadata = {
   title: 'Decro - Social Media',
   description: 'Share your creativity with the world',
   icons: {
-    icon: '/decky.png',
+    icon: [
+      { url: '/decky.png' },
+      { url: '/decky.png', sizes: '32x32', type: 'image/png' },
+      { url: '/decky.png', sizes: '16x16', type: 'image/png' },
+    ],
     shortcut: '/decky.png',
     apple: '/decky.png',
   },
