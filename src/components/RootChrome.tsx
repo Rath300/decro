@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import AppHeader from '@/components/AppHeader'
+import VersionIndicator from '@/components/VersionIndicator'
 import dynamic from 'next/dynamic'
 const StaggeredMenu = dynamic(() => import('@/components/StaggeredMenu').then(m => m.StaggeredMenu), { ssr: false })
 
@@ -37,6 +38,8 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
           </div>
           {/* Global header */}
           <AppHeader />
+          {/* Version indicator */}
+          <VersionIndicator />
         </>
       )}
       <div className={hide ? '' : 'pt-20'}>
