@@ -115,7 +115,7 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="mb-4">You must be logged in to access settings</p>
+          <p className="mb-4 text-black">You must be logged in to access settings</p>
           <button
             onClick={() => router.push('/')}
             className="px-4 py-2 bg-black text-white"
@@ -130,7 +130,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
       <main className="max-w-4xl mx-auto px-4 pb-12">
-        <h1 className="text-3xl font-bold mb-8">Settings</h1>
+        <h1 className="text-3xl font-bold mb-8 text-black">Settings</h1>
 
         {/* Tabs */}
         <div className="border-b border-gray-300 mb-8">
@@ -161,14 +161,14 @@ export default function SettingsPage() {
         {/* Password Section */}
         {activeSection === 'password' && (
           <div className="max-w-md">
-            <h2 className="text-xl font-bold mb-4">Change Password</h2>
+            <h2 className="text-xl font-bold mb-4 text-black">Change Password</h2>
             <p className="text-sm text-gray-600 mb-6">
               Choose a strong password that you don't use elsewhere
             </p>
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="current" className="block text-sm font-medium mb-2">
+                <label htmlFor="current" className="block text-sm font-medium mb-2 text-black">
                   Current Password
                 </label>
                 <input
@@ -181,7 +181,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label htmlFor="new" className="block text-sm font-medium mb-2">
+                <label htmlFor="new" className="block text-sm font-medium mb-2 text-black">
                   New Password
                 </label>
                 <input
@@ -195,7 +195,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label htmlFor="confirm" className="block text-sm font-medium mb-2">
+                <label htmlFor="confirm" className="block text-sm font-medium mb-2 text-black">
                   Confirm New Password
                 </label>
                 <input
@@ -225,12 +225,12 @@ export default function SettingsPage() {
         {/* Account Section */}
         {activeSection === 'account' && (
           <div className="max-w-md">
-            <h2 className="text-xl font-bold mb-4">Account Management</h2>
+            <h2 className="text-xl font-bold mb-4 text-black">Account Management</h2>
             
             {/* Account Info */}
             <div className="mb-8 p-4 bg-gray-50 border border-gray-200">
               <p className="text-sm text-gray-600 mb-2">Email</p>
-              <p className="font-medium">{user?.email}</p>
+              <p className="font-medium text-black">{user?.email}</p>
             </div>
 
             {/* Delete Account */}
