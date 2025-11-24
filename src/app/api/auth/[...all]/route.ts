@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth"
 
-// Try using the handler directly - BetterAuth 1.4.1 should handle Next.js properly
-export const { GET, POST } = auth.api
+// BetterAuth handler for all HTTP methods
+export const GET = auth.handler
+export const POST = auth.handler
