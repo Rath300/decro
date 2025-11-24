@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase-client'
-import { auth } from '@/lib/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
-import { headers as nextHeaders } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -26,24 +26,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing title' }, { status: 400 })
     }
 
-    // Auth (Better Auth - get session from request headers)
-    let sessionRes: any
-    try {
-      const h = nextHeaders()
-      const cookieHeader = h.get('cookie') || (req.headers as any).get?.('cookie') || ''
-      sessionRes = await (auth as any).api.getSession({ headers: { cookie: cookieHeader } } as any)
-    } catch {
-      try {
-        sessionRes = await auth.api.getSession(req.headers as any)
-      } catch {
-        sessionRes = await (auth as any).api.getSession({ headers: req.headers } as any)
-      }
-    }
-    const session = sessionRes?.data || sessionRes?.session || sessionRes
+    // Auth - NextAuth session
+    const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
-      const h = nextHeaders()
-      const cookieHeader = h.get('cookie') || ''
-      return NextResponse.json({ error: 'Unauthorized', hint: cookieHeader ? 'cookie_present' : 'no_cookie' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const externalId: string = session.user.id
 
