@@ -1,7 +1,18 @@
 import { betterAuth } from "better-auth"
 import { Pool } from "pg"
 
+// Get base URL for BetterAuth
+const getBaseURL = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_SITE_URL?.startsWith('http') 
+      ? process.env.NEXT_PUBLIC_SITE_URL 
+      : `https://${process.env.NEXT_PUBLIC_SITE_URL || 'decro.net'}`
+  }
+  return 'http://localhost:3000'
+}
+
 export const auth = betterAuth({
+  baseURL: getBaseURL(), // CRITICAL: Required for Next.js App Router
   database: new Pool({ 
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
@@ -12,7 +23,6 @@ export const auth = betterAuth({
   },
   session: { 
     expiresIn: 60 * 60 * 24 * 7,
-    // Ensure cookie is sent to all routes on the origin
     cookie: {
       name: 'better-auth.session',
       path: '/',
