@@ -12,23 +12,55 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { email, password, name } = body
+    
+    // Username is passed as 'name' from the form
+    const username = name
 
-    if (!email || !password || !name) {
+    if (!email || !password || !username) {
       return NextResponse.json(
-        { error: "Email, password, and name are required" },
+        { error: "Email, password, and username are required" },
         { status: 400 }
       )
     }
 
-    // Check if user already exists
-    const existingUser = await pool.query(
+    // Validate username format (alphanumeric, underscores, hyphens only)
+    const usernameRegex = /^[a-zA-Z0-9_-]+$/
+    if (!usernameRegex.test(username)) {
+      return NextResponse.json(
+        { error: "Username can only contain letters, numbers, underscores, and hyphens" },
+        { status: 400 }
+      )
+    }
+
+    if (username.length < 3 || username.length > 20) {
+      return NextResponse.json(
+        { error: "Username must be between 3 and 20 characters" },
+        { status: 400 }
+      )
+    }
+
+    // Check if email already exists
+    const existingEmail = await pool.query(
       'SELECT * FROM "user" WHERE email = $1',
       [email]
     )
 
-    if (existingUser.rows.length > 0) {
+    if (existingEmail.rows.length > 0) {
       return NextResponse.json(
-        { error: "User with this email already exists" },
+        { error: "Email already in use" },
+        { status: 400 }
+      )
+    }
+
+    // Check if username is taken (case-insensitive)
+    const existingUsername = await pool.query(
+      'SELECT * FROM "user" WHERE LOWER(name) = LOWER($1)',
+      [username]
+    )
+
+    if (existingUsername.rows.length > 0) {
+      return NextResponse.json(
+        { error: "Username taken" },
         { status: 400 }
       )
     }
@@ -36,11 +68,11 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user
+    // Create user with username as name
     const userId = nanoid()
     await pool.query(
       'INSERT INTO "user" (id, email, name, "emailVerified", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6)',
-      [userId, email, name, false, new Date(), new Date()]
+      [userId, email, username, false, new Date(), new Date()]
     )
 
     // Create account with hashed password
@@ -54,7 +86,7 @@ export async function POST(request: Request) {
       { 
         success: true,
         message: "User created successfully",
-        user: { id: userId, email, name }
+        user: { id: userId, email, name: username }
       },
       { status: 201 }
     )
