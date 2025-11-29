@@ -101,8 +101,34 @@ returns table(
   offset page_offset;
 $$;
 
+-- Create ensure_profile function to map external ID to profile ID
+create or replace function public.ensure_profile(external_id_param text)
+returns uuid language plpgsql security definer as $$
+declare
+  v_profile_id uuid;
+  v_username text;
+begin
+  -- Try to find existing profile
+  select id into v_profile_id from public.profiles where external_id = external_id_param;
+  
+  if v_profile_id is not null then
+    return v_profile_id;
+  end if;
+  
+  -- Get username from user table
+  select name into v_username from public."user" where id = external_id_param;
+  
+  -- Create new profile with username
+  insert into public.profiles (external_id, username, created_at, updated_at)
+  values (external_id_param, coalesce(v_username, 'user_' || substring(external_id_param from 1 for 8)), now(), now())
+  returning id into v_profile_id;
+  
+  return v_profile_id;
+end; $$;
+
 -- Grant execute permissions
 grant execute on function public.toggle_like_ext to authenticated, anon;
 grant execute on function public.add_reply_ext to authenticated, anon;
 grant execute on function public.get_comment_replies_with_nesting to authenticated, anon;
+grant execute on function public.ensure_profile to authenticated, anon;
 
