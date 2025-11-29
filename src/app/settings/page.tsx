@@ -139,7 +139,7 @@ export default function SettingsPage() {
               onClick={() => setActiveSection('password')}
               className={`pb-3 px-1 border-b-2 transition-colors ${
                 activeSection === 'password'
-                  ? 'border-black font-bold'
+                  ? 'border-black font-bold text-black'
                   : 'border-transparent text-gray-500 hover:text-black'
               }`}
             >
@@ -149,7 +149,7 @@ export default function SettingsPage() {
               onClick={() => setActiveSection('account')}
               className={`pb-3 px-1 border-b-2 transition-colors ${
                 activeSection === 'account'
-                  ? 'border-black font-bold'
+                  ? 'border-black font-bold text-black'
                   : 'border-transparent text-gray-500 hover:text-black'
               }`}
             >

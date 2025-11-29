@@ -45,12 +45,15 @@ export default function ProfilePage() {
   const router = useRouter()
   const { setSelectedCard, setShowDetailModal, trackView } = usePosts()
   const [posts, setPosts] = useState<UserPost[]>([])
+  const [likedPosts, setLikedPosts] = useState<UserPost[]>([])
+  const [spotlights, setSpotlights] = useState<any[]>([])
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'posts' | 'liked'>('posts')
+  const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'spotlights'>('posts')
   const [username, setUsername] = useState<string>('')
   const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'most_liked'>('newest')
   const [displayedPosts, setDisplayedPosts] = useState<UserPost[]>([])
+  const [profileId, setProfileId] = useState<string | null>(null)
 
   // Function to refresh posts after deletion
   const refreshPosts = useCallback(async () => {
@@ -109,21 +112,93 @@ export default function ProfilePage() {
     }
   }, [user?.id])
 
+  const loadLikedPosts = useCallback(async () => {
+    if (!profileId) return
+
+    try {
+      // Get posts that the user has liked
+      const { data: likedData, error: likedError } = await supabase
+        .from('likes')
+        .select(`
+          post_id,
+          posts!inner(
+            id,
+            title,
+            description,
+            media_url,
+            audio_url,
+            video_url,
+            content_type,
+            views,
+            created_at,
+            subgroup_id,
+            subgroups(name, slug)
+          )
+        `)
+        .eq('user_id', profileId)
+        .order('created_at', { ascending: false })
+
+      if (!likedError && likedData) {
+        const likedPostsWithStats = await Promise.all(
+          likedData.map(async (like: any) => {
+            const post = like.posts
+            const [likesResult, commentsResult] = await Promise.all([
+              supabase.rpc('get_like_count', { post_id_param: post.id }),
+              supabase.rpc('get_comment_count', { post_id_param: post.id })
+            ])
+
+            return {
+              ...post,
+              like_count: likesResult.data || 0,
+              comment_count: commentsResult.data || 0,
+              subgroup_name: (post.subgroups as any)?.[0]?.name || null,
+              subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
+            }
+          })
+        )
+
+        setLikedPosts(likedPostsWithStats)
+      }
+    } catch (error) {
+      console.error('Failed to load liked posts:', error)
+    }
+  }, [profileId])
+
+  const loadSpotlights = useCallback(async () => {
+    if (!profileId) return
+
+    try {
+      const { data: spotlightsData, error: spotlightsError } = await supabase
+        .from('spotlights')
+        .select('*')
+        .eq('creator_id', profileId)
+        .order('created_at', { ascending: false })
+
+      if (!spotlightsError && spotlightsData) {
+        setSpotlights(spotlightsData)
+      }
+    } catch (error) {
+      console.error('Failed to load spotlights:', error)
+    }
+  }, [profileId])
+
   const loadProfile = useCallback(async () => {
     if (!user?.id) return
 
     try {
       // Map external auth id -> profiles.id and get username
-      const { data: profileId, error: ensureErr } = await supabase.rpc('ensure_profile', {
+      const { data: userId, error: ensureErr } = await supabase.rpc('ensure_profile', {
         external_id_param: user.id,
       })
       if (ensureErr) throw ensureErr
+
+      setProfileId(userId)
 
       // Get username from profile
       const { data: profileData } = await supabase
         .from('profiles')
         .select('username')
-        .eq('id', profileId)
+        .eq('id', userId)
         .single()
       
       if (profileData?.username) {
@@ -132,7 +207,7 @@ export default function ProfilePage() {
 
       // Load user stats
       const { data: statsData, error: statsError } = await supabase.rpc('get_user_stats', {
-        user_id_param: profileId
+        user_id_param: userId
       })
 
       if (!statsError && statsData) {
@@ -155,7 +230,7 @@ export default function ProfilePage() {
           subgroup_id,
           subgroups(name, slug)
         `)
-        .eq('creator_id', profileId)
+        .eq('creator_id', userId)
         .order('created_at', { ascending: false })
 
       if (!postsError && postsData) {
@@ -202,10 +277,24 @@ export default function ProfilePage() {
     loadProfile()
   }, [user?.id, isAuthenticated, loadProfile])
 
+  // Load content based on active tab
+  useEffect(() => {
+    if (!profileId) return
+
+    if (activeTab === 'liked') {
+      loadLikedPosts()
+    } else if (activeTab === 'spotlights') {
+      loadSpotlights()
+    }
+  }, [activeTab, profileId, loadLikedPosts, loadSpotlights])
+
   // Handle sorting
   const handleSort = (mode: 'newest' | 'oldest' | 'most_liked') => {
     setSortMode(mode)
-    let sorted = [...posts]
+    
+    // Get the appropriate data source based on active tab
+    let sourceData = activeTab === 'liked' ? likedPosts : posts
+    let sorted = [...sourceData]
     
     switch (mode) {
       case 'newest':
@@ -222,10 +311,10 @@ export default function ProfilePage() {
     setDisplayedPosts(sorted)
   }
 
-  // Update displayed posts when posts or sort mode changes
+  // Update displayed posts when posts, liked posts, sort mode, or active tab changes
   useEffect(() => {
     handleSort(sortMode)
-  }, [posts, sortMode])
+  }, [posts, likedPosts, sortMode, activeTab])
 
   // Optimized post click handler with useCallback - handle text posts like feed page
   const handlePostClick = useCallback(async (post: UserPost) => {
@@ -369,7 +458,7 @@ export default function ProfilePage() {
                   onClick={() => setActiveTab('posts')}
                   className={`pb-3 px-1 border-b-2 transition-colors ${
                     activeTab === 'posts'
-                      ? 'border-black font-bold'
+                      ? 'border-black font-bold text-black'
                       : 'border-transparent text-gray-500 hover:text-black'
                   }`}
                 >
@@ -379,56 +468,105 @@ export default function ProfilePage() {
                   onClick={() => setActiveTab('liked')}
                   className={`pb-3 px-1 border-b-2 transition-colors ${
                     activeTab === 'liked'
-                      ? 'border-black font-bold'
+                      ? 'border-black font-bold text-black'
                       : 'border-transparent text-gray-500 hover:text-black'
                   }`}
                 >
                   Liked
                 </button>
-              </div>
-            </div>
-
-            {/* Sort Controls - similar to feed page */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <span className="text-sm font-['Space_Mono'] text-gray-600">Sort by:</span>
-                <div className="flex space-x-2">
-                  {[
-                    { id: 'newest', label: 'Newest' },
-                    { id: 'oldest', label: 'Oldest' },
-                    { id: 'most_liked', label: 'Most Liked' }
-                  ].map((option) => (
-                    <button
-                      key={option.id}
-                      onClick={() => handleSort(option.id as 'newest' | 'oldest' | 'most_liked')}
-                      className={`px-3 py-1 text-xs font-['Space_Mono'] border border-black transition-colors ${
-                        sortMode === option.id
-                          ? 'bg-black text-white'
-                          : 'bg-white text-black hover:bg-gray-50'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Posts Grid - use masonry layout like feed page */}
-            {posts.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-gray-300">
-                <p className="text-gray-600">No posts yet</p>
                 <button
-                  onClick={() => router.push('/create')}
-                  className="mt-4 px-4 py-2 bg-black text-white hover:bg-gray-800"
+                  onClick={() => setActiveTab('spotlights')}
+                  className={`pb-3 px-1 border-b-2 transition-colors ${
+                    activeTab === 'spotlights'
+                      ? 'border-black font-bold text-black'
+                      : 'border-transparent text-gray-500 hover:text-black'
+                  }`}
                 >
-                  Create Your First Post
+                  Spotlights
                 </button>
               </div>
+            </div>
+
+            {/* Sort Controls - only show for posts and liked tabs */}
+            {activeTab !== 'spotlights' && (
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm font-['Space_Mono'] text-gray-600">Sort by:</span>
+                  <div className="flex space-x-2">
+                    {[
+                      { id: 'newest', label: 'Newest' },
+                      { id: 'oldest', label: 'Oldest' },
+                      { id: 'most_liked', label: 'Most Liked' }
+                    ].map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => handleSort(option.id as 'newest' | 'oldest' | 'most_liked')}
+                        className={`px-3 py-1 text-xs font-['Space_Mono'] border border-black transition-colors ${
+                          sortMode === option.id
+                            ? 'bg-black text-white'
+                            : 'bg-white text-black hover:bg-gray-50'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Spotlights Tab Content */}
+            {activeTab === 'spotlights' ? (
+              spotlights.length === 0 ? (
+                <div className="text-center py-12 border border-dashed border-gray-300">
+                  <p className="text-gray-600">No spotlights yet</p>
+                  <button
+                    onClick={() => router.push('/spotlight/create')}
+                    className="mt-4 px-4 py-2 bg-black text-white hover:bg-gray-800"
+                  >
+                    Create Your First Spotlight
+                  </button>
+                </div>
+              ) : (
+                <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
+                  {spotlights.map((spotlight) => (
+                    <div
+                      key={spotlight.id}
+                      className="break-inside-avoid mb-4 border border-gray-200 hover:border-black transition-colors p-4 cursor-pointer"
+                      onClick={() => router.push(`/spotlight/${spotlight.id}`)}
+                    >
+                      <h3 className="font-bold text-black mb-2">{spotlight.title}</h3>
+                      {spotlight.description && (
+                        <p className="text-sm text-gray-600 line-clamp-3">{spotlight.description}</p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">
+                        {new Date(spotlight.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )
             ) : (
-              <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-3 xl:columns-4 gap-4 space-y-4">
-                <AnimatePresence>
-                  {(displayedPosts.length > 0 ? displayedPosts : posts).map((post, index) => (
+              /* Posts/Liked Grid - use masonry layout like feed page */
+              <>
+                {(activeTab === 'posts' ? posts : likedPosts).length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-gray-300">
+                    <p className="text-gray-600">
+                      {activeTab === 'posts' ? 'No posts yet' : 'No liked posts yet'}
+                    </p>
+                    {activeTab === 'posts' && (
+                      <button
+                        onClick={() => router.push('/create')}
+                        className="mt-4 px-4 py-2 bg-black text-white hover:bg-gray-800"
+                      >
+                        Create Your First Post
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+                    <AnimatePresence>
+                      {displayedPosts.map((post, index) => (
                     <motion.div
                       key={post.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -498,12 +636,15 @@ export default function ProfilePage() {
                   ))}
                 </AnimatePresence>
               </div>
-            )}
-          </>
-        )}
-      </main>
-      <DetailModal refetchPosts={refreshPosts} />
-    </div>
-  )
+            )
+          }
+        </>
+      )}
+    </>
+  )}
+</main>
+<DetailModal refetchPosts={refreshPosts} />
+</div>
+)
 }
 
