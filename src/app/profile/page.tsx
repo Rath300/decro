@@ -169,7 +169,7 @@ export default function ProfilePage() {
 
     try {
       const { data: spotlightsData, error: spotlightsError } = await supabase
-        .from('spotlights')
+        .from('spotlight_collections')
         .select('*')
         .eq('creator_id', profileId)
         .order('created_at', { ascending: false })
