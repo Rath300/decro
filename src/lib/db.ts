@@ -84,7 +84,38 @@ export class LocalDb extends Dexie {
   }
 }
 
-const db = new LocalDb()
+let db: LocalDb
+
+try {
+  db = new LocalDb()
+} catch (error) {
+  console.warn('IndexedDB initialization failed, creating fallback:', error)
+  // Create a fallback mock db that doesn't crash but also doesn't persist
+  db = {
+    posts: {
+      clear: async () => {},
+      bulkPut: async () => {},
+      orderBy: () => ({ reverse: () => ({ toArray: async () => [] }) }),
+      put: async () => {}
+    },
+    likes: {
+      put: async () => {},
+      delete: async () => {}
+    },
+    comments: {
+      add: async () => {}
+    },
+    outbox: {
+      add: async () => {},
+      limit: () => ({ toArray: async () => [] }),
+      delete: async () => {}
+    },
+    userHistory: {
+      add: async () => {}
+    }
+  } as any
+}
+
 export default db
 
 

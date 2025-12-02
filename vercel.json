@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/refresh-trending",
+      "schedule": "*/30 * * * *"
+    }
+  ]
+}
+

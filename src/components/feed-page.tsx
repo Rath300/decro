@@ -383,6 +383,22 @@ export default function FeedPage() {
                               {card.title}
                             </button>
                           )}
+
+                          {/* Tags */}
+                          {card.tags && card.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {card.tags.map((tag) => (
+                                <Link
+                                  key={tag}
+                                  href={`/tags/${encodeURIComponent(tag)}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="px-1.5 py-0.5 bg-gray-100 text-gray-700 text-[10px] font-['Space_Mono'] rounded hover:bg-gray-200 transition-colors"
+                                >
+                                  #{tag}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
                           
                           <div className="flex items-center justify-between text-xs text-gray-600">
                             <div className="flex flex-col">

@@ -31,20 +31,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } : null
 
   // Ensure a profile row exists and update display fields from auth
-  if (session?.user) {
+  if (session?.user && typeof window !== 'undefined') {
     // fire-and-forget; avoid blocking render
     fetch(process.env.NEXT_PUBLIC_SUPABASE_URL + '/rest/v1/rpc/upsert_profile_from_external', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+        'Prefer': 'return=representation'
       },
       body: JSON.stringify({
         external_id_param: session.user.id,
         username_param: session.user.name || session.user.email?.split('@')[0] || null,
         full_name_param: session.user.name || null
       })
-    }).catch(() => {})
+    }).catch((error) => {
+      console.warn('Profile upsert failed (non-critical):', error)
+    })
   }
 
   const signIn = async (email: string, password: string) => {

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Identity from '@/components/Identity'
+import { NotificationsDropdown } from '@/components/notifications-dropdown'
 
 function Tab({ href, label, active }: { href: string; label: string; active: boolean }) {
   return (
@@ -22,6 +23,8 @@ export default function AppHeader() {
   const pathname = usePathname() || '/feed'
 
   const isFeed = pathname === '/' || pathname.startsWith('/feed')
+  const isTrending = pathname.startsWith('/trending')
+  const isMessages = pathname.startsWith('/messages')
   const isSpotlight = pathname.startsWith('/spotlight')
   const isSubgroup = pathname.startsWith('/subgroup')
   const isProfile = pathname.startsWith('/profile')
@@ -42,6 +45,8 @@ export default function AppHeader() {
             </Link>
             <div className="flex items-end gap-2">
               <Tab href="/feed" label="Feed" active={isFeed} />
+              <Tab href="/trending" label="Trending" active={isTrending} />
+              <Tab href="/messages" label="Messages" active={isMessages} />
               <Tab href="/spotlight" label="Spotlight" active={isSpotlight} />
               <Tab href="/subgroup" label="Subgroup" active={isSubgroup} />
               <Tab href="/profile" label="Profile" active={isProfile} />
@@ -51,6 +56,7 @@ export default function AppHeader() {
             <Link href="/create" className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black font-['Space_Mono'] leading-6">
               +
             </Link>
+            <NotificationsDropdown />
             <Identity />
           </div>
         </div>

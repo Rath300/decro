@@ -295,6 +295,7 @@ export default function PublicProfilePage() {
         views: post.views,
         subgroupName: post.subgroup_name,
         subgroupSlug: post.subgroup_slug,
+        tags: [],
       })
       console.log('Setting detail modal to true')
       setShowDetailModal(true)
@@ -380,23 +381,23 @@ export default function PublicProfilePage() {
           {stats && (
             <div className="flex items-center gap-8 text-sm">
               <div>
-                <span className="font-bold">{stats.post_count}</span>
+                <span className="font-bold">{stats.post_count || 0}</span>
                 <span className="text-gray-600 ml-1">posts</span>
               </div>
               <div>
-                <span className="font-bold">{stats.follower_count}</span>
+                <span className="font-bold">{stats.follower_count || 0}</span>
                 <span className="text-gray-600 ml-1">followers</span>
               </div>
               <div>
-                <span className="font-bold">{stats.following_count}</span>
+                <span className="font-bold">{stats.following_count || 0}</span>
                 <span className="text-gray-600 ml-1">following</span>
               </div>
               <div>
-                <span className="font-bold">{stats.total_likes.toLocaleString()}</span>
+                <span className="font-bold">{(stats.total_likes || 0).toLocaleString()}</span>
                 <span className="text-gray-600 ml-1">total likes</span>
               </div>
               <div>
-                <span className="font-bold">{stats.total_views.toLocaleString()}</span>
+                <span className="font-bold">{(stats.total_views || 0).toLocaleString()}</span>
                 <span className="text-gray-600 ml-1">total views</span>
               </div>
             </div>

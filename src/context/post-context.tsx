@@ -21,7 +21,7 @@ export interface MediaCard {
   subgroupId?: string;
   subgroupName?: string;
   subgroupSlug?: string;
-  tags?: string[];
+  tags: string[];
 }
 
 interface PostContextType {
@@ -233,7 +233,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
           subgroupId: post.subgroup_id ?? undefined,
           subgroupName: post.subgroup_id ? subgroupNames[post.subgroup_id] : undefined,
           subgroupSlug: post.subgroup_id ? subgroupSlugs[post.subgroup_id] : undefined,
-          tags: Array.isArray(post.tags) ? post.tags : undefined,
+          tags: Array.isArray(post.tags) ? post.tags.filter((t: any) => t !== null) : [],
         }))
 
         setPosts(mapped)
@@ -291,6 +291,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
               subgroupName: r.subgroupName ?? undefined,
               subgroupSlug: r.subgroupSlug ?? undefined,
               description: r.description ?? undefined,
+              tags: [],
             }))
           )
         }
