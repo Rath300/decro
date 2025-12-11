@@ -1,7 +1,6 @@
 'use client'
 
 import { useAuth } from '@/context/auth-context'
-import { NotificationsDropdown } from './notifications-dropdown'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import supabase from '@/lib/supabase-client'
@@ -75,7 +74,6 @@ export default function Identity() {
   if (isAuthenticated) {
     return (
       <div className="flex items-center gap-3">
-        <NotificationsDropdown />
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown(!showDropdown)}
