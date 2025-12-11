@@ -57,6 +57,10 @@ export default function SpotlightDetailPage() {
   
   // Audio refs for music playback
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
+  
+  // Track click timing for double-click detection
+  const clickTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
+  const clickCounts = useRef<{ [key: string]: number }>({})
 
   useEffect(() => {
     loadSpotlight()
@@ -298,6 +302,39 @@ export default function SpotlightDetailPage() {
       setPlayingAudio(postId)
       audio.onended = () => setPlayingAudio(null)
     }
+  }
+  
+  // Handle single/double click for music posts in grid view
+  const handleMusicClick = (item: SpotlightItem, event: React.MouseEvent) => {
+    event.preventDefault()
+    const postId = item.post_id
+    
+    // Initialize click count for this post if not exists
+    if (!clickCounts.current[postId]) {
+      clickCounts.current[postId] = 0
+    }
+    
+    // Increment click count
+    clickCounts.current[postId]++
+    
+    // Clear any existing timer for this post
+    if (clickTimers.current[postId]) {
+      clearTimeout(clickTimers.current[postId])
+    }
+    
+    // Set a new timer to detect double-click
+    clickTimers.current[postId] = setTimeout(() => {
+      if (clickCounts.current[postId] === 1) {
+        // Single click: Play/pause audio
+        handleAudioPlay(item)
+      } else if (clickCounts.current[postId] >= 2) {
+        // Double click: Open detail modal
+        handlePostClick(item)
+      }
+      
+      // Reset click count
+      clickCounts.current[postId] = 0
+    }, 300) // 300ms window for double-click detection
   }
 
   const getTimeAgo = (dateString: string) => {
@@ -601,11 +638,11 @@ export default function SpotlightDetailPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => item.posts.content_type === 'music' ? handleAudioPlay(item) : handlePostClick(item)}
+                    onClick={(e) => item.posts.content_type === 'music' ? handleMusicClick(item, e) : handlePostClick(item)}
                   >
                     {/* Media Display */}
                     {item.posts.content_type === 'music' ? (
-                      <div className="relative aspect-square overflow-hidden">
+                      <div className="relative aspect-square overflow-hidden" title="Single click to play/pause, double-click to view details">
                         {item.posts.media_url ? (
                           <>
                             <img

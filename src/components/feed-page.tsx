@@ -81,24 +81,22 @@ export default function FeedPage() {
       setShowAuthModal(true);
       return;
     }
+    
+    if (!user?.id) {
+      console.error('User ID not available');
+      return;
+    }
+    
     // Capture current text before context clears it
     const content = commentText.trim();
+    
+    if (!content) {
+      return;
+    }
+    
     handleComment();
     if (selectedCard && content) {
-      // Optimistic append to detail view comments
-      const optimistic: RealtimeComment = {
-        id: `local-${Date.now()}`,
-        content,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_id: user?.id || 'anon',
-        username: user?.name || user?.email || 'You',
-        full_name: user?.name || null,
-        avatar_url: null,
-      };
-      setOptimisticComments((prev) => [optimistic, ...prev]);
-      setLastOptimisticContent(content);
-      // Trigger a refetch in CommentsList to reconcile soon after
+      // Trigger a refetch in CommentsList
       setCommentsRefreshSignal((n) => n + 1);
     }
   };
@@ -127,14 +125,21 @@ export default function FeedPage() {
   const handlePortfolioClick = async (creatorId: string) => {
     // Get username from creator ID and navigate to public profile
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('username')
         .eq('id', creatorId)
-        .single()
+        .maybeSingle()
+      
+      if (error) {
+        console.error('Failed to load profile:', error)
+        return
+      }
       
       if (data?.username) {
         router.push(`/profile/${data.username}`)
+      } else {
+        console.warn('No username found for creator:', creatorId)
       }
     } catch (error) {
       console.error('Failed to load profile:', error)

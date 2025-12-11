@@ -16,18 +16,35 @@ export default function Identity() {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      if (!user?.id) { setDisplayName(null); return }
-      const { data } = await supabase
-        .from('profiles')
-        .select('username, full_name')
-        .eq('external_id', user.id)
-        .single()
-      if (!cancelled) {
-        setDisplayName(data?.username || data?.full_name || user.name || user.email)
+      if (!user?.id) { 
+        setDisplayName(null) 
+        return 
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username, full_name')
+          .eq('external_id', user.id)
+          .maybeSingle()
+        
+        if (!cancelled) {
+          if (error) {
+            console.warn('Failed to load profile for identity:', error)
+            setDisplayName(user.name || user.email || 'User')
+          } else {
+            setDisplayName(data?.username || data?.full_name || user.name || user.email || 'User')
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('Failed to load profile for identity:', error)
+          setDisplayName(user.name || user.email || 'User')
+        }
       }
     })()
     return () => { cancelled = true }
-  }, [user?.id])
+  }, [user?.id, user?.name, user?.email])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -41,10 +58,18 @@ export default function Identity() {
   }, [])
 
   const handleSignOut = async () => {
-    await signOut()
-    setShowDropdown(false)
-    router.push('/')
-    router.refresh()
+    try {
+      await signOut()
+      setShowDropdown(false)
+      router.push('/')
+      router.refresh()
+    } catch (error) {
+      console.error('Sign out failed:', error)
+      // Still redirect even if sign out had an error
+      setShowDropdown(false)
+      router.push('/')
+      router.refresh()
+    }
   }
   
   if (isAuthenticated) {

@@ -86,10 +86,13 @@ export default function CreateSubgroupPage() {
       return
     }
 
-    if (!formData.slug) {
-      toast.error('Invalid slug')
+    if (!formData.slug || formData.slug.length < 3) {
+      toast.error('Invalid slug - must be at least 3 characters')
       return
     }
+    
+    // Prevent double submission
+    if (isSubmitting) return
 
     setIsSubmitting(true)
 
@@ -133,10 +136,18 @@ export default function CreateSubgroupPage() {
         .select('slug')
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Failed to create subgroup:', error)
+        throw error
+      }
+      
+      if (!data || !data.slug) {
+        throw new Error('No slug returned from subgroup creation')
+      }
 
       toast.success('Subgroup created successfully!')
       router.push(`/subgroup/${data.slug}`)
+      router.refresh()
     } catch (error: any) {
       console.error('Failed to create subgroup:', error)
       toast.error(error.message || 'Failed to create subgroup')

@@ -53,11 +53,17 @@ async function compressImage(file: File, maxWidth = 1920, quality = 0.85): Promi
  */
 export async function uploadImage(file: File, bucket = 'media'): Promise<UploadResult> {
   try {
+    // Validate file size (max 50MB)
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('File size must be less than 50MB');
+    }
+    
     // Compress image before upload
     const compressed = await compressImage(file)
     
     // Generate unique filename
-    const fileExt = file.name.split('.').pop()
+    const fileExt = file.name.split('.').pop() || 'jpg'
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
     const filePath = `images/${fileName}`
     
@@ -65,12 +71,15 @@ export async function uploadImage(file: File, bucket = 'media'): Promise<UploadR
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, compressed, {
-        contentType: file.type,
+        contentType: file.type || 'image/jpeg',
         cacheControl: '3600',
         upsert: false
       })
     
-    if (error) throw error
+    if (error) {
+      console.error('Storage upload error:', error)
+      throw error
+    }
     
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
@@ -81,9 +90,9 @@ export async function uploadImage(file: File, bucket = 'media'): Promise<UploadR
       url: publicUrl,
       path: filePath
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Image upload failed:', error)
-    throw new Error('Failed to upload image')
+    throw new Error(error.message || 'Failed to upload image')
   }
 }
 
@@ -92,8 +101,14 @@ export async function uploadImage(file: File, bucket = 'media'): Promise<UploadR
  */
 export async function uploadAudio(file: File, bucket = 'media'): Promise<UploadResult> {
   try {
+    // Validate file size (max 100MB for audio)
+    const MAX_FILE_SIZE = 100 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('Audio file size must be less than 100MB');
+    }
+    
     // Generate unique filename
-    const fileExt = file.name.split('.').pop()
+    const fileExt = file.name.split('.').pop() || 'mp3'
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
     const filePath = `audio/${fileName}`
     
@@ -101,12 +116,15 @@ export async function uploadAudio(file: File, bucket = 'media'): Promise<UploadR
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
-        contentType: file.type,
+        contentType: file.type || 'audio/mpeg',
         cacheControl: '3600',
         upsert: false
       })
     
-    if (error) throw error
+    if (error) {
+      console.error('Storage upload error:', error)
+      throw error
+    }
     
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
@@ -117,9 +135,9 @@ export async function uploadAudio(file: File, bucket = 'media'): Promise<UploadR
       url: publicUrl,
       path: filePath
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Audio upload failed:', error)
-    throw new Error('Failed to upload audio')
+    throw new Error(error.message || 'Failed to upload audio')
   }
 }
 
@@ -128,8 +146,14 @@ export async function uploadAudio(file: File, bucket = 'media'): Promise<UploadR
  */
 export async function uploadVideo(file: File, bucket = 'media'): Promise<UploadResult> {
   try {
+    // Validate file size (max 500MB for video)
+    const MAX_FILE_SIZE = 500 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('Video file size must be less than 500MB');
+    }
+    
     // Generate unique filename
-    const fileExt = file.name.split('.').pop()
+    const fileExt = file.name.split('.').pop() || 'mp4'
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
     const filePath = `videos/${fileName}`
     
@@ -137,12 +161,15 @@ export async function uploadVideo(file: File, bucket = 'media'): Promise<UploadR
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
-        contentType: file.type,
+        contentType: file.type || 'video/mp4',
         cacheControl: '3600',
         upsert: false
       })
     
-    if (error) throw error
+    if (error) {
+      console.error('Storage upload error:', error)
+      throw error
+    }
     
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
@@ -153,9 +180,9 @@ export async function uploadVideo(file: File, bucket = 'media'): Promise<UploadR
       url: publicUrl,
       path: filePath
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Video upload failed:', error)
-    throw new Error('Failed to upload video')
+    throw new Error(error.message || 'Failed to upload video')
   }
 }
 

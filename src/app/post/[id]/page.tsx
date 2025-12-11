@@ -63,21 +63,36 @@ export default function PostDetailPage() {
         .eq('id', postId)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Failed to load post:', error)
+        throw error
+      }
+      
+      if (!postData) {
+        console.error('No post data returned')
+        setPost(null)
+        return
+      }
 
       const postWithProfile = postData as any
+      
+      // Handle both single object and array profiles
+      const profileUsername = Array.isArray(postWithProfile.profiles) 
+        ? postWithProfile.profiles[0]?.username 
+        : postWithProfile.profiles?.username
+      
       setPost({
         id: postWithProfile.id,
-        title: postWithProfile.title,
-        description: postWithProfile.description,
-        content_type: postWithProfile.content_type,
-        media_url: postWithProfile.media_url,
-        audio_url: postWithProfile.audio_url,
-        video_url: postWithProfile.video_url,
-        created_at: postWithProfile.created_at,
-        views: postWithProfile.views,
-        creator_id: postWithProfile.creator_id,
-        creator_username: postWithProfile.profiles?.username
+        title: postWithProfile.title || 'Untitled',
+        description: postWithProfile.description || '',
+        content_type: postWithProfile.content_type || 'text',
+        media_url: postWithProfile.media_url || '',
+        audio_url: postWithProfile.audio_url || '',
+        video_url: postWithProfile.video_url || '',
+        created_at: postWithProfile.created_at || new Date().toISOString(),
+        views: postWithProfile.views || 0,
+        creator_id: postWithProfile.creator_id || '',
+        creator_username: profileUsername || 'Unknown'
       })
 
       // Track view for this post
@@ -96,19 +111,24 @@ export default function PostDetailPage() {
       }
 
       // Check if current user owns this post
-      if (user?.id) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('external_id', user.id)
-          .single()
-        
-        if (profileData?.id === postWithProfile.creator_id) {
-          setIsOwner(true)
+      if (user?.id && postWithProfile.creator_id) {
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('external_id', user.id)
+            .maybeSingle()
+          
+          if (!profileError && profileData?.id === postWithProfile.creator_id) {
+            setIsOwner(true)
+          }
+        } catch (ownerError) {
+          console.warn('Failed to check post ownership:', ownerError)
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading post:', error)
+      alert('Failed to load post: ' + (error.message || 'Please try again'))
     } finally {
       setLoading(false)
     }
@@ -118,32 +138,29 @@ export default function PostDetailPage() {
     if (!isAuthenticated || !user?.id || !newComment.trim() || !post) return
 
     const content = newComment.trim()
+    
+    // Clear input immediately for better UX
     setNewComment('')
 
-    // Add optimistic comment
-    const optimistic: RealtimeComment = {
-      id: `local-${Date.now()}`,
-      content,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_id: user.id,
-      username: user.name || user.email || 'You',
-      full_name: user.name || null,
-      avatar_url: null,
-      vote_score: 0,
-      reply_count: 0
-    }
-    setOptimisticComments((prev) => [optimistic, ...prev])
-    setCommentsRefreshSignal((n) => n + 1)
-
     try {
-      await supabase.rpc('add_comment_ext', {
+      const { error } = await supabase.rpc('add_comment_ext', {
         post_id_param: post.id,
         external_id_param: user.id,
         content_param: content
       })
-    } catch (error) {
+      
+      if (error) {
+        console.error('Failed to add comment:', error)
+        throw error
+      }
+      
+      // Trigger refresh of comments
+      setCommentsRefreshSignal((n) => n + 1)
+    } catch (error: any) {
       console.error('Error adding comment:', error)
+      alert('Failed to add comment: ' + (error.message || 'Please try again'))
+      // Restore the comment text on error
+      setNewComment(content)
     }
   }
 
@@ -156,20 +173,27 @@ export default function PostDetailPage() {
 
     setDeleting(true)
     try {
-      const { error } = await supabase.rpc('delete_post_ext', {
+      const { data, error } = await supabase.rpc('delete_post_ext', {
         post_id_param: post.id,
         external_id_param: user.id
       })
 
       if (error) {
+        console.error('Delete RPC error:', error)
         throw error
       }
+      
+      if (data && !data.success) {
+        throw new Error(data.error || 'Delete failed')
+      }
 
+      console.log('Post deleted successfully')
       // Redirect to feed after successful deletion
       router.push('/feed')
-    } catch (error) {
+      router.refresh()
+    } catch (error: any) {
       console.error('Error deleting post:', error)
-      alert('Failed to delete post. Please try again.')
+      alert('Failed to delete post: ' + (error.message || 'Please try again.'))
     } finally {
       setDeleting(false)
     }

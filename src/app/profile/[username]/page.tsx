@@ -76,18 +76,23 @@ export default function PublicProfilePage() {
     const loadCurrentUserProfileId = async () => {
       if (currentUser?.id) {
         try {
-          const { data: profileData } = await supabase
+          const { data: profileData, error } = await supabase
             .from('profiles')
             .select('id')
             .eq('external_id', currentUser.id)
-            .single()
+            .maybeSingle()
           
-          if (profileData) {
+          if (!error && profileData) {
             setCurrentUserProfileId(profileData.id)
+          } else {
+            setCurrentUserProfileId(null)
           }
         } catch (error) {
           console.error('Failed to load current user profile ID:', error)
+          setCurrentUserProfileId(null)
         }
+      } else {
+        setCurrentUserProfileId(null)
       }
     }
     
@@ -101,9 +106,10 @@ export default function PublicProfilePage() {
         .from('profiles')
         .select('id, username, full_name, bio, avatar_url')
         .eq('username', username)
-        .single()
+        .maybeSingle()
 
-      if (profileError) {
+      if (profileError || !profileData) {
+        console.error('Profile not found:', profileError)
         toast.error('User not found')
         router.push('/feed')
         return
@@ -125,46 +131,73 @@ export default function PublicProfilePage() {
 
       // Check if current user is following
       if (currentUser?.id) {
-        const { data: followData } = await supabase.rpc('is_following_user', {
-          target_user_id: profileData.id
-        })
-        setIsFollowing(followData || false)
+        try {
+          const { data: followData, error: followError } = await supabase.rpc('is_following_user', {
+            target_user_id: profileData.id
+          })
+          if (!followError) {
+            setIsFollowing(followData || false)
+          }
+        } catch (followError) {
+          console.warn('Failed to check follow status:', followError)
+          setIsFollowing(false)
+        }
       }
 
       // Load stats
-      const { data: statsData } = await supabase.rpc('get_user_stats', {
-        user_id_param: profileData.id
-      })
-      if (statsData) setStats(statsData)
+      try {
+        const { data: statsData, error: statsError } = await supabase.rpc('get_user_stats', {
+          user_id_param: profileData.id
+        })
+        if (!statsError && statsData) {
+          setStats(statsData)
+        }
+      } catch (statsError) {
+        console.warn('Failed to load user stats:', statsError)
+      }
 
       // Load posts with subgroup information
-      const { data: postsData } = await supabase
+      const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select('id, title, media_url, content_type, views, created_at, description, audio_url, video_url, subgroup_id, subgroups(name, slug)')
         .eq('creator_id', profileData.id)
         .order('created_at', { ascending: false })
 
-      if (postsData) {
+      if (postsError) {
+        console.error('Failed to load posts:', postsError)
+      } else if (postsData) {
         const postsWithStats = await Promise.all(
           postsData.map(async (post) => {
-            const [likesResult, commentsResult] = await Promise.all([
-              supabase.rpc('get_like_count', { post_id_param: post.id }),
-              supabase.rpc('get_comment_count', { post_id_param: post.id })
-            ])
-            return {
-              ...post,
-              like_count: likesResult.data || 0,
-              comment_count: commentsResult.data || 0,
-              subgroup_name: (post.subgroups as any)?.[0]?.name || null,
-              subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
+            try {
+              const [likesResult, commentsResult] = await Promise.all([
+                supabase.rpc('get_like_count', { post_id_param: post.id }),
+                supabase.rpc('get_comment_count', { post_id_param: post.id })
+              ])
+              return {
+                ...post,
+                like_count: likesResult.data || 0,
+                comment_count: commentsResult.data || 0,
+                subgroup_name: (post.subgroups as any)?.[0]?.name || null,
+                subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
+              }
+            } catch (statsError) {
+              console.warn('Failed to load stats for post:', post.id, statsError)
+              return {
+                ...post,
+                like_count: 0,
+                comment_count: 0,
+                subgroup_name: (post.subgroups as any)?.[0]?.name || null,
+                subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
+              }
             }
           })
         )
         setPosts(postsWithStats)
         setDisplayedPosts(postsWithStats)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load profile:', error)
+      toast.error('Failed to load profile: ' + (error.message || 'Please try again'))
     } finally {
       setLoading(false)
     }
@@ -221,16 +254,27 @@ export default function PublicProfilePage() {
       if (postsData) {
         const postsWithStats = await Promise.all(
           postsData.map(async (post) => {
-            const [likesResult, commentsResult] = await Promise.all([
-              supabase.rpc('get_like_count', { post_id_param: post.id }),
-              supabase.rpc('get_comment_count', { post_id_param: post.id })
-            ])
-            return {
-              ...post,
-              like_count: likesResult.data || 0,
-              comment_count: commentsResult.data || 0,
-              subgroup_name: (post.subgroups as any)?.[0]?.name || null,
-              subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
+            try {
+              const [likesResult, commentsResult] = await Promise.all([
+                supabase.rpc('get_like_count', { post_id_param: post.id }),
+                supabase.rpc('get_comment_count', { post_id_param: post.id })
+              ])
+              return {
+                ...post,
+                like_count: likesResult.data || 0,
+                comment_count: commentsResult.data || 0,
+                subgroup_name: (post.subgroups as any)?.[0]?.name || null,
+                subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
+              }
+            } catch (statsError) {
+              console.warn('Failed to load stats for post:', post.id, statsError)
+              return {
+                ...post,
+                like_count: 0,
+                comment_count: 0,
+                subgroup_name: (post.subgroups as any)?.[0]?.name || null,
+                subgroup_slug: (post.subgroups as any)?.[0]?.slug || null
+              }
             }
           })
         )
@@ -239,6 +283,7 @@ export default function PublicProfilePage() {
       }
     } catch (error) {
       console.error('Failed to refresh posts:', error)
+      toast.error('Failed to refresh posts')
     }
   }, [profile])
 

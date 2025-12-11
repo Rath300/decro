@@ -37,12 +37,21 @@ export function useRealtimeComments(postId: string) {
           page_offset: 0
         })
 
-        if (!error && data) {
+        if (error) {
+          console.error('Failed to fetch comments RPC error:', error)
+          setComments([])
+          setCommentCount(0)
+        } else if (data) {
           setComments(data)
           setCommentCount(data.length)
+        } else {
+          setComments([])
+          setCommentCount(0)
         }
       } catch (error) {
         console.error('Failed to fetch comments:', error)
+        setComments([])
+        setCommentCount(0)
       } finally {
         setLoading(false)
       }
@@ -117,6 +126,8 @@ export function useRealtimeComments(postId: string) {
   }, [postId])
 
   const refetch = useCallback(async () => {
+    if (!postId) return
+    
     try {
       const { data, error } = await supabase.rpc('get_post_comments', {
         post_id_param: postId,
@@ -124,7 +135,9 @@ export function useRealtimeComments(postId: string) {
         page_offset: 0
       })
       
-      if (!error && data) {
+      if (error) {
+        console.error('Failed to refetch comments RPC error:', error)
+      } else if (data) {
         setComments(data)
         setCommentCount(data.length)
       }

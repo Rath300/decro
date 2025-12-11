@@ -70,7 +70,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   const toggleLike = async (cardId: string) => {
-    if (!user?.id) return
+    if (!user?.id) {
+      console.warn('Cannot toggle like: user not authenticated')
+      return
+    }
+    
+    console.log('Toggling like for post:', cardId, 'current liked:', likedCards.has(cardId))
     
     // Optimistic update for instant UI response
     const isCurrentlyLiked = likedCards.has(cardId)
@@ -81,6 +86,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       } else {
         next.add(cardId)
       }
+      console.log('Optimistic like update:', isCurrentlyLiked ? 'unliked' : 'liked')
       return next
     })
     
@@ -89,24 +95,46 @@ export function PostProvider({ children }: { children: ReactNode }) {
     
     try {
       // Try to sync with server
+      console.log('Calling toggle_like_ext RPC...')
       const { data, error } = await supabase.rpc('toggle_like_ext', {
         post_id_param: cardId,
         external_id_param: user.id
       })
       
-      if (error) throw error
+      if (error) {
+        console.error('toggle_like_ext error:', error)
+        throw error
+      }
+      
+      console.log('toggle_like_ext response:', data)
+      
+      // Verify the server state matches our optimistic update
+      if (data && typeof data.liked === 'boolean') {
+        if (data.liked !== !isCurrentlyLiked) {
+          console.warn('Server state mismatch! Expected:', !isCurrentlyLiked, 'Got:', data.liked)
+          // Correct the state to match server
+          setLikedCards(prev => {
+            const next = new Set(prev)
+            if (data.liked) {
+              next.add(cardId)
+            } else {
+              next.delete(cardId)
+            }
+            return next
+          })
+        }
+      }
       
       // Update local cache
-      if (data.liked) {
+      if (data && data.liked) {
         await db.likes.put({ postId: cardId, userId: user.id })
+        console.log('Like saved to IndexedDB')
       } else {
         await db.likes.delete([cardId, user.id])
+        console.log('Like removed from IndexedDB')
       }
-
-      // The like state is already updated optimistically above
-      // UI will refresh automatically through the likedCards state
     } catch (e) {
-      console.warn('toggleLike failed, queuing for offline sync:', e)
+      console.error('toggleLike failed, queuing for offline sync:', e)
       
       // Revert optimistic update on error
       setLikedCards(prev => {
@@ -116,6 +144,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         } else {
           next.delete(cardId)
         }
+        console.log('Reverted like state due to error')
         return next
       })
       
@@ -127,8 +156,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
           userId: user.id, 
           add: !isCurrentlyLiked 
         })
+        console.log('Like action queued for offline sync')
       } catch (outboxError) {
-        console.warn('Failed to queue like action:', outboxError)
+        console.error('Failed to queue like action:', outboxError)
       }
     }
   };
@@ -177,6 +207,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   // Server-side refetch using RPC with sorting
   const refetchPosts = async (sortBy: 'created_at' | 'likes' | 'comments' = 'created_at') => {
     try {
+      console.log('Refetching posts with sort:', sortBy)
       const { data: postsData, error: postsError } = await supabase
         .rpc('get_feed_posts', {
           page_size: 100,
@@ -186,9 +217,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
           sort_by: sortBy
         })
 
-      if (postsError) throw postsError
+      if (postsError) {
+        console.error('Failed to fetch posts:', postsError)
+        throw postsError
+      }
 
-      if (postsData) {
+      if (postsData && Array.isArray(postsData)) {
         // First, get all unique subgroup IDs from posts
         const subgroupIds = Array.from(new Set(postsData.filter((post: any) => post.subgroup_id).map((post: any) => post.subgroup_id)))
         
@@ -217,25 +251,28 @@ export function PostProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        const mapped: MediaCard[] = postsData.map((post: any) => ({
-          id: String(post.id),
-          type: post.content_type,
-          title: post.title,
-          description: post.description ?? undefined,
-          imageUrl: post.media_url,
-          aspectRatio: 'square',
-          audioUrl: post.audio_url ?? undefined,
-          videoUrl: post.video_url ?? undefined,
-          creator: post.creator_username || 'Anonymous',
-          date: post.created_at,
-          isCurated: post.is_curated ?? false,
-          views: post.views ?? 0,
-          subgroupId: post.subgroup_id ?? undefined,
-          subgroupName: post.subgroup_id ? subgroupNames[post.subgroup_id] : undefined,
-          subgroupSlug: post.subgroup_id ? subgroupSlugs[post.subgroup_id] : undefined,
-          tags: Array.isArray(post.tags) ? post.tags.filter((t: any) => t !== null) : [],
-        }))
+        const mapped: MediaCard[] = postsData
+          .filter((post: any) => post && post.id) // Filter out invalid posts
+          .map((post: any) => ({
+            id: String(post.id),
+            type: post.content_type || 'image',
+            title: post.title || 'Untitled',
+            description: post.description ?? undefined,
+            imageUrl: post.media_url || '',
+            aspectRatio: 'square' as const,
+            audioUrl: post.audio_url ?? undefined,
+            videoUrl: post.video_url ?? undefined,
+            creator: post.creator_username || 'Anonymous',
+            date: post.created_at || new Date().toISOString(),
+            isCurated: post.is_curated ?? false,
+            views: post.views ?? 0,
+            subgroupId: post.subgroup_id ?? undefined,
+            subgroupName: post.subgroup_id ? subgroupNames[post.subgroup_id] : undefined,
+            subgroupSlug: post.subgroup_id ? subgroupSlugs[post.subgroup_id] : undefined,
+            tags: Array.isArray(post.tags) ? post.tags.filter((t: any) => t !== null && t !== undefined) : [],
+          }))
 
+        console.log('Mapped posts:', mapped.length)
         setPosts(mapped)
 
         try {
@@ -262,9 +299,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
         } catch (cacheError) {
           console.warn('Failed to update cache:', cacheError)
         }
+      } else {
+        console.warn('No posts data returned from get_feed_posts')
+        setPosts([])
       }
-    } catch (e) {
-      console.warn('Failed to fetch fresh posts:', e)
+    } catch (e: any) {
+      console.error('Failed to fetch fresh posts:', e)
+      // Don't clear posts on error - keep showing cached data
     }
   }
 
@@ -312,11 +353,77 @@ export function PostProvider({ children }: { children: ReactNode }) {
           .rpc('get_user_likes_ext', { external_id_param: user.id })
         
         if (error) throw error
-        if (data) setLikedCards(new Set(data.map((r: any) => String(r.post_id))))
+        if (data) {
+          console.log('Loaded user likes:', data.length, 'posts')
+          setLikedCards(new Set(data.map((r: any) => String(r.post_id))))
+        }
       } catch (e) {
         console.warn('load likes failed', e)
       }
     })()
+  }, [user?.id])
+  
+  // Real-time subscription for likes to sync across tabs/windows
+  useEffect(() => {
+    if (!user?.id) return
+    
+    let profileId: string | null = null
+    
+    // Get the profile ID for this user
+    const getProfileId = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .single()
+        
+        if (data) {
+          profileId = data.id
+        }
+      } catch (e) {
+        console.warn('Failed to get profile ID for real-time likes:', e)
+      }
+    }
+    
+    getProfileId()
+    
+    // Subscribe to likes table changes for this user
+    const channel = supabase
+      .channel('user-likes-sync')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'likes',
+          filter: profileId ? `user_id=eq.${profileId}` : undefined
+        },
+        (payload) => {
+          console.log('Likes change detected:', payload)
+          
+          if (payload.eventType === 'INSERT') {
+            const postId = String((payload.new as any).post_id)
+            setLikedCards(prev => {
+              const next = new Set(prev)
+              next.add(postId)
+              return next
+            })
+          } else if (payload.eventType === 'DELETE') {
+            const postId = String((payload.old as any).post_id)
+            setLikedCards(prev => {
+              const next = new Set(prev)
+              next.delete(postId)
+              return next
+            })
+          }
+        }
+      )
+      .subscribe()
+    
+    return () => {
+      channel.unsubscribe()
+    }
   }, [user?.id])
 
   // View tracking function

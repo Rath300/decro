@@ -138,7 +138,10 @@ export default function EditProfilePage() {
   }
 
   const handleSave = async () => {
-    if (!user?.id) return
+    if (!user?.id) {
+      toast.error('You must be logged in')
+      return
+    }
 
     // Validation
     if (!formData.username.trim()) {
@@ -155,6 +158,9 @@ export default function EditProfilePage() {
       toast.error('Username can only contain letters, numbers, and underscores')
       return
     }
+    
+    // Prevent double submission
+    if (saving) return
 
     setSaving(true)
 
@@ -218,11 +224,17 @@ export default function EditProfilePage() {
         ? await updateBuilder.eq('id', targetProfileId)
         : await updateBuilder.eq('external_id', user.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Profile update error:', error)
+        throw error
+      }
 
       toast.success('Profile updated successfully!')
       setOriginalUsername(usernameNormalized)
-      router.push('/profile')
+      
+      // Redirect to the updated profile URL
+      router.push(`/profile/${usernameNormalized}`)
+      router.refresh()
     } catch (error: any) {
       console.error('Failed to update profile:', error)
       toast.error(error.message || 'Failed to update profile')

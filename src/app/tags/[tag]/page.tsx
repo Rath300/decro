@@ -47,14 +47,16 @@ export default function TagPage() {
     setLoading(true)
     try {
       // Get tag info
-      const { data: tagData } = await supabase
+      const { data: tagData, error: tagError } = await supabase
         .from('tags')
         .select('usage_count')
         .eq('name', tag)
-        .single()
+        .maybeSingle()
       
-      if (tagData) {
+      if (!tagError && tagData) {
         setTagInfo(tagData)
+      } else {
+        console.warn('Tag info not found:', tag)
       }
 
       // Get posts with this tag
@@ -64,34 +66,50 @@ export default function TagPage() {
         page_offset: 0
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('RPC search_posts_by_tags error:', error)
+        throw error
+      }
 
-      if (data) {
+      if (data && data.length > 0) {
         // Get like and comment counts for each post
         const postsWithStats = await Promise.all(
           data.map(async (post: any) => {
-            const [likesResult, commentsResult, tagsResult] = await Promise.all([
-              supabase.rpc('get_like_count', { post_id_param: post.id }),
-              supabase.rpc('get_comment_count', { post_id_param: post.id }),
-              supabase
-                .from('post_tags')
-                .select('tags(name)')
-                .eq('post_id', post.id)
-            ])
+            try {
+              const [likesResult, commentsResult, tagsResult] = await Promise.all([
+                supabase.rpc('get_like_count', { post_id_param: post.id }),
+                supabase.rpc('get_comment_count', { post_id_param: post.id }),
+                supabase
+                  .from('post_tags')
+                  .select('tags(name)')
+                  .eq('post_id', post.id)
+              ])
 
-            return {
-              ...post,
-              like_count: likesResult.data || 0,
-              comment_count: commentsResult.data || 0,
-              tags: tagsResult.data?.map((t: any) => t.tags.name).filter((n: any) => n) || []
+              return {
+                ...post,
+                like_count: likesResult.data || 0,
+                comment_count: commentsResult.data || 0,
+                tags: tagsResult.data?.map((t: any) => t.tags?.name).filter((n: any) => n) || []
+              }
+            } catch (statsError) {
+              console.warn('Failed to load stats for post:', post.id, statsError)
+              return {
+                ...post,
+                like_count: 0,
+                comment_count: 0,
+                tags: []
+              }
             }
           })
         )
 
         setPosts(postsWithStats)
+      } else {
+        setPosts([])
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load tag posts:', error)
+      alert('Failed to load posts: ' + (error.message || 'Please try again'))
     } finally {
       setLoading(false)
     }

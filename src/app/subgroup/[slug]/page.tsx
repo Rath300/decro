@@ -33,7 +33,7 @@ export default function SubgroupDetail() {
     (async () => {
       try {
         // Load subgroup data with more details
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('subgroups')
           .select(`
             id, 
@@ -47,7 +47,18 @@ export default function SubgroupDetail() {
             post_count
           `)
           .eq('slug', params.slug)
-          .single()
+          .maybeSingle()
+        
+        if (error) {
+          console.error('Failed to load subgroup:', error)
+          throw error
+        }
+        
+        if (!data) {
+          console.error('Subgroup not found:', params.slug)
+          setSubgroupData(null)
+          return
+        }
         
         if (data) {
           setSubgroupId(data.id)
@@ -86,32 +97,46 @@ export default function SubgroupDetail() {
           }
 
           // Get follower count
-          const { count } = await supabase
-            .from('subgroup_follows')
-            .select('*', { count: 'exact', head: true })
-            .eq('subgroup_id', data.id)
-          
-          setFollowerCount(count || 0)
+          try {
+            const { count, error: countError } = await supabase
+              .from('subgroup_follows')
+              .select('*', { count: 'exact', head: true })
+              .eq('subgroup_id', data.id)
+            
+            if (!countError) {
+              setFollowerCount(count || 0)
+            }
+          } catch (countError) {
+            console.warn('Failed to get follower count:', countError)
+            setFollowerCount(0)
+          }
 
           // Check if user is following and if they're a moderator
           if (user?.id) {
-            const [followResult, moderatorResult] = await Promise.all([
-              supabase.rpc('is_following_subgroup_ext', {
-                target_subgroup_id: data.id,
-                external_id_param: user.id
-              }),
-              supabase.rpc('is_subgroup_moderator_ext', {
-                subgroup_id_param: data.id,
-                external_id_param: user.id
-              })
-            ])
-            
-            setIsFollowing(followResult.data || false)
-            setIsModerator(moderatorResult.data || false)
+            try {
+              const [followResult, moderatorResult] = await Promise.all([
+                supabase.rpc('is_following_subgroup_ext', {
+                  target_subgroup_id: data.id,
+                  external_id_param: user.id
+                }),
+                supabase.rpc('is_subgroup_moderator_ext', {
+                  subgroup_id_param: data.id,
+                  external_id_param: user.id
+                })
+              ])
+              
+              setIsFollowing(followResult.data || false)
+              setIsModerator(moderatorResult.data || false)
+            } catch (followError) {
+              console.warn('Failed to check follow/moderator status:', followError)
+              setIsFollowing(false)
+              setIsModerator(false)
+            }
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to load subgroup:', error)
+        toast.error('Failed to load subgroup: ' + (error.message || 'Please try again'))
       } finally {
         setLoading(false)
       }

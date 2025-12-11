@@ -207,6 +207,9 @@ export default function CreatePostPage() {
       alert('Please upload a video file');
       return;
     }
+    
+    // Prevent double submission
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
 
@@ -241,8 +244,8 @@ export default function CreatePostPage() {
       // Create post via SECURITY DEFINER RPC with Better Auth external id
       const { data: newId, error: rpcError } = await supabase.rpc('create_post_ext', {
         external_id_param: user.id,
-        title_param: postData.title,
-        description_param: postData.description,
+        title_param: postData.title.trim(),
+        description_param: postData.description.trim() || null,
         content_type_param: postData.contentType,
         media_url_param: mediaUrl,
         audio_url_param: audioUrl,
@@ -252,12 +255,17 @@ export default function CreatePostPage() {
         tags_param: postData.tags,
       })
 
-      if (rpcError) throw new Error(rpcError.message || 'Create failed')
+      if (rpcError) {
+        console.error('create_post_ext RPC error:', rpcError)
+        throw new Error(rpcError.message || 'Create failed')
+      }
 
+      console.log('Post created successfully:', newId)
       router.push('/feed');
+      router.refresh(); // Force refresh to show new post
     } catch (error) {
       console.error('Error creating post:', error);
-      alert(String((error as any)?.message || 'Failed to create post.'));
+      alert(String((error as any)?.message || 'Failed to create post. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }

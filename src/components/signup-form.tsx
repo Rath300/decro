@@ -187,6 +187,16 @@ export default function SignupForm() {
               </button>
             </div>
           </div>
+          {/* Submit Button inside form */}
+          <div className="mt-6 text-center">
+            <button
+              type="submit"
+              disabled={loading}
+              className="input-field bg-white text-black font-space-grotesk text-base font-normal border border-black hover:bg-black hover:text-white active:bg-black active:text-white transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing Up...' : 'Sign Up'}
+            </button>
+          </div>
         </form>
 
         {/* Error message */}
@@ -197,18 +207,6 @@ export default function SignupForm() {
             </p>
           </div>
         )}
-
-        {/* Sign Up Button */}
-        <div className="mt-6 text-center">
-          <button
-            type="submit"
-            onClick={handleSignUp}
-            disabled={loading}
-            className="input-field bg-white text-black font-space-grotesk text-base font-normal border border-black hover:bg-black hover:text-white active:bg-black active:text-white transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Signing Up...' : 'Sign Up'}
-          </button>
-        </div>
 
         {/* Already have an Account Link */}
         <div className="mt-6 text-center">

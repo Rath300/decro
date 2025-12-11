@@ -146,7 +146,14 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
               {/* Actions */}
             <div className="flex items-center gap-4 border-t border-gray-200 pt-4">
                 <button
-                  onClick={() => toggleLike(selectedCard.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (!isAuthenticated) {
+                      alert('Please sign in to like posts')
+                      return
+                    }
+                    toggleLike(selectedCard.id)
+                  }}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                     likedCards.has(selectedCard.id)
                       ? 'bg-red-50 text-red-500'
@@ -772,36 +779,32 @@ function RedditComment({
                         const content = replyText[commentId]?.trim();
                         if (!content || !isAuthenticated || !user?.id) return;
                         
+                        // Clear the input immediately
                         setReplyText((prev: Record<string, string>) => ({ ...prev, [commentId]: '' }));
-                        const optimisticReply: RealtimeComment = {
-                          id: `temp-${Date.now()}`,
-                          content,
-                          created_at: new Date().toISOString(),
-                          updated_at: new Date().toISOString(),
-                          user_id: (currentProfileId || user.id) as string,
-                          username: user.name || user.email?.split('@')[0] || 'You',
-                          full_name: user.name || null,
-                          avatar_url: null,
-                          vote_score: 0,
-                          reply_count: 0
-                        }
-                        const sanitizedOptimistic = sanitizeCommentList([optimisticReply])[0]
-                        setReplies(prev => ({
-                          ...prev,
-                          [commentId]: [
-                            sanitizedOptimistic,
-                            ...(prev[commentId] || [])
-                          ]
-                        }));
+                        
+                        // Show loading state for this comment's replies
+                        setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
                         
                         try {
+                          // Submit reply to server first (no optimistic update to avoid duplicates)
                           await supabase.rpc('add_reply_ext', { comment_id_param: commentId, external_id_param: user.id, content_param: content });
-                          // Refresh replies
+                          
+                          // Refresh replies after successful submission
                           const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: commentId, page_size: 20, page_offset: 0 });
                           const sanitized = sanitizeCommentList((data as RealtimeComment[] | null) || [])
                           setReplies(prev => ({ ...prev, [commentId]: sanitized }));
+                          
+                          // Make sure replies are visible after adding
+                          setVisibleReplies(prev => {
+                            const next = new Set(prev);
+                            next.add(commentId);
+                            return next;
+                          });
                         } catch (error) {
                           console.error('Error adding reply:', error);
+                          alert('Failed to add reply. Please try again.');
+                        } finally {
+                          setLoadingReplies(prev => ({ ...prev, [commentId]: false }));
                         }
                       }}
                       className="px-3 py-1 text-xs bg-black text-white rounded hover:bg-gray-800"

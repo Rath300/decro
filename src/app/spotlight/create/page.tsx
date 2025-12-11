@@ -21,6 +21,7 @@ export default function SpotlightCreatePage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [posts, setPosts] = useState<PostRow[]>([])
   const [filteredPosts, setFilteredPosts] = useState<PostRow[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -219,12 +220,54 @@ export default function SpotlightCreatePage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1">Cover image (optional)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-            />
+            <label className="block text-sm mb-2">Cover image (optional)</label>
+            <div className="space-y-3">
+              {coverPreview && (
+                <div className="relative w-full max-w-md">
+                  <div className="aspect-square rounded-lg overflow-hidden border-2 border-black">
+                    <img 
+                      src={coverPreview} 
+                      alt="Cover preview" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCoverFile(null)
+                      setCoverPreview(null)
+                    }}
+                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                    title="Remove image"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  setCoverFile(file)
+                  
+                  // Create preview URL
+                  if (file) {
+                    const reader = new FileReader()
+                    reader.onloadend = () => {
+                      setCoverPreview(reader.result as string)
+                    }
+                    reader.readAsDataURL(file)
+                  } else {
+                    setCoverPreview(null)
+                  }
+                }}
+                className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:border-2 file:border-black file:text-sm file:bg-white file:text-black hover:file:bg-gray-100 cursor-pointer"
+              />
+              <p className="text-xs text-gray-500">
+                This image will be shown as the spotlight cover. If not provided, a grid of posts will be used.
+              </p>
+            </div>
           </div>
 
           <div>

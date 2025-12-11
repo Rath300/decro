@@ -14,12 +14,22 @@ export function useRealtimeLikes(postId: string, initialCount = 0) {
 
     // Fetch current count
     const fetchCount = async () => {
-      const { data, error } = await supabase.rpc('get_like_count', {
-        post_id_param: postId
-      })
-      
-      if (!error && data !== null) {
-        setLikeCount(data)
+      try {
+        const { data, error } = await supabase.rpc('get_like_count', {
+          post_id_param: postId
+        })
+        
+        if (error) {
+          console.error('Failed to fetch like count:', error)
+          setLikeCount(initialCount)
+        } else if (data !== null && data !== undefined) {
+          setLikeCount(data)
+        } else {
+          setLikeCount(initialCount)
+        }
+      } catch (error) {
+        console.error('Failed to fetch like count:', error)
+        setLikeCount(initialCount)
       }
     }
 

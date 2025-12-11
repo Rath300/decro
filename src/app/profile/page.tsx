@@ -41,7 +41,7 @@ interface UserStats {
 }
 
 export default function ProfilePage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
   const router = useRouter()
   const { setSelectedCard, setShowDetailModal, trackView } = usePosts()
   const [posts, setPosts] = useState<UserPost[]>([])
@@ -266,16 +266,19 @@ export default function ProfilePage() {
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   useEffect(() => {
+    // Wait for auth to finish loading before deciding what to do
+    if (authLoading) return
+    
     if (!isAuthenticated) {
-      // Show modal instead of redirecting
-      setShowAuthModal(true)
+      // Redirect to feed if not authenticated (since /profile requires auth)
+      router.push('/feed')
       return
     }
 
     if (!user?.id) return
 
     loadProfile()
-  }, [user?.id, isAuthenticated, loadProfile])
+  }, [user?.id, isAuthenticated, authLoading, loadProfile, router])
 
   // Load content based on active tab
   useEffect(() => {

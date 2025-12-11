@@ -36,36 +36,46 @@ export function NotificationsDropdown() {
   const handleNotificationClick = async (notification: any) => {
     // Mark as read
     if (!notification.read) {
-      markAsRead(notification.id)
+      try {
+        await markAsRead(notification.id)
+      } catch (error) {
+        console.warn('Failed to mark notification as read:', error)
+      }
     }
 
     // Navigate to relevant page based on notification type and post content
     if (notification.post_id) {
       try {
         // Check if the post is a text post to redirect to the dedicated post page
-        const { data: postData } = await supabase
+        const { data: postData, error } = await supabase
           .from('posts')
           .select('content_type')
           .eq('id', notification.post_id)
-          .single()
+          .maybeSingle()
 
-        if (postData?.content_type === 'text') {
+        if (error) {
+          console.error('Failed to fetch post data:', error)
+          router.push(`/feed`)
+        } else if (postData?.content_type === 'text') {
           router.push(`/post/${notification.post_id}`)
         } else {
           router.push(`/feed#${notification.post_id}`)
         }
       } catch (error) {
+        console.error('Error navigating to post:', error)
         // Fallback to feed page if error
-        router.push(`/feed#${notification.post_id}`)
+        router.push(`/feed`)
       }
     } else if (notification.type === 'follow' || notification.type === 'profile_view') {
       // Navigate to profile if it's a follow or profile view notification
       if (notification.actor_username) {
         router.push(`/profile/${notification.actor_username}`)
+      } else {
+        console.warn('No actor username in follow/profile_view notification')
       }
     } else if (notification.type === 'spotlight' && notification.spotlight_id) {
       // Navigate to spotlight page if it's a spotlight notification
-      router.push(`/spotlight`)
+      router.push(`/spotlight/${notification.spotlight_id}`)
     }
 
     setIsOpen(false)

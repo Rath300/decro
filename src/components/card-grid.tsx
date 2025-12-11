@@ -10,45 +10,69 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
   const { setSelectedCard, setShowDetailModal, trackView, playingAudio, setPlayingAudio, likedCards, toggleLike } = usePosts()
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
   const router = useRouter()
+  
+  // Validate cards prop
+  if (!Array.isArray(cards)) {
+    console.error('CardGrid: cards prop must be an array')
+    return null
+  }
 
   const handleCardClick = (card: MediaCard) => {
-    trackView(card.id)
+    if (!card || !card.id) {
+      console.error('Invalid card data')
+      return
+    }
     
-    if (card.type === 'text') {
-      // For text posts, redirect to Reddit-style forum page
-      router.push(`/post/${card.id}`)
-    } else {
-      setSelectedCard(card)
-      setShowDetailModal(true)
+    try {
+      trackView(card.id)
+      
+      if (card.type === 'text') {
+        // For text posts, redirect to Reddit-style forum page
+        router.push(`/post/${card.id}`)
+      } else {
+        setSelectedCard(card)
+        setShowDetailModal(true)
+      }
+    } catch (error) {
+      console.error('Error handling card click:', error)
     }
   }
 
   const handleAudioPlay = (cardId: string, audioUrl: string) => {
-    if (playingAudio && playingAudio !== cardId) {
-      const currentAudio = audioRefs.current[playingAudio]
-      if (currentAudio) {
-        currentAudio.pause()
-        currentAudio.currentTime = 0
+    if (!cardId || !audioUrl) {
+      console.error('Invalid audio parameters')
+      return
+    }
+    
+    try {
+      if (playingAudio && playingAudio !== cardId) {
+        const currentAudio = audioRefs.current[playingAudio]
+        if (currentAudio) {
+          currentAudio.pause()
+          currentAudio.currentTime = 0
+        }
       }
-    }
-    if (!audioRefs.current[cardId]) {
-      audioRefs.current[cardId] = new Audio(audioUrl)
-    }
-    const audio = audioRefs.current[cardId]
-    if (playingAudio === cardId) {
-      audio.pause()
-      audio.currentTime = 0
-      setPlayingAudio(null)
-    } else {
-      audio.play()
-      setPlayingAudio(cardId)
-      audio.onended = () => setPlayingAudio(null)
+      if (!audioRefs.current[cardId]) {
+        audioRefs.current[cardId] = new Audio(audioUrl)
+      }
+      const audio = audioRefs.current[cardId]
+      if (playingAudio === cardId) {
+        audio.pause()
+        audio.currentTime = 0
+        setPlayingAudio(null)
+      } else {
+        audio.play()
+        setPlayingAudio(cardId)
+        audio.onended = () => setPlayingAudio(null)
+      }
+    } catch (error) {
+      console.error('Error playing audio:', error)
     }
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {cards.map((card) => (
+      {cards.filter(card => card && card.id).map((card) => (
         <div key={card.id} className="group cursor-pointer" onClick={() => handleCardClick(card)}>
           <div className="relative aspect-square overflow-hidden">
             {!card.imageUrl ? (

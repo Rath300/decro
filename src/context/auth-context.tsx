@@ -33,25 +33,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Ensure a profile row exists and update display fields from auth
   if (session?.user && typeof window !== 'undefined') {
     // fire-and-forget; avoid blocking render
-    fetch(process.env.NEXT_PUBLIC_SUPABASE_URL + '/rest/v1/rpc/upsert_profile_from_external', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify({
-        external_id_param: session.user.id,
-        username_param: session.user.name || session.user.email?.split('@')[0] || null,
-        full_name_param: session.user.name || null
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (supabaseUrl && supabaseKey) {
+      fetch(supabaseUrl + '/rest/v1/rpc/upsert_profile_from_external', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          external_id_param: session.user.id,
+          username_param: session.user.name || session.user.email?.split('@')[0] || null,
+          full_name_param: session.user.name || null
+        })
+      }).catch((error) => {
+        console.warn('Profile upsert failed (non-critical):', error)
       })
-    }).catch((error) => {
-      console.warn('Profile upsert failed (non-critical):', error)
-    })
+    }
   }
 
   const signIn = async (email: string, password: string) => {
     try {
+      if (!email || !password) {
+        return { success: false, error: 'Email and password are required' }
+      }
+      
       const result = await nextAuthSignIn('credentials', {
         email,
         password,
@@ -61,15 +70,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result?.ok) {
         return { success: true }
       } else {
-        return { success: false, error: result?.error || 'Sign in failed' }
+        return { success: false, error: result?.error || 'Invalid email or password' }
       }
-    } catch (error) {
-      return { success: false, error: 'An unexpected error occurred' }
+    } catch (error: any) {
+      console.error('Sign in error:', error)
+      return { success: false, error: error.message || 'An unexpected error occurred' }
     }
   }
 
   const signUp = async (email: string, password: string, name?: string) => {
     try {
+      if (!email || !password || !name) {
+        return { success: false, error: 'Email, password, and username are required' }
+      }
+      
+      if (password.length < 6) {
+        return { success: false, error: 'Password must be at least 6 characters' }
+      }
+      
       // Call signup API
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -93,18 +111,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (signInResult?.ok) {
         return { success: true }
       } else {
-        return { success: false, error: 'User created but sign-in failed' }
+        return { success: false, error: 'User created but automatic sign-in failed. Please sign in manually.' }
       }
-    } catch (error) {
-      return { success: false, error: 'An unexpected error occurred' }
+    } catch (error: any) {
+      console.error('Sign up error:', error)
+      return { success: false, error: error.message || 'An unexpected error occurred' }
     }
   }
 
   const signOut = async () => {
     try {
       await nextAuthSignOut({ redirect: false })
+      console.log('Sign out successful')
     } catch (error) {
       console.error('Sign out failed:', error)
+      // Don't throw - let the UI handle it gracefully
     }
   }
 

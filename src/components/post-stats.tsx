@@ -33,23 +33,35 @@ export function PostStats({
 
     // Fetch latest stats
     const fetchStats = async () => {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('views')
-        .eq('id', postId)
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          .select('views')
+          .eq('id', postId)
+          .maybeSingle()
 
-      if (!error && data) {
-        setViews(data.views || 0)
-      }
+        if (!error && data) {
+          setViews(data.views || 0)
+        } else if (error) {
+          console.warn('Failed to fetch views:', error)
+          setViews(initialViews)
+        }
 
-      // Get comment count
-      const { data: commentsData, error: commentsError } = await supabase.rpc('get_comment_count', {
-        post_id_param: postId
-      })
+        // Get comment count
+        const { data: commentsData, error: commentsError } = await supabase.rpc('get_comment_count', {
+          post_id_param: postId
+        })
 
-      if (!commentsError && commentsData !== null) {
-        setCommentCount(commentsData)
+        if (!commentsError && commentsData !== null && commentsData !== undefined) {
+          setCommentCount(commentsData)
+        } else if (commentsError) {
+          console.warn('Failed to fetch comment count:', commentsError)
+          setCommentCount(initialComments)
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error)
+        setViews(initialViews)
+        setCommentCount(initialComments)
       }
     }
 

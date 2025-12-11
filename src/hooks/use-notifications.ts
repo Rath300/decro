@@ -41,7 +41,15 @@ export function useNotifications() {
           external_id_param: user.id,
         })
         
-        if (profileError) throw profileError
+        if (profileError) {
+          console.error('Failed to get profile UUID:', profileError)
+          throw profileError
+        }
+        
+        if (!profileUuid) {
+          console.warn('No profile UUID returned for user:', user.id)
+          return null
+        }
         
         profileId = profileUuid
 
@@ -52,7 +60,10 @@ export function useNotifications() {
           .order('created_at', { ascending: false })
           .limit(50)
 
-        if (error) throw error
+        if (error) {
+          console.error('Failed to load notifications:', error)
+          throw error
+        }
 
         setNotifications(data || [])
         setUnreadCount(data?.filter((n: any) => !n.read).length || 0)

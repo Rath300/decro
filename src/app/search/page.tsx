@@ -85,6 +85,7 @@ export default function SearchPage() {
     setHasSearched(true)
 
     try {
+      console.log('Performing search:', { query, selectedTags, searchFilter })
       if (searchFilter === 'liked' && isAuthenticated && user?.id) {
         // Get user's liked post IDs first
         const { data: likedData, error: likedError } = await supabase.rpc('get_user_liked_posts_ext', {
@@ -139,16 +140,16 @@ export default function SearchPage() {
           id: post.id,
           title: post.title || '',
           description: post.description || '',
-          content_type: post.content_type,
-          media_url: post.media_url,
-          creator_id: post.creator_id,
-          creator_username: post.profiles?.username || '',
-          subgroup_name: post.subgroups?.name || '',
+          content_type: post.content_type || 'image',
+          media_url: post.media_url || '',
+          creator_id: post.creator_id || '',
+          creator_username: (Array.isArray(post.profiles) ? post.profiles[0]?.username : post.profiles?.username) || 'Unknown',
+          subgroup_name: (Array.isArray(post.subgroups) ? post.subgroups[0]?.name : post.subgroups?.name) || '',
           views: post.views || 0,
-          like_count: 0, // Would need additional query for this
-          comment_count: 0, // Would need additional query for this
-          created_at: post.created_at,
-          tags: [] // Would need additional query for this
+          like_count: 0,
+          comment_count: 0,
+          created_at: post.created_at || new Date().toISOString(),
+          tags: []
         }))
         
         if (query.trim()) {
@@ -180,8 +181,9 @@ export default function SearchPage() {
         if (error) throw error
         setResults(data || [])
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search failed:', error)
+      alert('Search failed: ' + (error.message || 'Please try again'))
       setResults([])
     } finally {
       setLoading(false)

@@ -3,9 +3,16 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { Pool } from "pg"
 import bcrypt from "bcryptjs"
 
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set')
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 10000, // Return error after 10 seconds if connection can't be established
 })
 
 export const authOptions: NextAuthOptions = {
@@ -19,6 +26,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.error('Missing credentials')
           throw new Error("Email and password required")
         }
 
@@ -26,13 +34,14 @@ export const authOptions: NextAuthOptions = {
           // Find user by email
           const result = await pool.query(
             'SELECT * FROM "user" WHERE email = $1',
-            [credentials.email]
+            [credentials.email.toLowerCase().trim()]
           )
 
           const user = result.rows[0]
 
           if (!user) {
-            throw new Error("No user found with this email")
+            console.error('User not found:', credentials.email)
+            throw new Error("Invalid email or password")
           }
 
           // Get account with password
@@ -44,21 +53,25 @@ export const authOptions: NextAuthOptions = {
           const account = accountResult.rows[0]
 
           if (!account || !account.password) {
-            throw new Error("Invalid credentials")
+            console.error('Account not found or missing password')
+            throw new Error("Invalid email or password")
           }
 
           // Verify password
           const isValid = await bcrypt.compare(credentials.password, account.password)
 
           if (!isValid) {
-            throw new Error("Invalid credentials")
+            console.error('Invalid password')
+            throw new Error("Invalid email or password")
           }
+
+          console.log('Authentication successful for user:', user.id)
 
           // Return user object
           return {
             id: user.id,
             email: user.email,
-            name: user.name,
+            name: user.name || user.email.split('@')[0],
             image: user.image,
           }
         } catch (error: any) {
