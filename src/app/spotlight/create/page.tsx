@@ -244,9 +244,9 @@ export default function SpotlightCreatePage() {
                   </button>
                 </div>
               )}
-              <input
-                type="file"
-                accept="image/*"
+            <input
+              type="file"
+              accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null
                   setCoverFile(file)

@@ -57,7 +57,7 @@ export default function SpotlightDetailPage() {
   
   // Audio refs for music playback
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
-  
+
   // Track click timing for double-click detection
   const clickTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
   const clickCounts = useRef<{ [key: string]: number }>({})
