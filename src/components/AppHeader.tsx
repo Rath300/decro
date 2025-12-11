@@ -51,12 +51,14 @@ export default function AppHeader() {
               <Tab href="/profile" label="Profile" active={isProfile} />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/create" className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black font-['Space_Mono'] leading-6">
+          <div className="flex items-center gap-3">
+            <Link href="/create" className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black font-['Space_Mono'] leading-6 hover:bg-gray-800 transition-colors">
               +
             </Link>
-            <MessagesDropdown />
-            <NotificationsDropdown />
+            <div className="flex items-center gap-1">
+              <MessagesDropdown />
+              <NotificationsDropdown />
+            </div>
             <Identity />
           </div>
         </div>
