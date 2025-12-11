@@ -322,8 +322,19 @@ export default function ProfilePage() {
   // Optimized post click handler with useCallback - handle text posts like feed page
   const handlePostClick = useCallback(async (post: UserPost) => {
     try {
-      // Track view
-      await trackView(post.id)
+      // Validate post has required fields
+      if (!post || !post.id) {
+        console.error('Invalid post data:', post)
+        return
+      }
+      
+      // Track view (with error handling)
+      try {
+        await trackView(post.id)
+      } catch (trackError) {
+        console.warn('Failed to track view:', trackError)
+        // Continue anyway - don't block UI for tracking failure
+      }
       
       // For text posts, redirect to Reddit-style forum page like feed page does
       if (post.content_type === 'text') {
@@ -335,17 +346,17 @@ export default function ProfilePage() {
       setSelectedCard({
         id: post.id,
         type: (post.content_type as any) || 'image',
-        title: post.title,
-        description: post.description,
+        title: post.title || 'Untitled',
+        description: post.description || '',
         imageUrl: post.media_url || '',
         aspectRatio: 'square' as const,
-        audioUrl: post.audio_url,
-        videoUrl: post.video_url,
+        audioUrl: post.audio_url || undefined,
+        videoUrl: post.video_url || undefined,
         creator: username || user?.email?.split('@')[0] || 'Anonymous',
-        date: post.created_at,
-        views: post.views,
-        subgroupName: post.subgroup_name,
-        subgroupSlug: post.subgroup_slug,
+        date: post.created_at || new Date().toISOString(),
+        views: post.views || 0,
+        subgroupName: post.subgroup_name || undefined,
+        subgroupSlug: post.subgroup_slug || undefined,
         tags: [],
       })
       
@@ -353,6 +364,7 @@ export default function ProfilePage() {
       setShowDetailModal(true)
     } catch (error) {
       console.error('Failed to open post detail:', error)
+      alert('Failed to open post. Please try again.')
     }
   }, [trackView, setSelectedCard, setShowDetailModal, username, user?.email, router])
 

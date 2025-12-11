@@ -324,7 +324,11 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
       })
     }
 
-    const sanitizedServer = sanitizeCommentList(server)
+    // Filter out replies (parent_id is not null) - only show top-level comments
+    // Replies will be fetched separately when user expands them
+    const topLevelServer = server.filter((comment: any) => !comment.parent_id)
+    
+    const sanitizedServer = sanitizeCommentList(topLevelServer)
     const sanitizedOptimistic = sanitizeCommentList(optimistic)
 
     if (sanitizedOptimistic.length === 0) {
