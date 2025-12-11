@@ -54,6 +54,7 @@ export default function SpotlightDetailPage() {
   const [loading, setLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [viewMode, setViewMode] = useState<'slideshow' | 'grid'>('slideshow')
+  const [isOwner, setIsOwner] = useState(false)
   
   // Audio refs for music playback
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
@@ -88,6 +89,23 @@ export default function SpotlightDetailPage() {
         `)
         .eq('id', spotlightId)
         .single()
+      
+      // Check if current user owns this spotlight
+      if (user?.id && spotlightData) {
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('external_id', user.id)
+            .maybeSingle()
+          
+          if (profileData && (profileData.id === spotlightData.creator_id || user.id === spotlightData.created_by)) {
+            setIsOwner(true)
+          }
+        } catch (error) {
+          console.warn('Failed to check spotlight ownership:', error)
+        }
+      }
 
       if (spotlightError) {
         console.error('Failed to load spotlight collection:', spotlightError)
@@ -269,6 +287,30 @@ export default function SpotlightDetailPage() {
     setShowDetailModal(true)
   }
 
+  // Handle spotlight deletion
+  const handleDeleteSpotlight = async () => {
+    if (!isOwner || !spotlight) return
+    
+    const confirmed = window.confirm(`Are you sure you want to delete "${spotlight.title}"? This action cannot be undone.`)
+    if (!confirmed) return
+    
+    try {
+      // Delete spotlight collection (items will cascade delete due to foreign key)
+      const { error } = await supabase
+        .from('spotlight_collections')
+        .delete()
+        .eq('id', spotlightId)
+      
+      if (error) throw error
+      
+      alert('Spotlight deleted successfully')
+      router.push('/spotlight')
+    } catch (error) {
+      console.error('Failed to delete spotlight:', error)
+      alert('Failed to delete spotlight. Please try again.')
+    }
+  }
+
   // Handle audio playback for music posts
   const handleAudioPlay = (item: SpotlightItem) => {
     if (item.posts.content_type !== 'music' || !item.posts.media_url) return
@@ -406,7 +448,21 @@ export default function SpotlightDetailPage() {
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold text-black mb-2">{spotlight.title}</h1>
+              <div className="flex items-start justify-between mb-2">
+                <h1 className="text-3xl font-bold text-black">{spotlight.title}</h1>
+                {isOwner && (
+                  <button
+                    onClick={handleDeleteSpotlight}
+                    className="ml-4 px-4 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors flex items-center gap-2"
+                    title="Delete spotlight"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                  </button>
+                )}
+              </div>
               {spotlight.description && (
                 <p className="text-gray-600 mb-4">{spotlight.description}</p>
               )}
