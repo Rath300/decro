@@ -1,0 +1,91 @@
+
+> decro@1.0.0 build
+> next build
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+./node_modules/@supabase/realtime-js/dist/main/index.js
+./node_modules/@supabase/supabase-js/dist/main/index.js
+./src/lib/supabase-client.ts
+./src/app/spotlight/page.tsx
+
+./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+./node_modules/@supabase/realtime-js/dist/main/index.js
+./node_modules/@supabase/supabase-js/dist/main/index.js
+./src/lib/supabase-client.ts
+./src/app/sitemap.xml/route.ts
+
+   Linting and checking validity of types ...
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/26) ...
+   Generating static pages (6/26) 
+   Generating static pages (12/26) 
+   Generating static pages (19/26) 
+ ⚠ Entire page /search deopted into client-side rendering. https://nextjs.org/docs/messages/deopted-into-client-rendering /search
+ ✓ Generating static pages (26/26) 
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    2.96 kB        94.5 kB
+├ ○ /_not-found                          875 B          81.6 kB
+├ λ /api/auth/[...nextauth]              0 B                0 B
+├ λ /api/auth/signup                     0 B                0 B
+├ ℇ /api/cron/refresh-trending           0 B                0 B
+├ ○ /api/debug/env                       0 B                0 B
+├ λ /api/posts                           0 B                0 B
+├ λ /api/resolve-username                0 B                0 B
+├ λ /api/subgroups                       0 B                0 B
+├ ○ /api/version                         0 B                0 B
+├ ○ /create                              6.33 kB         138 kB
+├ ○ /feed                                10.8 kB         224 kB
+├ ○ /feedback                            3.02 kB         135 kB
+├ ○ /forgot-password                     1.3 kB           89 kB
+├ ○ /messages                            2.28 kB        93.8 kB
+├ λ /post/[id]                           8.21 kB         171 kB
+├ λ /post/edit/[id]                      3.95 kB         136 kB
+├ ○ /profile                             5.36 kB         226 kB
+├ λ /profile/[username]                  4.99 kB         225 kB
+├ ○ /profile/edit                        5.07 kB         137 kB
+├ ○ /robots.txt                          0 B                0 B
+├ ○ /search                              5.29 kB         137 kB
+├ ○ /settings                            3.73 kB         135 kB
+├ ○ /signup                              3.01 kB        94.6 kB
+├ ○ /sitemap.xml                         0 B                0 B
+├ ○ /spotlight                           5.48 kB         183 kB
+├ λ /spotlight/[id]                      4.74 kB         225 kB
+├ ○ /spotlight/create                    4.86 kB         137 kB
+├ ○ /subgroup                            6.74 kB         215 kB
+├ λ /subgroup/[slug]                     4.37 kB         186 kB
+├ ○ /subgroup/create                     4.87 kB         137 kB
+├ λ /tags/[tag]                          4.5 kB          225 kB
+└ ○ /trending                            4.18 kB         224 kB
++ First Load JS shared by all            80.7 kB
+  ├ chunks/472-28ec35b8e2b527de.js       27.5 kB
+  ├ chunks/fd9d1056-bfd247beca2ef082.js  51.1 kB
+  ├ chunks/main-app-a227209d7768b772.js  231 B
+  └ chunks/webpack-9db58d06a4848ec0.js   1.89 kB
+
+
+ƒ Middleware                             26.3 kB
+
+ℇ  (Streaming)  server-side renders with streaming (uses React 18 SSR streaming or Server Components)
+λ  (Server)     server-side renders at runtime (uses getInitialProps or getServerSideProps)
+○  (Static)     automatically rendered as static HTML (uses no initial props)
+
