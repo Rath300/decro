@@ -104,9 +104,12 @@ self.addEventListener('fetch', (event) => {
           return fetch(request).then(response => {
             if (response.ok && response.status === 200) {
               const responseClone = response.clone()
-              caches.open(CACHE_NAME).then(cache => {
-                try { cache.put(request, responseClone) } catch {}
-              })
+              // Only cache http/https requests, not chrome-extension or other schemes
+              if (request.url.startsWith('http')) {
+                caches.open(CACHE_NAME).then(cache => {
+                  try { cache.put(request, responseClone) } catch {}
+                })
+              }
             }
             return response
           }).catch(() => fetch(request))
