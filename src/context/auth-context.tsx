@@ -31,29 +31,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } : null
 
   // Ensure a profile row exists and update display fields from auth
-  if (session?.user && typeof window !== 'undefined') {
-    // fire-and-forget; avoid blocking render
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    
-    if (supabaseUrl && supabaseKey) {
-      fetch(supabaseUrl + '/rest/v1/rpc/upsert_profile_from_external', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseKey,
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({
-          external_id_param: session.user.id,
-          username_param: session.user.name || session.user.email?.split('@')[0] || null,
-          full_name_param: session.user.name || null
+  React.useEffect(() => {
+    if (session?.user && typeof window !== 'undefined') {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      
+      if (supabaseUrl && supabaseKey) {
+        // Create profile immediately on session start
+        fetch(supabaseUrl + '/rest/v1/rpc/upsert_profile_from_external', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            external_id_param: session.user.id,
+            username_param: session.user.name || session.user.email?.split('@')[0] || 'user',
+            full_name_param: session.user.name || null
+          })
         })
-      }).catch((error) => {
-        console.warn('Profile upsert failed (non-critical):', error)
-      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error('Profile upsert failed:', errorText)
+          } else {
+            console.log('Profile created/updated successfully')
+          }
+        })
+        .catch((error) => {
+          console.error('Profile upsert error:', error)
+        })
+      }
     }
-  }
+  }, [session?.user?.id])
 
   const signIn = async (email: string, password: string) => {
     try {

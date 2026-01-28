@@ -107,10 +107,31 @@ export function PostProvider({ children }: { children: ReactNode }) {
       console.log('Calling toggle_like_ext RPC...')
       console.log('RPC params:', { post_id_param: cardId, external_id_param: user.id })
       
-      const { data, error } = await supabase.rpc('toggle_like_ext', {
-        post_id_param: cardId,
-        external_id_param: user.id
-      })
+      // Add retry logic for new users
+      let retries = 0
+      let data = null
+      let error = null
+      
+      while (retries < 3) {
+        const result = await supabase.rpc('toggle_like_ext', {
+          post_id_param: cardId,
+          external_id_param: user.id
+        })
+        
+        data = result.data
+        error = result.error
+        
+        if (!error) break
+        
+        // If profile not found, wait and retry
+        if (error.message?.includes('profile') || error.message?.includes('user')) {
+          console.log(`Profile not ready, retry ${retries + 1}/3...`)
+          await new Promise(resolve => setTimeout(resolve, 500))
+          retries++
+        } else {
+          break
+        }
+      }
       
       if (error) {
         console.error('=== RPC ERROR ===')
@@ -203,12 +224,31 @@ export function PostProvider({ children }: { children: ReactNode }) {
       setCommentText('')
       
       try {
-        const { error } = await supabase
+        // Add retry logic for new users
+      let retries = 0
+      let error = null
+      
+      while (retries < 3) {
+        const result = await supabase
           .rpc('add_comment_ext', {
             post_id_param: selectedCard.id,
             external_id_param: user.id,
             content_param: commentContent
           })
+        
+        error = result.error
+        
+        if (!error) break
+        
+        // If profile not found, wait and retry
+        if (error.message?.includes('profile') || error.message?.includes('user')) {
+          console.log(`Profile not ready for comment, retry ${retries + 1}/3...`)
+          await new Promise(resolve => setTimeout(resolve, 500))
+          retries++
+        } else {
+          break
+        }
+      }
         if (error) throw error
         
         // Update local cache
@@ -402,14 +442,15 @@ export function PostProvider({ children }: { children: ReactNode }) {
           console.log('Liked post IDs:', likedPostIds)
           setLikedCards(new Set(likedPostIds))
         } else {
-          console.log('⚠️ No likes data returned or invalid format')
+          console.log('ℹ️ No likes data returned (new user or empty)')
           setLikedCards(new Set())
         }
       } catch (e: any) {
         console.error('❌ Load likes failed:', e)
         console.error('Error message:', e?.message)
         console.error('Error details:', e)
-        // Don't clear existing likes on error
+        // Set empty likes for new users - don't block the app
+        setLikedCards(new Set())
       }
     })()
   }, [user?.id])

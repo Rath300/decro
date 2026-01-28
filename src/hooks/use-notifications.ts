@@ -36,22 +36,27 @@ export function useNotifications() {
 
     const loadNotifications = async () => {
       try {
-        // Convert external ID to profile UUID
-        const { data: profileUuid, error: profileError } = await supabase.rpc('ensure_profile', {
-          external_id_param: user.id,
-        })
+        // Get profile UUID from external ID
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .maybeSingle()
         
         if (profileError) {
-          console.error('Failed to get profile UUID:', profileError)
-          throw profileError
-        }
-        
-        if (!profileUuid) {
-          console.warn('No profile UUID returned for user:', user.id)
+          console.error('Failed to get profile:', profileError)
           return null
         }
         
-        profileId = profileUuid
+        // If no profile exists yet, wait and return empty
+        if (!profileData) {
+          console.log('Profile not created yet for user:', user.id)
+          setNotifications([])
+          setUnreadCount(0)
+          return null
+        }
+        
+        profileId = profileData.id
 
         const { data, error } = await supabase
           .from('notifications')
@@ -132,17 +137,22 @@ export function useNotifications() {
   const markAllAsRead = async () => {
     if (!user?.id) return
     try {
-      // Convert external ID to profile UUID
-      const { data: profileId, error: profileError } = await supabase.rpc('ensure_profile', {
-        external_id_param: user.id,
-      })
+      // Get profile UUID from external ID
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('external_id', user.id)
+        .maybeSingle()
       
-      if (profileError) throw profileError
+      if (profileError || !profileData) {
+        console.error('Failed to get profile:', profileError)
+        return
+      }
 
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
-        .eq('user_id', profileId)
+        .eq('user_id', profileData.id)
         .eq('read', false)
 
       if (error) throw error
