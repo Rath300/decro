@@ -14,6 +14,8 @@ import supabase from '@/lib/supabase-client'
 import { PostStats } from '@/components/post-stats'
 import { usePosts } from '@/context/post-context'
 import DetailModal from '@/components/detail-modal'
+import { NetworkView } from '@/components/collab/NetworkView'
+import { CollaborationRequests } from '@/components/collab/CollaborationRequests'
 
 interface UserPost {
   id: string
@@ -49,7 +51,7 @@ export default function ProfilePage() {
   const [spotlights, setSpotlights] = useState<any[]>([])
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'spotlights'>('posts')
+  const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'spotlights' | 'network' | 'requests'>('posts')
   const [username, setUsername] = useState<string>('')
   const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'most_liked'>('newest')
   const [displayedPosts, setDisplayedPosts] = useState<UserPost[]>([])
@@ -500,11 +502,31 @@ export default function ProfilePage() {
                 >
                   Spotlights
                 </button>
+                <button
+                  onClick={() => setActiveTab('network')}
+                  className={`pb-3 px-1 border-b-2 transition-colors ${
+                    activeTab === 'network'
+                      ? 'border-black font-bold text-black'
+                      : 'border-transparent text-gray-500 hover:text-black'
+                  }`}
+                >
+                  Network
+                </button>
+                <button
+                  onClick={() => setActiveTab('requests')}
+                  className={`pb-3 px-1 border-b-2 transition-colors ${
+                    activeTab === 'requests'
+                      ? 'border-black font-bold text-black'
+                      : 'border-transparent text-gray-500 hover:text-black'
+                  }`}
+                >
+                  Requests
+                </button>
               </div>
             </div>
 
             {/* Sort Controls - only show for posts and liked tabs */}
-            {activeTab !== 'spotlights' && (
+            {(activeTab === 'posts' || activeTab === 'liked') && (
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
                   <span className="text-sm font-['Space_Mono'] text-gray-600">Sort by:</span>
@@ -531,8 +553,14 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* Spotlights Tab Content */}
-            {activeTab === 'spotlights' ? (
+            {/* Network Tab Content */}
+            {activeTab === 'network' ? (
+              <NetworkView userId={profileId || undefined} />
+            ) : activeTab === 'requests' ? (
+              /* Requests Tab Content */
+              <CollaborationRequests />
+            ) : activeTab === 'spotlights' ? (
+              /* Spotlights Tab Content */
               spotlights.length === 0 ? (
                 <div className="text-center py-12 border border-dashed border-gray-300">
                   <p className="text-gray-600">No spotlights yet</p>

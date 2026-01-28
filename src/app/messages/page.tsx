@@ -1,23 +1,117 @@
 /**
  * Messages / DM Page
- * Placeholder for external chat system integration
+ * Full direct messaging interface with real-time updates
  */
 
 'use client'
 
 import { useAuth } from '@/context/auth-context'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { ConversationList } from '@/components/messages/ConversationList'
+import { MessageView } from '@/components/messages/MessageView'
+import supabase from '@/lib/supabase-client'
 
 export default function MessagesPage() {
   const { isAuthenticated, user, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  const [selectedConversation, setSelectedConversation] = useState<{
+    id: string
+    userId: string
+    username: string
+  } | null>(null)
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/')
     }
   }, [isAuthenticated, loading, router])
+
+  // Handle URL params (conversation ID or user ID to start new conversation)
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const conversationId = searchParams.get('conversation')
+    const userId = searchParams.get('user')
+
+    if (conversationId) {
+      // Load conversation details
+      loadConversationDetails(conversationId)
+    } else if (userId) {
+      // Start new conversation with user
+      startNewConversation(userId)
+    }
+  }, [isAuthenticated, searchParams])
+
+  const loadConversationDetails = async (conversationId: string) => {
+    try {
+      // Get conversation participants to find other user
+      const { data: participants } = await supabase
+        .from('conversation_participants')
+        .select('user_id, profiles(username)')
+        .eq('conversation_id', conversationId)
+
+      if (participants && participants.length === 2) {
+        // Find the other user
+        const { data: currentUserProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user?.id)
+          .maybeSingle()
+
+        if (currentUserProfile) {
+          const otherParticipant = participants.find(p => p.user_id !== currentUserProfile.id)
+          if (otherParticipant) {
+            setSelectedConversation({
+              id: conversationId,
+              userId: otherParticipant.user_id,
+              username: (otherParticipant.profiles as any)?.username || 'User'
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load conversation details:', error)
+    }
+  }
+
+  const startNewConversation = async (userId: string) => {
+    try {
+      // Get or create conversation
+      const { data, error } = await supabase.rpc('get_or_create_conversation', {
+        other_user_id: userId
+      })
+
+      if (error) throw error
+
+      if (data.success) {
+        // Get username
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', userId)
+          .maybeSingle()
+
+        setSelectedConversation({
+          id: data.conversation_id,
+          userId: userId,
+          username: profile?.username || 'User'
+        })
+
+        // Update URL
+        router.replace(`/messages?conversation=${data.conversation_id}`)
+      }
+    } catch (error) {
+      console.error('Failed to start conversation:', error)
+    }
+  }
+
+  const handleSelectConversation = (conversationId: string, userId: string, username: string) => {
+    setSelectedConversation({ id: conversationId, userId, username })
+    router.replace(`/messages?conversation=${conversationId}`)
+  }
 
   if (loading) {
     return (
@@ -32,59 +126,35 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white font-['Space_Mono']">
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold text-black mb-6">Messages</h1>
-          
-          <div className="border-2 border-black p-8 text-center">
-            <div className="text-6xl mb-4">💬</div>
-            <h2 className="text-xl font-bold text-black mb-4">Direct Messages Coming Soon</h2>
-            <p className="text-gray-600 mb-6">
-              We're working on adding direct messaging to Decro. This feature will allow you to have private conversations with other creators.
-            </p>
-            
-            <div className="bg-gray-50 border border-gray-200 p-6 text-left mb-6">
-              <h3 className="font-bold text-black mb-3">Planned Features:</h3>
-              <ul className="space-y-2 text-sm text-gray-700">
-                <li className="flex items-start gap-2">
-                  <span className="text-black">✓</span>
-                  <span>Real-time messaging</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-black">✓</span>
-                  <span>File and image sharing</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-black">✓</span>
-                  <span>Read receipts and typing indicators</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-black">✓</span>
-                  <span>Message history</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-black">✓</span>
-                  <span>Notification support</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-yellow-50 border border-yellow-200 p-4 text-left text-sm">
-              <p className="text-yellow-800">
-                <strong>For Developers:</strong> To implement the DM system, integrate SendBird or Stream Chat. 
-                See <code className="bg-yellow-100 px-1">IMPLEMENTATION_COMPLETE.md</code> for detailed setup instructions.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              In the meantime, you can connect with other creators through comments and subgroups.
-            </p>
-          </div>
+    <div className="h-screen bg-white font-['Space_Mono'] flex flex-col">
+      {/* Main content - split view */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Conversation List - Left Panel */}
+        <div className="w-full md:w-1/3 border-r-2 border-black overflow-hidden">
+          <ConversationList
+            selectedConversationId={selectedConversation?.id}
+            onSelectConversation={handleSelectConversation}
+          />
         </div>
-      </main>
+
+        {/* Message View - Right Panel */}
+        <div className="hidden md:block md:w-2/3">
+          {selectedConversation ? (
+            <MessageView
+              conversationId={selectedConversation.id}
+              otherUserId={selectedConversation.userId}
+              otherUsername={selectedConversation.username}
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <div className="text-4xl mb-4">💬</div>
+                <p className="text-sm">Select a conversation to start messaging</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -15,6 +15,8 @@ import supabase from '@/lib/supabase-client'
 import { PostStats } from '@/components/post-stats'
 import { useToast } from '@/hooks/use-toast'
 import DetailModal from '@/components/detail-modal'
+import { CollaborationButton } from '@/components/collab/CollaborationButton'
+import { MessageButton } from '@/components/messages/MessageButton'
 
 interface UserPost {
   id: string
@@ -413,11 +415,8 @@ export default function PublicProfilePage() {
                 >
                   {followLoading ? '...' : isFollowing ? 'Connected' : 'Connect'}
                 </button>
-                <button
-                  className="px-4 py-2 border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  Collab
-                </button>
+                <MessageButton targetUserId={profile.id} />
+                <CollaborationButton targetUserId={profile.id} targetUsername={profile.username} />
               </div>
             )}
           </div>
