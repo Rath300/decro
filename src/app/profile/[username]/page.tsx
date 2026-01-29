@@ -54,7 +54,7 @@ interface ProfileData {
 export default function PublicProfilePage() {
   const params = useParams()
   const router = useRouter()
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, loading: authLoading } = useAuth()
   const { setSelectedCard, setShowDetailModal, trackView } = usePosts()
   const toast = useToast()
   const username = params.username as string
@@ -70,8 +70,11 @@ export default function PublicProfilePage() {
   const [displayedPosts, setDisplayedPosts] = useState<UserPost[]>([])
 
   useEffect(() => {
-    loadProfile()
-  }, [username])
+    // Wait for auth to finish loading before attempting profile load
+    if (!authLoading) {
+      loadProfile()
+    }
+  }, [username, authLoading])
 
   // Load current user's profile ID for comparison
   useEffect(() => {
@@ -103,16 +106,25 @@ export default function PublicProfilePage() {
 
   const loadProfile = async () => {
     try {
-      // Get user by username
+      setLoading(true)
+      
+      // Get user by username (case-insensitive via RPC)
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, bio, avatar_url')
-        .eq('username', username)
+        .rpc('get_profile_by_username', { username_param: username })
         .maybeSingle()
 
-      if (profileError || !profileData) {
-        console.error('Profile not found:', profileError)
-        toast.error('User not found')
+      if (profileError) {
+        console.error('Profile lookup error:', profileError)
+        toast.error('Error loading profile')
+        setLoading(false)
+        router.push('/feed')
+        return
+      }
+
+      if (!profileData) {
+        console.error('Profile not found for username:', username)
+        toast.error(`User "${username}" not found`)
+        setLoading(false)
         router.push('/feed')
         return
       }

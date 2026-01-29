@@ -420,7 +420,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       if (!user?.id) {
-        console.log('❌ Cannot load likes: user not logged in')
+        // Silent: No user logged in, guest mode (can't load likes)
         setLikedCards(new Set())
         return
       }
@@ -458,7 +458,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   // Real-time subscription for likes to sync across tabs/windows
   useEffect(() => {
     if (!user?.id) {
-      console.log('❌ Cannot setup real-time likes: user not logged in')
+      // Silent: No user logged in, guest mode (no real-time sync needed)
       return
     }
     
