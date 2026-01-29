@@ -111,7 +111,7 @@ export default function PublicProfilePage() {
       // Get user by username (case-insensitive via RPC)
       const { data: profileData, error: profileError } = await supabase
         .rpc('get_profile_by_username', { username_param: username })
-        .maybeSingle()
+        .maybeSingle() as { data: ProfileData | null; error: any }
 
       if (profileError) {
         console.error('Profile lookup error:', profileError)
