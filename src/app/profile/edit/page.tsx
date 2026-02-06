@@ -129,7 +129,7 @@ export default function EditProfilePage() {
         return false
       }
 
-      return !existingProfile || (profileId && existingProfile.id === profileId)
+      return !existingProfile || Boolean(profileId && existingProfile.id === profileId)
     } catch (err) {
       console.warn('Username availability check failed:', err)
       return true
