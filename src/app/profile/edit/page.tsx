@@ -118,7 +118,7 @@ export default function EditProfilePage() {
       // Use case-insensitive RPC function to check username availability
       const { data: existingProfile, error } = await supabase
         .rpc('get_profile_by_username', { username_param: normalized })
-        .maybeSingle()
+        .maybeSingle() as { data: { id: string } | null; error: any }
 
       if (error && error.code !== 'PGRST116') {
         throw error
