@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast'
 interface CollaborationButtonProps {
   targetUserId: string // UUID of the profile being viewed
   targetUsername: string
+  currentUserProfileId: string | null // UUID of current user's profile
 }
 
 interface CollabStatus {
