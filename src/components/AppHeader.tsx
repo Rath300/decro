@@ -45,15 +45,17 @@ export default function AppHeader() {
             </Link>
             <div className="flex items-end gap-2">
               <Tab href="/feed" label="Feed" active={isFeed} />
-              <Tab href="/trending" label="Trending" active={isTrending} />
               <Tab href="/spotlight" label="Spotlight" active={isSpotlight} />
               <Tab href="/subgroup" label="Subgroup" active={isSubgroup} />
               <Tab href="/profile" label="Profile" active={isProfile} />
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/create" className="inline-flex items-center justify-center w-8 h-8 bg-black text-white border border-black font-['Space_Mono'] leading-6 hover:bg-gray-800 transition-colors">
-              +
+            <Link 
+              href="/create" 
+              className="px-6 py-2 bg-black text-white border-2 border-black font-['Space_Mono'] font-bold hover:bg-gray-900 transition-all duration-150 active:translate-y-[1px]"
+            >
+              CREATE
             </Link>
             <div className="flex items-center gap-1">
               <MessagesDropdown />

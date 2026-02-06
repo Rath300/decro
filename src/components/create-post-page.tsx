@@ -91,9 +91,20 @@ export default function CreatePostPage() {
   const [subgroupResults, setSubgroupResults] = useState<{ id: string; name: string; slug: string }[]>([])
   const [selectedSubgroup, setSelectedSubgroup] = useState<{ id: string; name: string; slug: string } | null>(null)
 
+  // Handle URL parameter for content type preselection
+  useEffect(() => {
+    const typeParam = searchParams?.get('type')
+    if (typeParam && ['image', 'music', 'video', 'physical-art', 'edits', 'film', 'graphic-design', 'text'].includes(typeParam)) {
+      setPostData(prev => ({
+        ...prev,
+        contentType: typeParam as typeof prev.contentType
+      }))
+    }
+  }, [searchParams])
+
   // Handle URL parameter for subgroup preselection
   useEffect(() => {
-    const subgroupId = searchParams.get('subgroup')
+    const subgroupId = searchParams?.get('subgroup')
     if (subgroupId) {
       // Fetch the subgroup data to preselect it
       const fetchSubgroup = async () => {

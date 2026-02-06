@@ -12,6 +12,7 @@ import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/us
 import { PostStats } from './post-stats';
 import supabase from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
+import QuickCreate from '@/components/QuickCreate';
 // SiteHeader removed per request to avoid obstruction
 
 
