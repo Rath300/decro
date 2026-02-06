@@ -11,7 +11,7 @@ function Tab({ href, label, active }: { href: string; label: string; active: boo
   return (
     <Link
       href={href}
-      className={`px-14 py-2 border border-black -mb-px text-sm font-['Space_Mono'] leading-6 transition-transform duration-150 active:translate-y-[1px] ${
+      className={`px-14 py-2 border border-black -mb-px text-sm font-['Space_Mono'] leading-6 transition-all duration-150 active:translate-y-[1px] ${
         active ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
       }`}
     >
@@ -52,7 +52,7 @@ export default function AppHeader() {
           <div className="flex items-center gap-3">
             <Link 
               href="/create" 
-              className="px-8 py-3 bg-black text-white border-2 border-black font-['Space_Mono'] font-bold text-lg hover:bg-gray-900 transition-all duration-150 active:translate-y-[1px]"
+              className="px-14 py-2 border border-black -mb-px text-sm font-['Space_Mono'] leading-6 bg-black text-white hover:bg-white hover:text-black transition-all duration-150 active:translate-y-[1px]"
             >
               CREATE
             </Link>
