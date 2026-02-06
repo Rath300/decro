@@ -147,10 +147,11 @@ export default function PublicProfilePage() {
       }
 
       // Check if current user is following
-      if (currentUser?.id) {
+      if (currentUser?.id && currentUserProfileId) {
         try {
           const { data: followData, error: followError } = await supabase.rpc('is_following_user', {
-            target_user_id: profileData.id
+            target_user_id: profileData.id,
+            current_user_id: currentUserProfileId
           })
           if (!followError) {
             setIsFollowing(followData || false)
@@ -221,7 +222,7 @@ export default function PublicProfilePage() {
   }
 
   const handleFollow = async () => {
-    if (!currentUser?.id) {
+    if (!currentUser?.id || !currentUserProfileId) {
       toast.error('Please sign in to follow users')
       return
     }
@@ -232,7 +233,8 @@ export default function PublicProfilePage() {
 
     try {
       const { data, error } = await supabase.rpc('toggle_follow_user', {
-        target_user_id: profile.id
+        target_user_id: profile.id,
+        current_user_id: currentUserProfileId
       })
 
       if (error) throw error
@@ -430,8 +432,8 @@ export default function PublicProfilePage() {
                 >
                   {followLoading ? '...' : isFollowing ? 'Connected' : 'Connect'}
                 </button>
-                <MessageButton targetUserId={profile.id} />
-                <CollaborationButton targetUserId={profile.id} targetUsername={profile.username} />
+                <MessageButton targetUserId={profile.id} currentUserProfileId={currentUserProfileId} />
+                <CollaborationButton targetUserId={profile.id} targetUsername={profile.username} currentUserProfileId={currentUserProfileId} />
               </div>
             )}
           </div>

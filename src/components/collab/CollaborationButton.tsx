@@ -21,7 +21,7 @@ interface CollabStatus {
   request_id?: string
 }
 
-export function CollaborationButton({ targetUserId, targetUsername }: CollaborationButtonProps) {
+export function CollaborationButton({ targetUserId, targetUsername, currentUserProfileId }: CollaborationButtonProps) {
   const { isAuthenticated } = useAuth()
   const toast = useToast()
   const [status, setStatus] = useState<CollabStatus | null>(null)
@@ -32,16 +32,19 @@ export function CollaborationButton({ targetUserId, targetUsername }: Collaborat
 
   // Load collaboration status
   useEffect(() => {
-    if (!isAuthenticated || !targetUserId) return
+    if (!isAuthenticated || !targetUserId || !currentUserProfileId) return
     
     loadStatus()
-  }, [isAuthenticated, targetUserId])
+  }, [isAuthenticated, targetUserId, currentUserProfileId])
 
   const loadStatus = async () => {
+    if (!currentUserProfileId) return
+    
     try {
       setLoading(true)
       const { data, error } = await supabase.rpc('check_collaboration_status', {
-        other_user_id: targetUserId
+        other_user_id: targetUserId,
+        current_user_id: currentUserProfileId
       })
       
       if (error) throw error
@@ -54,7 +57,7 @@ export function CollaborationButton({ targetUserId, targetUsername }: Collaborat
   }
 
   const handleSendRequest = async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !currentUserProfileId) {
       toast.error('Please sign in to send collaboration requests')
       return
     }
@@ -64,7 +67,8 @@ export function CollaborationButton({ targetUserId, targetUsername }: Collaborat
       const { data, error } = await supabase.rpc('send_collaboration_request', {
         receiver_profile_id: targetUserId,
         message_text: requestMessage || null,
-        collab_type: 'general'
+        collab_type: 'general',
+        sender_profile_id: currentUserProfileId
       })
       
       if (error) throw error

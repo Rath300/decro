@@ -13,17 +13,18 @@ import { useToast } from '@/hooks/use-toast'
 
 interface MessageButtonProps {
   targetUserId: string // UUID of the user to message
+  currentUserProfileId: string | null // UUID of current user's profile
   className?: string
 }
 
-export function MessageButton({ targetUserId, className = '' }: MessageButtonProps) {
+export function MessageButton({ targetUserId, currentUserProfileId, className = '' }: MessageButtonProps) {
   const { isAuthenticated } = useAuth()
   const router = useRouter()
   const toast = useToast()
   const [loading, setLoading] = useState(false)
 
   const handleStartConversation = async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !currentUserProfileId) {
       toast.error('Please sign in to send messages')
       return
     }
@@ -33,7 +34,8 @@ export function MessageButton({ targetUserId, className = '' }: MessageButtonPro
       
       // Get or create conversation
       const { data, error } = await supabase.rpc('get_or_create_conversation', {
-        other_user_id: targetUserId
+        other_user_id: targetUserId,
+        current_user_id: currentUserProfileId
       })
       
       if (error) throw error
