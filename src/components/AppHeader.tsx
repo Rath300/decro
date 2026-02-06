@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import Identity from '@/components/Identity'
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import { MessagesDropdown } from '@/components/messages-dropdown'
+import { CreateModal } from '@/components/create-modal'
 
 function Tab({ href, label, active }: { href: string; label: string; active: boolean }) {
   return (
@@ -50,12 +51,7 @@ export default function AppHeader() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link 
-              href="/create" 
-              className="px-14 py-2 border border-black -mb-px text-sm font-['Space_Mono'] leading-6 bg-black text-white hover:bg-white hover:text-black transition-all duration-150 active:translate-y-[1px]"
-            >
-              CREATE
-            </Link>
+            <CreateModal />
             <div className="flex items-center gap-1">
               <MessagesDropdown />
               <NotificationsDropdown />

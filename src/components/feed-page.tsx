@@ -12,7 +12,6 @@ import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/us
 import { PostStats } from './post-stats';
 import supabase from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
-import FeedQuickCreate from '@/components/FeedQuickCreate';
 // SiteHeader removed per request to avoid obstruction
 
 
@@ -282,9 +281,6 @@ export default function FeedPage() {
 
       {/* Feed Content - Floating masonry layout */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Quick Create Menu */}
-        <FeedQuickCreate />
-        
         {displayedCards.length === 0 ? (
           <div className="text-center py-24 border border-dashed border-black">
             <p className="text-black font-['Space_Mono']">No posts yet.</p>
