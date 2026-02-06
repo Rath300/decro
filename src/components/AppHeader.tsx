@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import Identity from '@/components/Identity'
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import { MessagesDropdown } from '@/components/messages-dropdown'
-import QuickCreateMenu from '@/components/QuickCreateMenu'
 
 function Tab({ href, label, active }: { href: string; label: string; active: boolean }) {
   return (
@@ -51,7 +50,12 @@ export default function AppHeader() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <QuickCreateMenu />
+            <Link 
+              href="/create" 
+              className="px-8 py-3 bg-black text-white border-2 border-black font-['Space_Mono'] font-bold text-lg hover:bg-gray-900 transition-all duration-150 active:translate-y-[1px]"
+            >
+              CREATE
+            </Link>
             <div className="flex items-center gap-1">
               <MessagesDropdown />
               <NotificationsDropdown />
