@@ -110,27 +110,26 @@ export default function EditProfilePage() {
   }
 
   const checkUsernameAvailable = async (username: string): Promise<boolean> => {
-    const normalized = username.trim().toLowerCase()
+    const normalized = username.trim()
     if (!normalized) return true
-    if (normalized === (originalUsername || '').toLowerCase()) return true
+    if (normalized.toLowerCase() === (originalUsername || '').toLowerCase()) return true
 
     try {
-      let query = supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', normalized)
-
-      if (profileId) {
-        query = query.neq('id', profileId)
-      }
-
-      const { data, error } = await query.limit(1)
+      // Use case-insensitive RPC function to check username availability
+      const { data: existingProfile, error } = await supabase
+        .rpc('get_profile_by_username', { username_param: normalized })
+        .maybeSingle()
 
       if (error && error.code !== 'PGRST116') {
         throw error
       }
 
-      return !data || data.length === 0
+      // If profile exists and it's not the current user's profile, username is taken
+      if (existingProfile && profileId && existingProfile.id !== profileId) {
+        return false
+      }
+
+      return !existingProfile || (profileId && existingProfile.id === profileId)
     } catch (err) {
       console.warn('Username availability check failed:', err)
       return true
@@ -207,7 +206,7 @@ export default function EditProfilePage() {
         }
       }
 
-      const usernameNormalized = formData.username.trim().toLowerCase()
+      const usernameNormalized = formData.username.trim()
 
       // Update profile
       const updateBuilder = supabase
