@@ -57,7 +57,8 @@ export default function PublicProfilePage() {
   const { user: currentUser, loading: authLoading } = useAuth()
   const { setSelectedCard, setShowDetailModal, trackView } = usePosts()
   const toast = useToast()
-  const username = params.username as string
+  // Decode URL-encoded username and trim whitespace
+  const username = decodeURIComponent(params.username as string).trim()
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [posts, setPosts] = useState<UserPost[]>([])
@@ -123,6 +124,8 @@ export default function PublicProfilePage() {
 
       if (!profileData) {
         console.error('Profile not found for username:', username)
+        console.error('RPC call parameters:', { username_param: username })
+        console.error('RPC error:', profileError)
         toast.error(`User "${username}" not found`)
         setLoading(false)
         router.push('/feed')
