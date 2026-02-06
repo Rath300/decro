@@ -65,10 +65,15 @@ export default function CreatePostPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuth();
+  
+  // Get type from URL params
+  const typeParam = searchParams.get('type');
+  const initialContentType = typeParam === 'photo' ? 'image' : typeParam === 'text' ? 'text' : typeParam === 'audio' ? 'music' : typeParam === 'video' ? 'video' : 'image';
+  
   const [postData, setPostData] = useState({
     title: '',
     description: '',
-    contentType: 'image' as 'image' | 'music' | 'text' | 'physical-art' | 'edits' | 'video' | 'film' | 'graphic-design',
+    contentType: initialContentType as 'image' | 'music' | 'text' | 'physical-art' | 'edits' | 'video' | 'film' | 'graphic-design',
     file: null as File | null,
     audioFile: null as File | null,
     videoFile: null as File | null,

@@ -409,7 +409,7 @@ export default function FeedPage() {
                           <div className="flex items-center justify-between text-xs text-gray-600">
                             <div className="flex flex-col">
                               <a
-                                href={`/profile/${card.creator.toLowerCase().replace(/\s+/g, '_')}`}
+                                href={`/profile/${card.creator}`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                 }}
