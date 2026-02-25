@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast'
 export default function EditPostPage() {
   const params = useParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const toast = useToast()
   const postId = params.id as string
 
@@ -29,8 +29,10 @@ export default function EditPostPage() {
   const [postData, setPostData] = useState<any>(null)
 
   useEffect(() => {
-    loadPost()
-  }, [postId])
+    if (!authLoading) {
+      loadPost()
+    }
+  }, [postId, authLoading])
 
   const loadPost = async () => {
     try {
