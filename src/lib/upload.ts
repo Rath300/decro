@@ -59,8 +59,9 @@ export async function uploadImage(file: File, bucket = 'media'): Promise<UploadR
       throw new Error('File size must be less than 50MB');
     }
     
-    // Compress image before upload
-    const compressed = await compressImage(file)
+    // Check if file is a GIF - don't compress to preserve animation
+    const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif')
+    const fileToUpload = isGif ? file : await compressImage(file)
     
     // Generate unique filename
     const fileExt = file.name.split('.').pop() || 'jpg'
@@ -70,7 +71,7 @@ export async function uploadImage(file: File, bucket = 'media'): Promise<UploadR
     // Upload to storage
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, compressed, {
+      .upload(filePath, fileToUpload, {
         contentType: file.type || 'image/jpeg',
         cacheControl: '3600',
         upsert: false

@@ -96,19 +96,27 @@ export default function EditPostPage() {
       return
     }
 
+    if (!user?.id) {
+      toast.error('You must be logged in to edit posts')
+      return
+    }
+
     setSaving(true)
 
     try {
-      // Update post
-      const { error: updateError } = await supabase
-        .from('posts')
-        .update({
-          title: formData.title.trim(),
-          description: formData.description.trim() || null
-        })
-        .eq('id', postId)
+      // Update post via RPC (bypasses RLS)
+      const { data: updateResult, error: updateError } = await supabase.rpc('update_post_ext', {
+        post_id_param: postId,
+        external_id_param: user.id,
+        title_param: formData.title.trim(),
+        description_param: formData.description.trim() || null
+      })
 
       if (updateError) throw updateError
+      
+      if (updateResult && !updateResult.success) {
+        throw new Error(updateResult.error || 'Failed to update post')
+      }
 
       // Update tags - delete old tags and add new ones
       const { error: deleteError } = await supabase
