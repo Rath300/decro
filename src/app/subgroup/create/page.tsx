@@ -24,8 +24,7 @@ export default function CreateSubgroupPage() {
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
-    description: '',
-    rules: ''
+    description: ''
   })
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string>('')
@@ -107,19 +106,6 @@ export default function CreateSubgroupPage() {
 
       let coverUrl: string | null = null
 
-      // Get current user's profile ID
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('external_id', user.id)
-        .single()
-
-      if (profileError || !profileData) {
-        toast.error('Profile not found - please try logging in again')
-        setIsSubmitting(false)
-        return
-      }
-
       // Upload cover image if provided
       if (coverFile) {
         setUploadingCover(true)
@@ -135,16 +121,15 @@ export default function CreateSubgroupPage() {
         setUploadingCover(false)
       }
 
-      // Create subgroup
+      // Create subgroup (created_by is TEXT, not UUID - use external_id)
       const { data, error } = await supabase
         .from('subgroups')
         .insert({
           name: formData.name.trim(),
           slug: formData.slug,
           description: formData.description.trim() || null,
-          rules: formData.rules.trim() || null,
           cover_image_url: coverUrl,
-          created_by: profileData.id
+          created_by: user.id
         })
         .select('slug')
         .single()
@@ -297,25 +282,6 @@ export default function CreateSubgroupPage() {
             />
             <div className="text-xs text-gray-500 mt-1 text-right">
               {formData.description.length}/500
-            </div>
-          </div>
-
-          {/* Rules */}
-          <div>
-            <label htmlFor="rules" className="block text-sm font-medium text-black mb-2">
-              Rules (Optional)
-            </label>
-            <textarea
-              id="rules"
-              value={formData.rules}
-              onChange={(e) => setFormData(prev => ({ ...prev, rules: e.target.value }))}
-              placeholder="Community guidelines and rules..."
-              rows={4}
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none text-black bg-white"
-              maxLength={1000}
-            />
-            <div className="text-xs text-gray-500 mt-1 text-right">
-              {formData.rules.length}/1000
             </div>
           </div>
 
