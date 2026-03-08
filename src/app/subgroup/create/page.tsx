@@ -107,11 +107,24 @@ export default function CreateSubgroupPage() {
 
       let coverUrl: string | null = null
 
+      // Get current user's profile ID
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('external_id', user.id)
+        .single()
+
+      if (profileError || !profileData) {
+        toast.error('Profile not found - please try logging in again')
+        setIsSubmitting(false)
+        return
+      }
+
       // Upload cover image if provided
       if (coverFile) {
         setUploadingCover(true)
         try {
-          const result = await uploadImage(coverFile, 'subgroup-covers')
+          const result = await uploadImage(coverFile, 'media')
           coverUrl = result.url
         } catch (uploadError) {
           toast.error('Failed to upload cover image')
@@ -131,7 +144,7 @@ export default function CreateSubgroupPage() {
           description: formData.description.trim() || null,
           rules: formData.rules.trim() || null,
           cover_image_url: coverUrl,
-          created_by: user.id
+          created_by: profileData.id
         })
         .select('slug')
         .single()
