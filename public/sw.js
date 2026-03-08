@@ -95,14 +95,16 @@ self.addEventListener('fetch', (event) => {
     )
   } else {
     // Page and asset requests - cache first, network fallback
+    // But skip caching redirects (3xx responses)
     event.respondWith(
       caches.match(request)
         .then(response => {
           if (response) {
             return response
           }
-          return fetch(request).then(response => {
-            if (response.ok && response.status === 200) {
+          return fetch(request, { redirect: 'follow' }).then(response => {
+            // Only cache successful responses (200), not redirects (3xx)
+            if (response.ok && response.status === 200 && response.type !== 'opaqueredirect') {
               const responseClone = response.clone()
               // Only cache http/https requests, not chrome-extension or other schemes
               if (request.url.startsWith('http')) {
@@ -112,7 +114,7 @@ self.addEventListener('fetch', (event) => {
               }
             }
             return response
-          }).catch(() => fetch(request))
+          }).catch(() => fetch(request, { redirect: 'follow' }))
         })
     )
   }
