@@ -12,12 +12,12 @@ function Tab({ href, label, active, shortLabel }: { href: string; label: string;
   return (
     <Link
       href={href}
-      className={`px-2 sm:px-4 md:px-8 lg:px-14 py-2 border border-black -mb-px text-xs sm:text-sm font-['Space_Mono'] leading-6 transition-all duration-150 active:translate-y-[1px] ${
+      className={`px-3 sm:px-4 md:px-8 lg:px-14 py-2 border border-black -mb-px text-xs sm:text-sm font-['Space_Mono'] leading-6 transition-all duration-150 active:translate-y-[1px] ${
         active ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'
       }`}
     >
       <span className="hidden sm:inline">{label}</span>
-      <span className="sm:hidden">{shortLabel || label}</span>
+      <span className="sm:hidden">{shortLabel || label.slice(0, 1)}</span>
     </Link>
   )
 }
@@ -45,16 +45,16 @@ export default function AppHeader() {
                 priority
               />
             </Link>
-            <div className="flex items-end gap-0.5 sm:gap-2">
-              <Tab href="/feed" label="Feed" shortLabel="Feed" active={isFeed} />
-              <Tab href="/spotlight" label="Spotlight" shortLabel="Spot" active={isSpotlight} />
-              <Tab href="/subgroup" label="Subgroup" shortLabel="Sub" active={isSubgroup} />
-              <Tab href="/profile" label="Profile" shortLabel="Pro" active={isProfile} />
+            <div className="flex items-end gap-1 sm:gap-2">
+              <Tab href="/feed" label="Feed" shortLabel="F" active={isFeed} />
+              <Tab href="/spotlight" label="Spotlight" shortLabel="S" active={isSpotlight} />
+              <Tab href="/subgroup" label="Subgroup" shortLabel="G" active={isSubgroup} />
+              <Tab href="/profile" label="Profile" shortLabel="P" active={isProfile} />
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-3">
             <CreateModal />
-            <div className="flex items-center gap-0.5 sm:gap-1">
+            <div className="hidden sm:flex items-center gap-0.5 sm:gap-1">
               <MessagesDropdown />
               <NotificationsDropdown />
             </div>

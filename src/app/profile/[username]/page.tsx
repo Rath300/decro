@@ -389,9 +389,9 @@ export default function PublicProfilePage() {
         {/* Profile Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-4">
-            <div className="flex items-start gap-3 sm:gap-6">
+            <div className="flex items-start gap-4 sm:gap-6">
               {/* Avatar */}
-              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center text-xl sm:text-3xl font-bold text-gray-600 flex-shrink-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-600 flex-shrink-0">
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
                 ) : (
@@ -401,7 +401,7 @@ export default function PublicProfilePage() {
               
               {/* User Info */}
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 break-words">
+                <h1 className="text-lg sm:text-3xl font-bold mb-1 sm:mb-2 break-words">
                   {profile.full_name || profile.username}
                 </h1>
                 <p className="text-gray-600 text-xs sm:text-sm mb-1 sm:mb-2">@{profile.username}</p>
@@ -415,7 +415,7 @@ export default function PublicProfilePage() {
             {isOwnProfile ? (
               <button
                 onClick={() => router.push('/profile/edit')}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors text-sm"
+                className="w-full sm:w-auto px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors text-sm"
               >
                 Edit Profile
               </button>
@@ -424,7 +424,7 @@ export default function PublicProfilePage() {
                 <button
                   onClick={handleFollow}
                   disabled={followLoading}
-                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 border-2 transition-colors text-sm ${
+                  className={`flex-1 sm:flex-none px-4 py-2 border-2 transition-colors text-sm ${
                     isFollowing
                       ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
                       : 'border-blue-600 text-blue-600 hover:bg-blue-50'
@@ -440,7 +440,7 @@ export default function PublicProfilePage() {
 
           {/* Stats */}
           {stats && (
-            <div className="flex items-center gap-4 sm:gap-8 text-xs sm:text-sm flex-wrap">
+            <div className="flex items-center gap-6 sm:gap-8 text-sm flex-wrap">
               <div>
                 <span className="font-bold">{stats.post_count || 0}</span>
                 <span className="text-gray-600 ml-1">posts</span>

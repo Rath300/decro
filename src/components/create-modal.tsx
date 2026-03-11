@@ -33,10 +33,10 @@ export function CreateModal() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="px-2 sm:px-4 md:px-8 lg:px-14 py-2 border border-black -mb-px text-xs sm:text-sm font-['Space_Mono'] leading-6 transition-all duration-150 active:translate-y-[1px] bg-white text-black hover:bg-gray-50"
+        className="px-3 sm:px-4 md:px-8 lg:px-14 py-2 border border-black -mb-px text-xs sm:text-sm font-['Space_Mono'] leading-6 transition-all duration-150 active:translate-y-[1px] bg-white text-black hover:bg-gray-50"
       >
         <span className="hidden sm:inline">Create</span>
-        <span className="sm:hidden">+</span>
+        <span className="sm:hidden">C</span>
       </button>
 
       <AnimatePresence>
