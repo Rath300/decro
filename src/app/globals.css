@@ -127,20 +127,6 @@ body {
   .text-sm {
     font-size: 0.75rem;
   }
-  
-  /* Reduce padding on cards */
-  .login-card, .signup-card, .forgot-password-card {
-    width: 95vw;
-    min-height: auto;
-    padding: 1rem;
-  }
-}
-
-/* Tablet breakpoint */
-@media (min-width: 641px) and (max-width: 1024px) {
-  .login-card, .signup-card, .forgot-password-card {
-    width: 90vw;
-  }
 }
 
 /* Ensure responsive images */
