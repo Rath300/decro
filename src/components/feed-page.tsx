@@ -241,11 +241,11 @@ export default function FeedPage() {
     <div className="min-h-screen bg-white font-['Space_Mono']">
 
       {/* Old Internet Controls */}
-      <div className="max-w-7xl mx-auto px-4 py-4 border-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm font-['Space_Mono'] text-gray-600">Sort by:</span>
-            <div className="flex space-x-2">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 sm:py-4 border-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <span className="text-xs sm:text-sm font-['Space_Mono'] text-gray-600">Sort:</span>
+            <div className="flex space-x-1 sm:space-x-2">
               {[
                 { id: 'random', label: 'Random' },
                 { id: 'newest', label: 'Newest' }
@@ -253,7 +253,7 @@ export default function FeedPage() {
                 <button
                   key={option.id}
                   onClick={() => handleSort(option.id as 'random' | 'newest')}
-                  className={`px-3 py-1 text-xs font-['Space_Mono'] border border-black transition-colors ${
+                  className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-['Space_Mono'] border border-black transition-colors ${
                     sortMode === option.id
                       ? 'bg-black text-white'
                       : 'bg-white text-black hover:bg-gray-50'
@@ -265,29 +265,29 @@ export default function FeedPage() {
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 text-[10px] sm:text-xs">
             <button
               onClick={() => setShowStats(!showStats)}
-              className="text-xs font-['Space_Mono'] text-gray-600 hover:text-black transition-colors"
+              className="font-['Space_Mono'] text-gray-600 hover:text-black transition-colors"
             >
-              {showStats ? 'Hide Stats' : 'Show Stats'}
+              {showStats ? 'Hide' : 'Stats'}
             </button>
-            <span className="text-xs font-['Space_Mono'] text-gray-500">
-              {displayedCards.length} items • No algorithm
+            <span className="font-['Space_Mono'] text-gray-500">
+              <span className="hidden sm:inline">{displayedCards.length} items • </span>No algo
             </span>
           </div>
         </div>
       </div>
 
       {/* Feed Content - Floating masonry layout */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {displayedCards.length === 0 ? (
           <div className="text-center py-24 border border-dashed border-black">
             <p className="text-black font-['Space_Mono']">No posts yet.</p>
             <p className="text-black font-['Space_Mono'] text-sm mt-2">Be the first to <a href="/create" className="underline">create a post</a>.</p>
           </div>
         ) : (
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 space-y-8">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-3 sm:gap-6 lg:gap-8 space-y-3 sm:space-y-6 lg:space-y-8">
           <AnimatePresence>
             {displayedCards.map((card, index) => (
               <motion.div

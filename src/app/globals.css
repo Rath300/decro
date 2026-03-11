@@ -21,9 +21,10 @@ body {
 /* Staggered menu overrides */
 @import '../components/StaggeredMenu.css';
 
-/* Custom input field styling */
+/* Custom input field styling - responsive */
 .input-field {
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
   height: 48px;
   background: #ffffff;
   border: 1px solid #000000;
@@ -32,6 +33,14 @@ body {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
   color: #000000;
+}
+
+@media (max-width: 640px) {
+  .input-field {
+    height: 44px;
+    font-size: 14px;
+    padding: 0 12px;
+  }
 }
 
 /* Custom card styling */
@@ -99,4 +108,51 @@ body {
 /* Ensure Space Mono is used everywhere by default */
 * {
   font-family: 'Space Mono', monospace;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 640px) {
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Better touch targets */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Smaller text on mobile for better fit */
+  .text-sm {
+    font-size: 0.75rem;
+  }
+  
+  /* Reduce padding on cards */
+  .login-card, .signup-card, .forgot-password-card {
+    width: 95vw;
+    min-height: auto;
+    padding: 1rem;
+  }
+}
+
+/* Tablet breakpoint */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .login-card, .signup-card, .forgot-password-card {
+    width: 90vw;
+  }
+}
+
+/* Ensure responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Make modals responsive */
+@media (max-width: 640px) {
+  .fixed.inset-0 {
+    /* Full screen modals on mobile */
+    padding: 0;
+  }
 } 
