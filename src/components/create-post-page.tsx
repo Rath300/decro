@@ -309,7 +309,7 @@ export default function CreatePostPage() {
     <div className="min-h-screen bg-white font-['Space_Mono']">
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <main className="max-w-2xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <div className="space-y-8">
           {/* Content Type Selection */}
           <div>

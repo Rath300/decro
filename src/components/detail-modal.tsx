@@ -85,7 +85,7 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto" onClick={handleCloseModal}>
-      <div className="max-w-4xl mx-auto p-6 bg-white" onClick={(e) => e.stopPropagation()}>
+      <div className="max-w-4xl mx-auto p-3 sm:p-6 bg-white" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">

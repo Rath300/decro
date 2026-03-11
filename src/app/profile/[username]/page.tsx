@@ -385,13 +385,13 @@ export default function PublicProfilePage() {
 
   return (
     <div className="min-h-screen bg-white text-black font-['Space_Mono']">
-      <main className="max-w-5xl mx-auto px-4 pb-12">
+      <main className="max-w-5xl mx-auto px-2 sm:px-4 pb-8 sm:pb-12">
         {/* Profile Header */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-6">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-4">
+            <div className="flex items-start gap-3 sm:gap-6">
               {/* Avatar */}
-              <div className="w-24 h-24 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center text-3xl font-bold text-gray-600">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center text-xl sm:text-3xl font-bold text-gray-600 flex-shrink-0">
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
                 ) : (
@@ -400,13 +400,13 @@ export default function PublicProfilePage() {
               </div>
               
               {/* User Info */}
-              <div>
-                <h1 className="text-3xl font-bold mb-2">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 break-words">
                   {profile.full_name || profile.username}
                 </h1>
-                <p className="text-gray-600 text-sm mb-2">@{profile.username}</p>
+                <p className="text-gray-600 text-xs sm:text-sm mb-1 sm:mb-2">@{profile.username}</p>
                 {profile.bio && (
-                  <p className="text-sm text-gray-800 max-w-md">{profile.bio}</p>
+                  <p className="text-xs sm:text-sm text-gray-800 max-w-md break-words">{profile.bio}</p>
                 )}
               </div>
             </div>
@@ -415,16 +415,16 @@ export default function PublicProfilePage() {
             {isOwnProfile ? (
               <button
                 onClick={() => router.push('/profile/edit')}
-                className="mt-2 px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors text-sm"
               >
                 Edit Profile
               </button>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleFollow}
                   disabled={followLoading}
-                  className={`px-4 py-2 border-2 transition-colors ${
+                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 border-2 transition-colors text-sm ${
                     isFollowing
                       ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
                       : 'border-blue-600 text-blue-600 hover:bg-blue-50'
@@ -440,7 +440,7 @@ export default function PublicProfilePage() {
 
           {/* Stats */}
           {stats && (
-            <div className="flex items-center gap-8 text-sm">
+            <div className="flex items-center gap-4 sm:gap-8 text-xs sm:text-sm flex-wrap">
               <div>
                 <span className="font-bold">{stats.post_count || 0}</span>
                 <span className="text-gray-600 ml-1">posts</span>
@@ -479,7 +479,7 @@ export default function PublicProfilePage() {
                   <button
                     key={option.id}
                     onClick={() => handleSort(option.id as 'newest' | 'oldest' | 'most_liked')}
-                    className={`px-3 py-1 text-xs font-['Space_Mono'] border border-black transition-colors ${
+                    className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-['Space_Mono'] border border-black transition-colors ${
                       sortMode === option.id
                         ? 'bg-black text-white'
                         : 'bg-white text-black hover:bg-gray-50'
