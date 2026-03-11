@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { PlusIcon } from '@/components/NavIcons'
 
 interface CreateOption {
   type: 'text' | 'photo' | 'quote' | 'link' | 'chat' | 'audio' | 'video'
@@ -36,7 +37,7 @@ export function CreateModal() {
         className="px-3 sm:px-4 md:px-8 lg:px-14 py-2 border border-black -mb-px text-xs sm:text-sm font-['Space_Mono'] leading-6 transition-all duration-150 active:translate-y-[1px] bg-white text-black hover:bg-gray-50"
       >
         <span className="hidden sm:inline">Create</span>
-        <span className="sm:hidden text-base">➕</span>
+        <span className="sm:hidden flex items-center justify-center"><PlusIcon /></span>
       </button>
 
       <AnimatePresence>

@@ -7,8 +7,9 @@ import Identity from '@/components/Identity'
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import { MessagesDropdown } from '@/components/messages-dropdown'
 import { CreateModal } from '@/components/create-modal'
+import { HomeIcon, StarIcon, GroupIcon, UserIcon } from '@/components/NavIcons'
 
-function Tab({ href, label, active, icon }: { href: string; label: string; active: boolean; icon?: string }) {
+function Tab({ href, label, active, icon }: { href: string; label: string; active: boolean; icon?: React.ReactNode }) {
   return (
     <Link
       href={href}
@@ -17,7 +18,7 @@ function Tab({ href, label, active, icon }: { href: string; label: string; activ
       }`}
     >
       <span className="hidden sm:inline">{label}</span>
-      <span className="sm:hidden text-base">{icon || label}</span>
+      <span className="sm:hidden flex items-center justify-center">{icon || label}</span>
     </Link>
   )
 }
@@ -46,10 +47,10 @@ export default function AppHeader() {
               />
             </Link>
             <div className="flex items-end gap-1 sm:gap-2">
-              <Tab href="/feed" label="Feed" icon="🏠" active={isFeed} />
-              <Tab href="/spotlight" label="Spotlight" icon="⭐" active={isSpotlight} />
-              <Tab href="/subgroup" label="Subgroup" icon="👥" active={isSubgroup} />
-              <Tab href="/profile" label="Profile" icon="👤" active={isProfile} />
+              <Tab href="/feed" label="Feed" icon={<HomeIcon />} active={isFeed} />
+              <Tab href="/spotlight" label="Spotlight" icon={<StarIcon />} active={isSpotlight} />
+              <Tab href="/subgroup" label="Subgroup" icon={<GroupIcon />} active={isSubgroup} />
+              <Tab href="/profile" label="Profile" icon={<UserIcon />} active={isProfile} />
               <div className="sm:hidden">
                 <CreateModal />
               </div>
