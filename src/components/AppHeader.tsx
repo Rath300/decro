@@ -8,7 +8,7 @@ import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import { MessagesDropdown } from '@/components/messages-dropdown'
 import { CreateModal } from '@/components/create-modal'
 
-function Tab({ href, label, active, shortLabel }: { href: string; label: string; active: boolean; shortLabel?: string }) {
+function Tab({ href, label, active, icon }: { href: string; label: string; active: boolean; icon?: string }) {
   return (
     <Link
       href={href}
@@ -17,7 +17,7 @@ function Tab({ href, label, active, shortLabel }: { href: string; label: string;
       }`}
     >
       <span className="hidden sm:inline">{label}</span>
-      <span className="sm:hidden">{shortLabel || label.slice(0, 1)}</span>
+      <span className="sm:hidden text-base">{icon || label}</span>
     </Link>
   )
 }
@@ -46,14 +46,19 @@ export default function AppHeader() {
               />
             </Link>
             <div className="flex items-end gap-1 sm:gap-2">
-              <Tab href="/feed" label="Feed" shortLabel="F" active={isFeed} />
-              <Tab href="/spotlight" label="Spotlight" shortLabel="S" active={isSpotlight} />
-              <Tab href="/subgroup" label="Subgroup" shortLabel="G" active={isSubgroup} />
-              <Tab href="/profile" label="Profile" shortLabel="P" active={isProfile} />
+              <Tab href="/feed" label="Feed" icon="🏠" active={isFeed} />
+              <Tab href="/spotlight" label="Spotlight" icon="⭐" active={isSpotlight} />
+              <Tab href="/subgroup" label="Subgroup" icon="👥" active={isSubgroup} />
+              <Tab href="/profile" label="Profile" icon="👤" active={isProfile} />
+              <div className="sm:hidden">
+                <CreateModal />
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-3">
-            <CreateModal />
+            <div className="hidden sm:block">
+              <CreateModal />
+            </div>
             <div className="hidden sm:flex items-center gap-0.5 sm:gap-1">
               <MessagesDropdown />
               <NotificationsDropdown />
