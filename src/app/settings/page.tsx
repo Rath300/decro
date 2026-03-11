@@ -129,7 +129,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
-      <main className="max-w-4xl mx-auto px-4 pb-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12">
         <h1 className="text-3xl font-bold mb-8 text-black">Settings</h1>
 
         {/* Tabs */}

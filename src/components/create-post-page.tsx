@@ -313,10 +313,10 @@ export default function CreatePostPage() {
         <div className="space-y-8">
           {/* Content Type Selection */}
           <div>
-            <label className="block text-sm font-['Space_Mono'] font-medium text-black mb-4">
+            <label className="block text-xs sm:text-sm font-['Space_Mono'] font-medium text-black mb-3 sm:mb-4">
               What are you sharing?
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {[
                 { id: 'image', label: 'Photo', icon: '📷' },
                 { id: 'music', label: 'Music', icon: '🎵' },
@@ -330,13 +330,13 @@ export default function CreatePostPage() {
                 <button
                   key={type.id}
                   onClick={() => setPostData(prev => ({ ...prev, contentType: type.id as any }))}
-                  className={`p-4 border-2 font-['Space_Mono'] text-sm transition-all duration-200 ${
+                  className={`p-3 sm:p-4 border-2 font-['Space_Mono'] text-xs sm:text-sm transition-all duration-200 ${
                     postData.contentType === type.id
                       ? 'border-black bg-black text-white'
                       : 'border-gray-300 bg-white text-black hover:border-black'
                   }`}
                 >
-                  <div className="text-2xl mb-2">{type.icon}</div>
+                  <div className="text-xl sm:text-2xl mb-1 sm:mb-2">{type.icon}</div>
                   <div>{type.label}</div>
                 </button>
               ))}
