@@ -501,42 +501,13 @@ export default function FeedPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white max-w-7xl w-full max-h-[90vh] overflow-y-auto"
             >
             <div className="flex flex-col lg:flex-row">
-              {/* Image/Video Section */}
-              <div className="lg:w-2/3 p-6">
-                <div className="relative">
-                  {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
-                    <video
-                      src={selectedCard.videoUrl}
-                      controls
-                      className="w-full h-auto rounded-lg"
-                    >
-                      Your browser does not support the video element.
-                    </video>
-                  ) : (
-                    <img
-                      src={selectedCard.imageUrl}
-                      alt={selectedCard.title}
-                      className="w-full h-auto max-h-[500px] sm:max-h-[700px] lg:max-h-[800px] object-contain rounded-lg"
-                      loading="eager"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<div class="w-full h-auto min-h-[300px] bg-gray-200 flex items-center justify-center rounded-lg"><span class="text-gray-500">Image unavailable</span></div>';
-                        }
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-              
-              {/* Info Section */}
-              <div className="lg:w-1/3 p-6 border-l border-gray-200">
-                <div className="flex items-center justify-between mb-4">
+              {/* LEFT: Info and Actions */}
+              <div className="lg:w-2/3 p-6 flex flex-col">
+                {/* Close button - top right on mobile */}
+                <div className="flex justify-between items-start mb-4 lg:hidden">
                   <h2 className="text-xl font-['Space_Mono'] font-bold text-black">
                     {selectedCard.title}
                   </h2>
@@ -549,120 +520,166 @@ export default function FeedPage() {
                     </svg>
                   </button>
                 </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        setShowDetailModal(false);
-                        handlePortfolioClick(selectedCard.creator);
-                      }}
-                      className="font-['Space_Mono'] text-blue-600 hover:text-blue-800 transition-colors"
+
+                {/* Image/Video - MASSIVE on desktop */}
+                <div className="relative mb-4">
+                  {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
+                    <video
+                      src={selectedCard.videoUrl}
+                      controls
+                      className="w-full h-auto max-h-[500px] sm:max-h-[700px] lg:max-h-[900px] rounded-lg"
                     >
-                      {selectedCard.creator}
-                    </button>
+                      Your browser does not support the video element.
+                    </video>
+                  ) : (
+                    <img
+                      src={selectedCard.imageUrl}
+                      alt={selectedCard.title}
+                      className="w-full h-auto max-h-[500px] sm:max-h-[700px] lg:max-h-[900px] object-contain rounded-lg bg-gray-100"
+                      loading="eager"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = '<div class="w-full h-auto min-h-[300px] bg-gray-200 flex items-center justify-center rounded-lg"><span class="text-gray-500">Image unavailable</span></div>';
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* Title and Creator */}
+                <div className="mb-4">
+                  <h2 className="text-2xl font-['Space_Mono'] font-bold text-black mb-2 hidden lg:block">
+                    {selectedCard.title}
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      handlePortfolioClick(selectedCard.creator);
+                    }}
+                    className="font-['Space_Mono'] text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    by {selectedCard.creator}
+                  </button>
+                  <div className="text-sm font-['Space_Mono'] text-gray-600 mt-1">
+                    {new Date(selectedCard.date).toLocaleDateString()} • {selectedCard.views} views
                   </div>
-                  
-                                      <div className="text-sm font-['Space_Mono'] text-gray-600 mb-4">
-                      {new Date(selectedCard.date).toLocaleDateString()} • {selectedCard.views} views
-                    </div>
-                  
-                  {/* Work Description */}
+                </div>
+                {/* Description */}
+                {selectedCard.description && (
                   <div className="mb-4">
                     <h3 className="text-sm font-['Space_Mono'] font-medium text-black mb-2">
                       About this work
                     </h3>
-                    <div className="text-sm font-['Space_Mono'] text-gray-700 leading-relaxed">
-                      {selectedCard.description ? (
-                        <p>{selectedCard.description}</p>
-                      ) : (
-                        <p className="text-gray-500">No description provided.</p>
-                      )}
-                      {Array.isArray((selectedCard as any).tags) && (selectedCard as any).tags.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {(selectedCard as any).tags.map((tag: string) => (
-                            <span key={tag} className="px-2 py-1 bg-black text-white text-xs font-['Space_Mono']">#{tag}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-sm font-['Space_Mono'] text-gray-700 leading-relaxed">
+                      {selectedCard.description}
+                    </p>
                   </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="border-t border-gray-200 pt-4 mb-4 flex items-center gap-3">
-                    <button 
-                      onClick={() => selectedCard && handleLikeClick(selectedCard.id)}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                        selectedCard && likedCards.has(selectedCard.id)
-                          ? 'bg-red-50 text-red-500'
-                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                      }`}
+                )}
+                
+                {/* Tags */}
+                {Array.isArray((selectedCard as any).tags) && (selectedCard as any).tags.length > 0 && (
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {(selectedCard as any).tags.map((tag: string) => (
+                      <span key={tag} className="px-2 py-1 bg-black text-white text-xs font-['Space_Mono']">#{tag}</span>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Spacer to push actions to bottom */}
+                <div className="flex-1"></div>
+                
+                {/* Action Buttons - BOTTOM LEFT on desktop */}
+                <div className="border-t border-gray-200 pt-4 mt-4 flex items-center gap-3">
+                  <button 
+                    onClick={() => selectedCard && handleLikeClick(selectedCard.id)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                      selectedCard && likedCards.has(selectedCard.id)
+                        ? 'bg-red-50 text-red-500'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <svg 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill={selectedCard && likedCards.has(selectedCard.id) ? "currentColor" : "none"}
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                      className="transition-all duration-200"
                     >
-                      <svg 
-                        width="20" 
-                        height="20" 
-                        viewBox="0 0 24 24" 
-                        fill={selectedCard && likedCards.has(selectedCard.id) ? "currentColor" : "none"}
-                        stroke="currentColor" 
-                        strokeWidth="2"
-                        className="transition-all duration-200"
-                      >
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                      </svg>
-                      <span className="font-['Space_Mono'] text-sm">
-                        {selectedCard && likedCards.has(selectedCard.id) ? 'Liked' : 'Like'}
-                      </span>
-                    </button>
-                    
-                    <EditPostButton postId={selectedCard.id} />
-                    <DeletePostButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={refetchPosts} />
-                  </div>
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    <span className="font-['Space_Mono'] text-sm">
+                      {selectedCard && likedCards.has(selectedCard.id) ? 'Liked' : 'Like'}
+                    </span>
+                  </button>
+                  
+                  <EditPostButton postId={selectedCard.id} />
+                  <DeletePostButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={refetchPosts} />
+                </div>
+              </div>
+              
+              {/* RIGHT: Comments Only */}
+              <div className="lg:w-1/3 p-6 border-l border-gray-200 flex flex-col max-h-[90vh]">
+                {/* Close button - desktop only */}
+                <div className="hidden lg:flex justify-end mb-4">
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="text-gray-500 hover:text-black transition-colors"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                  </button>
+                </div>
 
-                  {/* Comments Section */}
-                  <div className="border-t border-gray-200 pt-4">
-                    <h3 className="text-sm font-['Space_Mono'] font-medium text-black mb-3">
-                      Comments
-                    </h3>
-                    
-                    {/* Comment Input */}
-                    <div className="flex space-x-2 mb-4">
-                      <input
-                        type="text"
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Add a comment..."
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handleCommentSubmit();
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={handleCommentSubmit}
-                        disabled={!commentText.trim()}
-                        className={`p-2 rounded-lg transition-all duration-200 ${
-                          commentText.trim()
-                            ? 'bg-black text-white hover:bg-gray-800'
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        <svg 
-                          width="16" 
-                          height="16" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2"
-                          className="transition-all duration-200"
-                        >
-                          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                        </svg>
-                      </button>
-                    </div>
-                    
-                    <CommentsList postId={selectedCard.id} refreshSignal={commentsRefreshSignal} optimisticComments={optimisticComments} />
-                  </div>
+                <h3 className="text-lg font-['Space_Mono'] font-bold text-black mb-4">
+                  Comments
+                </h3>
+                
+                {/* Comment Input */}
+                <div className="flex space-x-2 mb-4">
+                  <input
+                    type="text"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-['Space_Mono'] text-sm text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleCommentSubmit();
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={handleCommentSubmit}
+                    disabled={!commentText.trim()}
+                    className={`p-2 rounded-lg transition-all duration-200 ${
+                      commentText.trim()
+                        ? 'bg-black text-white hover:bg-gray-800'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <svg 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                      className="transition-all duration-200"
+                    >
+                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Comments List - Scrollable */}
+                <div className="flex-1 overflow-y-auto">
+                  <CommentsList postId={selectedCard.id} refreshSignal={commentsRefreshSignal} optimisticComments={optimisticComments} />
                 </div>
               </div>
             </div>
@@ -793,7 +810,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
   };
 
   return (
-    <div className="space-y-3 max-h-64 overflow-y-auto">
+    <div className="space-y-3">
       {merged.map((comment) => (
         <div key={comment.id} className="flex gap-3">
           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
@@ -969,8 +986,9 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                           return;
                         }
                         
-                        // Clear input immediately
+                        // Clear input and close reply box
                         setReplyText(prev => ({ ...prev, [comment.id]: '' }));
+                        setOpenReplyFor(null);
                         
                         // Submit reply
                         try {
@@ -980,10 +998,11 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                           return;
                         }
                         
-                        // Refresh replies and comments to get updated counts
+                        // Refresh ONLY replies for this comment (not all comments to avoid duplication)
                         const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                         setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
-                        refetch(); // Refetch all comments to update reply counts
+                        // Show the replies
+                        setVisibleReplies(prev => new Set(prev).add(comment.id));
                       }
                     }}
                   />
@@ -998,8 +1017,9 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                         return;
                       }
                       
-                      // Clear input immediately
+                      // Clear input and close reply box
                       setReplyText(prev => ({ ...prev, [comment.id]: '' }));
+                      setOpenReplyFor(null);
                       
                       // Submit reply
                       try {
@@ -1009,10 +1029,11 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                         return;
                       }
                       
-                      // Refresh replies and comments to get updated counts
+                      // Refresh ONLY replies for this comment (not all comments to avoid duplication)
                       const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                       setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
-                      refetch(); // Refetch all comments to update reply counts
+                      // Show the replies
+                      setVisibleReplies(prev => new Set(prev).add(comment.id));
                     }}
                   >
                     Reply
