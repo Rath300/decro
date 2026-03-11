@@ -21,10 +21,9 @@ body {
 /* Staggered menu overrides */
 @import '../components/StaggeredMenu.css';
 
-/* Custom input field styling - responsive */
+/* Custom input field styling */
 .input-field {
-  width: 100%;
-  max-width: 400px;
+  width: 400px;
   height: 48px;
   background: #ffffff;
   border: 1px solid #000000;
@@ -33,14 +32,6 @@ body {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
   color: #000000;
-}
-
-@media (max-width: 640px) {
-  .input-field {
-    height: 44px;
-    font-size: 14px;
-    padding: 0 12px;
-  }
 }
 
 /* Custom card styling */
