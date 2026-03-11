@@ -387,11 +387,11 @@ export default function PublicProfilePage() {
     <div className="min-h-screen bg-white text-black font-['Space_Mono']">
       <main className="max-w-5xl mx-auto px-2 sm:px-4 pb-8 sm:pb-12">
         {/* Profile Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-4">
-            <div className="flex items-start gap-3 sm:gap-6">
+        <div className="mb-4 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+            <div className="flex items-start gap-2 sm:gap-6">
               {/* Avatar */}
-              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center text-xl sm:text-3xl font-bold text-gray-600 flex-shrink-0">
+              <div className="w-12 h-12 sm:w-24 sm:h-24 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center text-base sm:text-3xl font-bold text-gray-600 flex-shrink-0">
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
                 ) : (
@@ -401,12 +401,12 @@ export default function PublicProfilePage() {
               
               {/* User Info */}
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 break-words">
+                <h1 className="text-base sm:text-3xl font-bold mb-0.5 sm:mb-2 break-words">
                   {profile.full_name || profile.username}
                 </h1>
-                <p className="text-gray-600 text-xs sm:text-sm mb-1 sm:mb-2">@{profile.username}</p>
+                <p className="text-gray-600 text-[10px] sm:text-sm mb-0.5 sm:mb-2">@{profile.username}</p>
                 {profile.bio && (
-                  <p className="text-xs sm:text-sm text-gray-800 max-w-md break-words">{profile.bio}</p>
+                  <p className="text-[10px] sm:text-sm text-gray-800 max-w-md break-words line-clamp-2 sm:line-clamp-none">{profile.bio}</p>
                 )}
               </div>
             </div>
@@ -415,16 +415,16 @@ export default function PublicProfilePage() {
             {isOwnProfile ? (
               <button
                 onClick={() => router.push('/profile/edit')}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors text-sm"
+                className="w-full sm:w-auto px-2 sm:px-4 py-1.5 sm:py-2 border-2 border-black hover:bg-black hover:text-white transition-colors text-xs sm:text-sm"
               >
-                Edit Profile
+                Edit
               </button>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1 sm:gap-2">
                 <button
                   onClick={handleFollow}
                   disabled={followLoading}
-                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 border-2 transition-colors text-sm ${
+                  className={`flex-1 sm:flex-none px-2 sm:px-4 py-1.5 sm:py-2 border-2 transition-colors text-xs sm:text-sm ${
                     isFollowing
                       ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
                       : 'border-blue-600 text-blue-600 hover:bg-blue-50'

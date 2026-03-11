@@ -54,7 +54,7 @@ export default function AppHeader() {
           </div>
           <div className="flex items-center gap-1 sm:gap-3">
             <CreateModal />
-            <div className="flex items-center gap-0.5 sm:gap-1">
+            <div className="hidden sm:flex items-center gap-0.5 sm:gap-1">
               <MessagesDropdown />
               <NotificationsDropdown />
             </div>
