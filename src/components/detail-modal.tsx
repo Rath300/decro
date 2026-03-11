@@ -85,66 +85,70 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto" onClick={handleCloseModal}>
-      <div className="max-w-4xl mx-auto p-3 sm:p-6 bg-white" onClick={(e) => e.stopPropagation()}>
+      <div className="max-w-7xl mx-auto p-3 sm:p-6 bg-white" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <button 
-              onClick={handleCloseModal}
-              className="text-sm text-gray-500 hover:text-black"
-            >
-              ← Back
-            </button>
+          <button 
+            onClick={handleCloseModal}
+            className="text-sm text-gray-500 hover:text-black"
+          >
+            ← Back
+          </button>
         </div>
 
-          {/* Post Header - Reddit Style */}
-          <div className="border border-gray-200 rounded-lg p-6">
-            <h1 className="text-2xl font-['Space_Mono'] font-bold text-black mb-4">
-              {selectedCard.title}
-            </h1>
-            
-            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-              <button
-                onClick={() => handlePortfolioClick(selectedCard.creator)}
-                className="text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                Posted by {selectedCard.creator}
-              </button>
-              <span>•</span>
-              <span>{getTimeAgo(selectedCard.date)}</span>
-              <span>•</span>
-              <span>{selectedCard.views} views</span>
-              {selectedCard.subgroupName && selectedCard.subgroupSlug && (
-                <>
-                  <span>•</span>
-                  <span className="text-blue-600">
-                    in <Link href={`/subgroup/${selectedCard.subgroupSlug}`} className="hover:underline">{selectedCard.subgroupName}</Link>
-                  </span>
-                </>
-              )}
-          </div>
-
-            {/* Media Display */}
-            {selectedCard.imageUrl || (['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl) ? (
-              <div className="mb-4">
-                {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
-                  <video src={selectedCard.videoUrl} controls className="w-full max-h-96 rounded-lg" />
-                ) : (
-                  <img src={selectedCard.imageUrl} alt={selectedCard.title} className="w-full max-h-96 object-contain rounded-lg bg-gray-100" />
+        {/* Desktop: Side-by-side layout | Mobile: Stacked */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          
+          {/* LEFT: Media and Info */}
+          <div className="lg:w-2/3 space-y-6">
+            {/* Post Header */}
+            <div className="border border-gray-200 rounded-lg p-6">
+              <h1 className="text-2xl font-['Space_Mono'] font-bold text-black mb-4">
+                {selectedCard.title}
+              </h1>
+              
+              <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                <button
+                  onClick={() => handlePortfolioClick(selectedCard.creator)}
+                  className="text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Posted by {selectedCard.creator}
+                </button>
+                <span>•</span>
+                <span>{getTimeAgo(selectedCard.date)}</span>
+                <span>•</span>
+                <span>{selectedCard.views} views</span>
+                {selectedCard.subgroupName && selectedCard.subgroupSlug && (
+                  <>
+                    <span>•</span>
+                    <span className="text-blue-600">
+                      in <Link href={`/subgroup/${selectedCard.subgroupSlug}`} className="hover:underline">{selectedCard.subgroupName}</Link>
+                    </span>
+                  </>
                 )}
               </div>
-            ) : null}
+
+              {/* Media Display - MUCH LARGER on desktop */}
+              {selectedCard.imageUrl || (['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl) ? (
+                <div className="mb-4">
+                  {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
+                    <video src={selectedCard.videoUrl} controls className="w-full max-h-[500px] sm:max-h-[700px] lg:max-h-[900px] rounded-lg" />
+                  ) : (
+                    <img src={selectedCard.imageUrl} alt={selectedCard.title} className="w-full max-h-[500px] sm:max-h-[700px] lg:max-h-[900px] object-contain rounded-lg bg-gray-100" />
+                  )}
+                </div>
+              ) : null}
 
               {selectedCard.description && (
-              <div className="prose max-w-none mb-4">
-                <p className="text-gray-800 whitespace-pre-wrap font-['Space_Mono']">
-                  {selectedCard.description}
-                </p>
+                <div className="prose max-w-none mb-4">
+                  <p className="text-gray-800 whitespace-pre-wrap font-['Space_Mono']">
+                    {selectedCard.description}
+                  </p>
                 </div>
               )}
 
-              {/* Actions */}
-            <div className="flex items-center gap-4 border-t border-gray-200 pt-4">
+              {/* Actions - Bottom Left on Desktop */}
+              <div className="flex items-center gap-4 border-t border-gray-200 pt-4">
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
@@ -165,14 +169,15 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
                   </svg>
                   <span className="font-['Space_Mono'] text-sm">{likedCards.has(selectedCard.id) ? 'Liked' : 'Like'}</span>
                 </button>
-              <PostStats postId={selectedCard.id} initialViews={selectedCard.views} showDetailed />
-              <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={effectiveRefetchPosts} />
-            </div>
-                </div>
+                <PostStats postId={selectedCard.id} initialViews={selectedCard.views} showDetailed />
+                <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={effectiveRefetchPosts} />
               </div>
+            </div>
+          </div>
 
-        {/* Comments Section */}
-        <div className="border border-gray-200 rounded-lg p-6">
+          {/* RIGHT: Comments Only */}
+          <div className="lg:w-1/3">
+            <div className="border border-gray-200 rounded-lg p-6 lg:sticky lg:top-6">
           <h2 className="text-lg font-['Space_Mono'] font-bold text-black mb-4">
             Comments
           </h2>
@@ -205,6 +210,8 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
 
           {/* Comments List */}
           <CommentsList postId={selectedCard.id} refreshSignal={commentsRefreshSignal} optimisticComments={optimisticComments} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -641,6 +648,33 @@ function RedditComment({
             
             {/* Reply and voting controls */}
             <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+              {/* Delete button (owner only) */}
+              {user?.name === comment.username && (
+                <button
+                  className="text-red-500 hover:text-red-700 transition-colors"
+                  onClick={async () => {
+                    if (!confirm('Delete this comment?')) return;
+                    try {
+                      const { data, error } = await supabase.rpc('delete_comment_ext', {
+                        comment_id_param: commentId,
+                        external_id_param: user.id
+                      });
+                      if (error) throw error;
+                      if (data && data.success) {
+                        handleRemoveComment(commentId);
+                      } else {
+                        alert(data?.error || 'Failed to delete');
+                      }
+                    } catch (error) {
+                      console.error('Delete failed:', error);
+                      alert('Failed to delete comment');
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+              
               {/* Show/Hide replies button */}
               {comment.reply_count && comment.reply_count > 0 && (
                 <button
@@ -781,20 +815,18 @@ function RedditComment({
                         
                         // Clear the input immediately
                         setReplyText((prev: Record<string, string>) => ({ ...prev, [commentId]: '' }));
-                        
-                        // Show loading state for this comment's replies
-                        setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
+                        setOpenReplyFor(null);
                         
                         try {
-                          // Submit reply to server first (no optimistic update to avoid duplicates)
+                          // Submit reply to server
                           await supabase.rpc('add_reply_ext', { comment_id_param: commentId, external_id_param: user.id, content_param: content });
                           
-                          // Refresh replies after successful submission
+                          // Refresh ONLY replies for this comment (not all comments)
                           const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: commentId, page_size: 20, page_offset: 0 });
                           const sanitized = sanitizeCommentList((data as RealtimeComment[] | null) || [])
                           setReplies(prev => ({ ...prev, [commentId]: sanitized }));
                           
-                          // Make sure replies are visible after adding
+                          // Make replies visible
                           setVisibleReplies(prev => {
                             const next = new Set(prev);
                             next.add(commentId);
@@ -803,8 +835,6 @@ function RedditComment({
                         } catch (error) {
                           console.error('Error adding reply:', error);
                           alert('Failed to add reply. Please try again.');
-                        } finally {
-                          setLoadingReplies(prev => ({ ...prev, [commentId]: false }));
                         }
                       }}
                       className="px-3 py-1 text-xs bg-black text-white rounded hover:bg-gray-800"
