@@ -519,7 +519,7 @@ export default function FeedPage() {
                     <img
                       src={selectedCard.imageUrl}
                       alt={selectedCard.title}
-                      className="w-full h-auto rounded-lg"
+                      className="w-full h-auto max-h-[500px] sm:max-h-[700px] lg:max-h-[800px] object-contain rounded-lg"
                       loading="eager"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -813,6 +813,33 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             </p>
             {/* Reply and voting controls */}
             <div className="mt-2 flex items-center gap-3 text-xs">
+              {/* Delete button (owner only) */}
+              {user?.name === comment.username && (
+                <button
+                  className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors"
+                  onClick={async () => {
+                    if (!confirm('Delete this comment?')) return;
+                    try {
+                      const { data, error } = await supabase.rpc('delete_comment_ext', {
+                        comment_id_param: comment.id,
+                        external_id_param: user.id
+                      });
+                      if (error) throw error;
+                      if (data && data.success) {
+                        refetch(); // Refresh comments
+                      } else {
+                        alert(data?.error || 'Failed to delete');
+                      }
+                    } catch (error) {
+                      console.error('Delete failed:', error);
+                      alert('Failed to delete comment');
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+              
               {/* Show/Hide replies button */}
               {comment.reply_count && comment.reply_count > 0 && (
                 <button
@@ -942,15 +969,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                           return;
                         }
                         
-                        // Optimistic update
-                        setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, reply_count: (c.reply_count ?? 0) + 1 }) : c));
-                        setReplies(prev => ({
-                          ...prev,
-                          [comment.id]: [
-                            { id: `local-${Date.now()}`, content, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), user_id: user.id, username: user.name || user.email || 'You', full_name: user.name || null, avatar_url: null } as any,
-                            ...(prev[comment.id] || [])
-                          ]
-                        }));
+                        // Clear input immediately
                         setReplyText(prev => ({ ...prev, [comment.id]: '' }));
                         
                         // Submit reply
@@ -958,11 +977,13 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                           await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
                         } catch (error) {
                           console.error('Failed to add reply:', error);
+                          return;
                         }
                         
-                        // Refresh replies
+                        // Refresh replies and comments to get updated counts
                         const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                         setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                        refetch(); // Refetch all comments to update reply counts
                       }
                     }}
                   />
@@ -977,15 +998,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                         return;
                       }
                       
-                      // Optimistic update
-                      setMerged(prev => prev.map(c => c.id === comment.id ? ({ ...c, reply_count: (c.reply_count ?? 0) + 1 }) : c));
-                      setReplies(prev => ({
-                        ...prev,
-                        [comment.id]: [
-                          { id: `local-${Date.now()}`, content, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), user_id: user.id, username: user.name || user.email || 'You', full_name: user.name || null, avatar_url: null } as any,
-                          ...(prev[comment.id] || [])
-                        ]
-                      }));
+                      // Clear input immediately
                       setReplyText(prev => ({ ...prev, [comment.id]: '' }));
                       
                       // Submit reply
@@ -993,11 +1006,13 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                         await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
                       } catch (error) {
                         console.error('Failed to add reply:', error);
+                        return;
                       }
                       
-                      // Refresh replies
+                      // Refresh replies and comments to get updated counts
                       const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: comment.id, page_size: 20, page_offset: 0 });
                       setReplies(prev => ({ ...prev, [comment.id]: (data || []) as any }));
+                      refetch(); // Refetch all comments to update reply counts
                     }}
                   >
                     Reply
@@ -1088,13 +1103,13 @@ function EditPostButton({ postId }: { postId: string }) {
   return (
     <button
       onClick={() => router.push(`/post/edit/${postId}`)}
-      className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+      className="flex items-center justify-center p-2 border-2 border-black hover:bg-black hover:text-white transition-colors"
+      title="Edit post"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
       </svg>
-      <span className="font-['Space_Mono'] text-sm">Edit</span>
     </button>
   );
 }
@@ -1190,14 +1205,12 @@ function DeletePostButton({ postId, onDeleted, refetchPosts }: { postId: string;
     <button
       onClick={handleDelete}
       disabled={isDeleting}
-      className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+      className="flex items-center justify-center p-2 border-2 border-black hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors disabled:opacity-50"
+      title={isDeleting ? 'Deleting...' : 'Delete post'}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
       </svg>
-      <span className="font-['Space_Mono'] text-sm">
-        {isDeleting ? 'Deleting...' : 'Delete'}
-      </span>
     </button>
   );
 } 
