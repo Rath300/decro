@@ -661,7 +661,7 @@ function RedditComment({
                       });
                       if (error) throw error;
                       if (data && data.success) {
-                        handleRemoveComment(commentId);
+                        refetch?.();
                       } else {
                         alert(data?.error || 'Failed to delete');
                       }
