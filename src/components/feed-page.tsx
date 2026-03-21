@@ -735,6 +735,33 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
   const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({});
   const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set());
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null);
+
+  // Fetch current user's profile ID for ownership checks
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      setCurrentUserProfileId(null);
+      return;
+    }
+    
+    const fetchProfileId = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .single();
+        
+        if (!error && data) {
+          setCurrentUserProfileId(data.id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch current user profile ID:', error);
+      }
+    };
+    
+    fetchProfileId();
+  }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
     if (!postId) return;
@@ -855,49 +882,31 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             </p>
             {/* Reply and voting controls */}
             <div className="mt-2 flex items-center gap-3 text-xs">
-              {/* Delete button (owner only) - DEBUG: showing for ALL users temporarily */}
-              {isAuthenticated && user?.id && (
-                <>
-                  {/* Debug: show ownership check */}
-                  {(() => {
-                    const userLower = user?.name?.toLowerCase();
-                    const commentLower = comment.username?.toLowerCase();
-                    const isOwner = userLower === commentLower;
-                    console.log('Delete button check:', { 
-                      userName: user.name, 
-                      commentUsername: comment.username,
-                      userLower,
-                      commentLower,
-                      isOwner 
-                    });
-                    return null;
-                  })()}
-                  {user?.name?.toLowerCase() === comment.username?.toLowerCase() && (
-                    <button
-                      className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
-                      onClick={async () => {
-                        if (!confirm('Delete this comment?')) return;
-                        try {
-                          const { data, error } = await supabase.rpc('delete_comment_ext', {
-                            comment_id_param: comment.id,
-                            external_id_param: user.id
-                          });
-                          if (error) throw error;
-                          if (data && data.success) {
-                            refetch(); // Refresh comments
-                          } else {
-                            alert(data?.error || 'Failed to delete');
-                          }
-                        } catch (error) {
-                          console.error('Delete failed:', error);
-                          alert('Failed to delete comment');
-                        }
-                      }}
-                    >
-                      Delete
-                    </button>
-                  )}
-                </>
+              {/* Delete button (owner only) - compare profile IDs instead of usernames */}
+              {currentUserProfileId && currentUserProfileId === comment.user_id && (
+                <button
+                  className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
+                  onClick={async () => {
+                    if (!confirm('Delete this comment?')) return;
+                    try {
+                      const { data, error } = await supabase.rpc('delete_comment_ext', {
+                        comment_id_param: comment.id,
+                        external_id_param: user.id
+                      });
+                      if (error) throw error;
+                      if (data && data.success) {
+                        refetch();
+                      } else {
+                        alert(data?.error || 'Failed to delete');
+                      }
+                    } catch (error) {
+                      console.error('Delete failed:', error);
+                      alert('Failed to delete comment');
+                    }
+                  }}
+                >
+                  Delete
+                </button>
               )}
               
               {/* Show/Hide replies button */}
