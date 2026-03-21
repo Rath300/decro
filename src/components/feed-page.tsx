@@ -855,31 +855,49 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             </p>
             {/* Reply and voting controls */}
             <div className="mt-2 flex items-center gap-3 text-xs">
-              {/* Delete button (owner only) - case insensitive comparison */}
-              {user?.name?.toLowerCase() === comment.username?.toLowerCase() && (
-                <button
-                  className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
-                  onClick={async () => {
-                    if (!confirm('Delete this comment?')) return;
-                    try {
-                      const { data, error } = await supabase.rpc('delete_comment_ext', {
-                        comment_id_param: comment.id,
-                        external_id_param: user.id
-                      });
-                      if (error) throw error;
-                      if (data && data.success) {
-                        refetch(); // Refresh comments
-                      } else {
-                        alert(data?.error || 'Failed to delete');
-                      }
-                    } catch (error) {
-                      console.error('Delete failed:', error);
-                      alert('Failed to delete comment');
-                    }
-                  }}
-                >
-                  Delete
-                </button>
+              {/* Delete button (owner only) - DEBUG: showing for ALL users temporarily */}
+              {isAuthenticated && user?.id && (
+                <>
+                  {/* Debug: show ownership check */}
+                  {(() => {
+                    const userLower = user?.name?.toLowerCase();
+                    const commentLower = comment.username?.toLowerCase();
+                    const isOwner = userLower === commentLower;
+                    console.log('Delete button check:', { 
+                      userName: user.name, 
+                      commentUsername: comment.username,
+                      userLower,
+                      commentLower,
+                      isOwner 
+                    });
+                    return null;
+                  })()}
+                  {user?.name?.toLowerCase() === comment.username?.toLowerCase() && (
+                    <button
+                      className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
+                      onClick={async () => {
+                        if (!confirm('Delete this comment?')) return;
+                        try {
+                          const { data, error } = await supabase.rpc('delete_comment_ext', {
+                            comment_id_param: comment.id,
+                            external_id_param: user.id
+                          });
+                          if (error) throw error;
+                          if (data && data.success) {
+                            refetch(); // Refresh comments
+                          } else {
+                            alert(data?.error || 'Failed to delete');
+                          }
+                        } catch (error) {
+                          console.error('Delete failed:', error);
+                          alert('Failed to delete comment');
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </>
               )}
               
               {/* Show/Hide replies button */}
