@@ -71,7 +71,23 @@ export function useRealtimeComments(postId: string) {
           filter: `post_id=eq.${postId}`
         },
         async (payload) => {
-          // Fetch full comment data with user info
+          // Only add top-level comments (not replies)
+          // Replies have parent_id set, top-level comments have parent_id = null
+          if (payload.new.parent_id) {
+            // This is a reply, don't add to top-level comments
+            // Just refetch to update reply counts
+            const { data, error } = await supabase.rpc('get_post_comments', {
+              post_id_param: postId,
+              page_size: 20,
+              page_offset: 0
+            })
+            if (!error && data) {
+              setComments(data)
+            }
+            return
+          }
+          
+          // Fetch full comment data with user info for top-level comments
           const { data, error } = await supabase.rpc('get_post_comments', {
             post_id_param: postId,
             page_size: 1,
