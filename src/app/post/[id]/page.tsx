@@ -383,6 +383,33 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
   const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set())
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set())
   const { isAuthenticated, user } = useAuth()
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null)
+
+  // Fetch current user's profile ID for ownership checks
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      setCurrentUserProfileId(null)
+      return
+    }
+    
+    const fetchProfileId = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('external_id', user.id)
+          .single()
+        
+        if (!error && data) {
+          setCurrentUserProfileId(data.id)
+        }
+      } catch (error) {
+        console.error('Failed to fetch current user profile ID:', error)
+      }
+    }
+    
+    fetchProfileId()
+  }, [isAuthenticated, user?.id])
 
   useEffect(() => {
     if (postId) refetch()
@@ -537,6 +564,7 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
           setVisibleReplies={setVisibleReplies}
           likedComments={likedComments}
           setLikedComments={setLikedComments}
+          currentUserProfileId={currentUserProfileId}
         />
       ))}
     </div>
@@ -559,7 +587,8 @@ function RedditComment({
   visibleReplies,
   setVisibleReplies,
   likedComments,
-  setLikedComments
+  setLikedComments,
+  currentUserProfileId
 }: { 
   comment: RealtimeComment
   depth: number
@@ -577,9 +606,11 @@ function RedditComment({
   setVisibleReplies: (setter: (prev: Set<string>) => Set<string>) => void
   likedComments: Set<string>
   setLikedComments: (setter: (prev: Set<string>) => Set<string>) => void
+  currentUserProfileId?: string | null
 }) {
   const { isAuthenticated, user } = useAuth()
   const maxDepth = 2
+  const isCommentOwner = currentUserProfileId && currentUserProfileId === comment.user_id
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
@@ -618,8 +649,8 @@ function RedditComment({
           
           {/* Comment actions with likes */}
           <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-            {/* Delete button (owner only) */}
-            {user?.name?.toLowerCase() === comment.username?.toLowerCase() && (
+            {/* Delete button (owner only) - compare profile IDs */}
+            {isCommentOwner && (
               <button
                 className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
                 onClick={async () => {
@@ -833,6 +864,7 @@ function RedditComment({
                       setVisibleReplies={setVisibleReplies}
                       likedComments={likedComments}
                       setLikedComments={setLikedComments}
+                      currentUserProfileId={currentUserProfileId}
                     />
                   ))}
                 </div>
