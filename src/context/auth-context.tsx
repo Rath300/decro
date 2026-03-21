@@ -91,8 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, name?: string) => {
     try {
-      if (!email || !password || !name) {
-        return { success: false, error: 'Email, password, and username are required' }
+      if (!password || !name) {
+        return { success: false, error: 'Password and username are required' }
       }
       
       if (password.length < 6) {
