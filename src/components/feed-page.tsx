@@ -863,7 +863,11 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
 
   return (
     <div className="space-y-3">
-      {merged.map((comment) => (
+      {merged.map((comment) => {
+        // Check ownership for this comment
+        const isCommentOwner = currentUserProfileId && currentUserProfileId === comment.user_id;
+        
+        return (
         <div key={comment.id} className="flex gap-3">
           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
             {comment.username?.[0]?.toUpperCase() || '?'}
@@ -1130,7 +1134,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             )}
           </div>
         </div>
-      ))}
+      )})}
     </div>
   );
 }
