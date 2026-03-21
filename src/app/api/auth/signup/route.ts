@@ -16,21 +16,23 @@ export async function POST(request: Request) {
     // Username is passed as 'name' from the form
     const username = name
 
-    if (!email || !password || !username) {
-      console.error('Missing required fields:', { email: !!email, password: !!password, username: !!username })
+    if (!password || !username) {
+      console.error('Missing required fields:', { password: !!password, username: !!username })
       return NextResponse.json(
-        { error: "Email, password, and username are required" },
+        { error: "Password and username are required" },
         { status: 400 }
       )
     }
     
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: "Invalid email format" },
-        { status: 400 }
-      )
+    // Validate email format only if provided
+    if (email && email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return NextResponse.json(
+          { error: "Invalid email format" },
+          { status: 400 }
+        )
+      }
     }
     
     // Validate password length
@@ -57,18 +59,20 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if email already exists (case-insensitive and trimmed)
-    const existingEmail = await pool.query(
-      'SELECT * FROM "user" WHERE LOWER(TRIM(email)) = LOWER($1)',
-      [email.trim()]
-    )
-
-    if (existingEmail.rows.length > 0) {
-      console.error('Email already exists:', email)
-      return NextResponse.json(
-        { error: "Email already in use" },
-        { status: 400 }
+    // Check if email already exists (only if email is provided)
+    if (email && email.trim()) {
+      const existingEmail = await pool.query(
+        'SELECT * FROM "user" WHERE LOWER(TRIM(email)) = LOWER($1)',
+        [email.trim()]
       )
+
+      if (existingEmail.rows.length > 0) {
+        console.error('Email already exists:', email)
+        return NextResponse.json(
+          { error: "Email already in use" },
+          { status: 400 }
+        )
+      }
     }
 
     // Check if username is taken (case-insensitive and trimmed)
@@ -88,13 +92,14 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user with username as name
+    // Create user with username as name (email optional)
     const userId = nanoid()
-    console.log('Creating user:', { userId, email, username })
+    const emailValue = email && email.trim() ? email.trim() : null
+    console.log('Creating user:', { userId, email: emailValue, username })
     
     await pool.query(
       'INSERT INTO "user" (id, email, name, "emailVerified", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6)',
-      [userId, email.trim(), username.trim(), false, new Date(), new Date()]
+      [userId, emailValue, username.trim(), false, new Date(), new Date()]
     )
 
     // Create account with hashed password
@@ -110,7 +115,7 @@ export async function POST(request: Request) {
       { 
         success: true,
         message: "User created successfully",
-        user: { id: userId, email: email.trim(), name: username.trim() }
+        user: { id: userId, email: emailValue, name: username.trim() }
       },
       { status: 201 }
     )

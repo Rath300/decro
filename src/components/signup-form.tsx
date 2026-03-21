@@ -23,8 +23,8 @@ export default function SignupForm() {
   }
 
   const handleSignUp = async () => {
-    if (!email || !username || !password || !confirmPassword) {
-      setError('Please fill in all fields')
+    if (!username || !password || !confirmPassword) {
+      setError('Please fill in all required fields')
       return
     }
 
@@ -82,10 +82,10 @@ export default function SignupForm() {
 
         {/* Form with proper input dimensions */}
         <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
-          {/* Email Field */}
+          {/* Email Field - Optional */}
           <div className="space-y-2">
             <label htmlFor="email" className="block text-sm font-normal text-black font-space-grotesk">
-              Email
+              Email <span className="text-gray-500">(optional)</span>
             </label>
             <input
               type="email"
@@ -93,8 +93,7 @@ export default function SignupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input-field focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email"
-              required
+              placeholder="Enter your email (optional)"
             />
           </div>
 

@@ -618,6 +618,33 @@ function RedditComment({
           
           {/* Comment actions with likes */}
           <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+            {/* Delete button (owner only) */}
+            {user?.name?.toLowerCase() === comment.username?.toLowerCase() && (
+              <button
+                className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
+                onClick={async () => {
+                  if (!confirm('Delete this comment?')) return;
+                  try {
+                    const { data, error } = await supabase.rpc('delete_comment_ext', {
+                      comment_id_param: comment.id,
+                      external_id_param: user.id
+                    });
+                    if (error) throw error;
+                    if (data && data.success) {
+                      if (refetch) refetch();
+                    } else {
+                      alert(data?.error || 'Failed to delete');
+                    }
+                  } catch (error) {
+                    console.error('Delete failed:', error);
+                    alert('Failed to delete comment');
+                  }
+                }}
+              >
+                Delete
+              </button>
+            )}
+            
             {/* Show/Hide replies button */}
             {comment.reply_count && comment.reply_count > 0 && (
               <button

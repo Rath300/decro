@@ -56,6 +56,31 @@ export default function FeedPage() {
     }
   }, [posts, sortMode]);
 
+  // Handle hash navigation (from notifications/history)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1); // Remove #
+      if (hash && posts.length > 0) {
+        const post = posts.find(p => p.id === hash);
+        if (post) {
+          setSelectedCard(post);
+          setShowDetailModal(true);
+          // Clear hash without reload
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      }
+    };
+
+    // Check on mount
+    handleHashChange();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [posts, setSelectedCard, setShowDetailModal]);
+
   const { signOut, isAuthenticated, user } = useAuth();
   const [commentsRefreshSignal, setCommentsRefreshSignal] = useState(0);
   const [optimisticComments, setOptimisticComments] = useState<RealtimeComment[]>([]);
@@ -830,10 +855,10 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
             </p>
             {/* Reply and voting controls */}
             <div className="mt-2 flex items-center gap-3 text-xs">
-              {/* Delete button (owner only) */}
-              {user?.name === comment.username && (
+              {/* Delete button (owner only) - case insensitive comparison */}
+              {user?.name?.toLowerCase() === comment.username?.toLowerCase() && (
                 <button
-                  className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors"
+                  className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
                   onClick={async () => {
                     if (!confirm('Delete this comment?')) return;
                     try {
