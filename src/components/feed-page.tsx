@@ -1108,7 +1108,9 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                     <div className="text-xs text-gray-500">Loading replies...</div>
                   ) : (
                     <div className="space-y-2">
-                      {(replies[comment.id] || []).map(r => (
+                      {(replies[comment.id] || []).map(r => {
+                        const isReplyOwner = currentUserProfileId && currentUserProfileId === r.user_id;
+                        return (
                         <div key={r.id} className="flex gap-2">
                           <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600 flex-shrink-0">
                             {r.username?.[0]?.toUpperCase() || '?'}
@@ -1124,9 +1126,211 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                               <span className="font-['Space_Mono'] text-[10px] text-gray-500">{getTimeAgo(r.created_at)}</span>
                             </div>
                             <p className="font-['Space_Mono'] text-xs text-gray-800 mt-1 break-words">{r.content}</p>
+                            
+                            {/* Reply controls: Delete, Reply, Like */}
+                            <div className="mt-1 flex items-center gap-2 text-[10px]">
+                              {/* Delete button (owner only) */}
+                              {isReplyOwner && (
+                                <button
+                                  className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
+                                  onClick={async () => {
+                                    if (!confirm('Delete this reply?')) return;
+                                    try {
+                                      const { data, error } = await supabase.rpc('delete_comment_ext', {
+                                        comment_id_param: r.id,
+                                        external_id_param: user.id
+                                      });
+                                      if (error) throw error;
+                                      if (data && data.success) {
+                                        // Refresh replies for this parent comment
+                                        const { data: updatedReplies } = await supabase.rpc('get_comment_replies_with_nesting', { 
+                                          comment_id_param: comment.id, 
+                                          page_size: 20, 
+                                          page_offset: 0 
+                                        });
+                                        setReplies(prev => ({ ...prev, [comment.id]: (updatedReplies || []) as any }));
+                                        refetch(); // Also refetch main comments to update reply counts
+                                      } else {
+                                        alert(data?.error || 'Failed to delete');
+                                      }
+                                    } catch (error) {
+                                      console.error('Delete failed:', error);
+                                      alert('Failed to delete reply');
+                                    }
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                              
+                              {/* Reply to reply button */}
+                              <button
+                                className="text-gray-500 hover:text-black font-['Space_Mono'] transition-colors"
+                                onClick={() => {
+                                  if (openReplyFor === r.id) {
+                                    setOpenReplyFor(null);
+                                  } else {
+                                    setOpenReplyFor(r.id);
+                                  }
+                                }}
+                              >
+                                Reply
+                              </button>
+                              
+                              {/* Like button for reply */}
+                              <button
+                                className={`flex items-center gap-1 transition-all duration-200 ${
+                                  likedComments.has(r.id)
+                                    ? 'text-red-500'
+                                    : 'text-gray-500 hover:text-red-500'
+                                }`}
+                                onClick={async () => {
+                                  if (!isAuthenticated || !user?.id) return;
+                                  try {
+                                    const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
+                                      comment_id_param: r.id, 
+                                      external_id_param: user.id, 
+                                      direction: 1 
+                                    });
+                                    
+                                    if (rpcError) {
+                                      console.error('RPC error:', rpcError);
+                                      return;
+                                    }
+                                    
+                                    let responseData = data;
+                                    if (typeof data === 'string') {
+                                      try {
+                                        responseData = JSON.parse(data);
+                                      } catch (e) {
+                                        console.error('Failed to parse response:', e);
+                                        return;
+                                      }
+                                    }
+                                    
+                                    if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
+                                      // Update reply vote score in local state
+                                      setReplies(prev => ({
+                                        ...prev,
+                                        [comment.id]: (prev[comment.id] || []).map(reply => 
+                                          reply.id === r.id ? { ...reply, vote_score: responseData.vote_score } : reply
+                                        )
+                                      }));
+                                      
+                                      // Update liked state
+                                      setLikedComments(prev => {
+                                        const next = new Set(prev);
+                                        if (responseData.liked) {
+                                          next.add(r.id);
+                                        } else {
+                                          next.delete(r.id);
+                                        }
+                                        return next;
+                                      });
+                                    }
+                                  } catch (error) {
+                                    console.error('Error toggling reply vote:', error);
+                                  }
+                                }}
+                              >
+                                <svg 
+                                  className={`w-3 h-3 ${likedComments.has(r.id) ? 'text-red-500' : 'text-gray-600'}`} 
+                                  fill={likedComments.has(r.id) ? 'currentColor' : 'none'} 
+                                  stroke={likedComments.has(r.id) ? 'currentColor' : 'currentColor'} 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                {(r.vote_score && r.vote_score > 0) && <span>{r.vote_score}</span>}
+                              </button>
+                            </div>
+                            
+                            {/* Reply input for reply-to-reply */}
+                            {openReplyFor === r.id && (
+                              <div className="mt-2">
+                                <div className="flex items-start gap-2">
+                                  <input
+                                    type="text"
+                                    value={replyText[r.id] || ''}
+                                    onChange={(e) => setReplyText(prev => ({ ...prev, [r.id]: e.target.value }))}
+                                    placeholder={`Reply to ${r.username}...`}
+                                    className="flex-1 px-2 py-1 border border-gray-300 rounded font-['Space_Mono'] text-[10px] text-black placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                                    onKeyPress={async (e) => {
+                                      if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        const content = (replyText[r.id] || '').trim();
+                                        if (!content) return;
+                                        if (!isAuthenticated || !user?.id) {
+                                          alert('Please sign in to reply');
+                                          return;
+                                        }
+                                        
+                                        setReplyText(prev => ({ ...prev, [r.id]: '' }));
+                                        setOpenReplyFor(null);
+                                        
+                                        try {
+                                          await supabase.rpc('add_reply_ext', { 
+                                            comment_id_param: r.id, 
+                                            external_id_param: user.id, 
+                                            content_param: content 
+                                          });
+                                        } catch (error) {
+                                          console.error('Failed to add reply:', error);
+                                          return;
+                                        }
+                                        
+                                        // Refresh replies for the parent top-level comment
+                                        const { data: updatedReplies } = await supabase.rpc('get_comment_replies_with_nesting', { 
+                                          comment_id_param: comment.id, 
+                                          page_size: 20, 
+                                          page_offset: 0 
+                                        });
+                                        setReplies(prev => ({ ...prev, [comment.id]: (updatedReplies || []) as any }));
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    disabled={!(replyText[r.id] || '').trim()}
+                                    className="px-2 py-1 text-[10px] font-['Space_Mono'] bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                    onClick={async () => {
+                                      const content = (replyText[r.id] || '').trim();
+                                      if (!content) return;
+                                      if (!isAuthenticated || !user?.id) {
+                                        alert('Please sign in to reply');
+                                        return;
+                                      }
+                                      
+                                      setReplyText(prev => ({ ...prev, [r.id]: '' }));
+                                      setOpenReplyFor(null);
+                                      
+                                      try {
+                                        await supabase.rpc('add_reply_ext', { 
+                                          comment_id_param: r.id, 
+                                          external_id_param: user.id, 
+                                          content_param: content 
+                                        });
+                                      } catch (error) {
+                                        console.error('Failed to add reply:', error);
+                                        return;
+                                      }
+                                      
+                                      // Refresh replies for the parent top-level comment
+                                      const { data: updatedReplies } = await supabase.rpc('get_comment_replies_with_nesting', { 
+                                        comment_id_param: comment.id, 
+                                        page_size: 20, 
+                                        page_offset: 0 
+                                      });
+                                      setReplies(prev => ({ ...prev, [comment.id]: (updatedReplies || []) as any }));
+                                    }}
+                                  >
+                                    Reply
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
                 </div>
