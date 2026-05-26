@@ -13,7 +13,7 @@ interface AIProtectionSettings {
 
 export default function AIProtectionSettings() {
   const { user } = useAuth();
-  const { showToast } = useToast();
+  const toast = useToast();
   const [settings, setSettings] = useState<AIProtectionSettings>({
     ai_training_opt_out: true,
     show_high_res_public: false,
@@ -64,10 +64,10 @@ export default function AIProtectionSettings() {
 
       if (error) throw error;
 
-      showToast('AI protection settings updated', 'success');
+      toast.success('AI protection settings updated');
     } catch (err) {
       console.error('Failed to save settings:', err);
-      showToast('Failed to save settings', 'error');
+      toast.error('Failed to save settings');
     } finally {
       setSaving(false);
     }
