@@ -10,12 +10,13 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
 import { useToast } from '@/hooks/use-toast'
+import AIProtectionSettings from '@/components/ai-protection-settings'
 
 export default function SettingsPage() {
   const { user, isAuthenticated, signOut } = useAuth()
   const router = useRouter()
   const toast = useToast()
-  const [activeSection, setActiveSection] = useState<'password' | 'account'>('password')
+  const [activeSection, setActiveSection] = useState<'password' | 'account' | 'ai-protection'>('password')
   const [isChanging, setIsChanging] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -146,6 +147,16 @@ export default function SettingsPage() {
               Password
             </button>
             <button
+              onClick={() => setActiveSection('ai-protection')}
+              className={`pb-3 px-1 border-b-2 transition-colors ${
+                activeSection === 'ai-protection'
+                  ? 'border-black font-bold text-black'
+                  : 'border-transparent text-gray-500 hover:text-black'
+              }`}
+            >
+              AI Protection
+            </button>
+            <button
               onClick={() => setActiveSection('account')}
               className={`pb-3 px-1 border-b-2 transition-colors ${
                 activeSection === 'account'
@@ -157,6 +168,13 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* AI Protection Section */}
+        {activeSection === 'ai-protection' && (
+          <div className="max-w-2xl">
+            <AIProtectionSettings />
+          </div>
+        )}
 
         {/* Password Section */}
         {activeSection === 'password' && (

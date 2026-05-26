@@ -32,7 +32,10 @@ export default function FeedPage() {
     setCommentText, 
     handleComment,
     trackView,
-    refetchPosts
+    refetchPosts,
+    useFairFeed,
+    setUseFairFeed,
+    fetchFairFeed
   } = usePosts();
   
   // Global header handles navigation; keep state for legacy references if any
@@ -45,7 +48,10 @@ export default function FeedPage() {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
   useEffect(() => {
-    if (sortMode === 'random') {
+    if (useFairFeed) {
+      // Fair feed sorting is handled by the algorithm, just display as-is
+      setDisplayedCards(posts);
+    } else if (sortMode === 'random') {
       const shuffled = [...posts].sort(() => Math.random() - 0.5);
       setDisplayedCards(shuffled);
     } else if (sortMode === 'newest') {
@@ -54,7 +60,7 @@ export default function FeedPage() {
     } else {
       setDisplayedCards(posts);
     }
-  }, [posts, sortMode]);
+  }, [posts, sortMode, useFairFeed]);
 
   // Handle hash navigation (from notifications/history)
   useEffect(() => {
@@ -184,8 +190,17 @@ export default function FeedPage() {
     }
   };
 
-  const handleSort = async (mode: 'random' | 'newest') => {
+  const handleSort = async (mode: 'random' | 'newest' | 'fair') => {
     console.log('Sorting by:', mode); // Debug log
+    
+    if (mode === 'fair') {
+      setUseFairFeed(true);
+      setSortMode('newest'); // Reset sortMode
+      await fetchFairFeed();
+      return;
+    }
+    
+    setUseFairFeed(false);
     setSortMode(mode);
     let sorted: MediaCard[];
     
@@ -273,13 +288,14 @@ export default function FeedPage() {
             <div className="flex space-x-1 sm:space-x-2">
               {[
                 { id: 'random', label: 'Random' },
-                { id: 'newest', label: 'Newest' }
+                { id: 'newest', label: 'Newest' },
+                { id: 'fair', label: 'Fair Algo' }
               ].map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => handleSort(option.id as 'random' | 'newest')}
+                  onClick={() => handleSort(option.id as 'random' | 'newest' | 'fair')}
                   className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-['Space_Mono'] border border-black transition-colors ${
-                    sortMode === option.id
+                    (option.id === 'fair' && useFairFeed) || (option.id === sortMode && !useFairFeed)
                       ? 'bg-black text-white'
                       : 'bg-white text-black hover:bg-gray-50'
                   }`}
@@ -298,7 +314,14 @@ export default function FeedPage() {
               {showStats ? 'Hide' : 'Stats'}
             </button>
             <span className="font-['Space_Mono'] text-gray-500">
-              <span className="hidden sm:inline">{displayedCards.length} items • </span>No algo
+              <span className="hidden sm:inline">{displayedCards.length} items • </span>
+              {useFairFeed ? (
+                <a href="/algorithm" className="underline hover:text-black">
+                  Fair Algo
+                </a>
+              ) : (
+                'No algo'
+              )}
             </span>
           </div>
         </div>
