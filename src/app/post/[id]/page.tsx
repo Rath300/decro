@@ -654,6 +654,10 @@ function RedditComment({
               <button
                 className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
                 onClick={async () => {
+                  if (!user?.id) {
+                    alert('You must be logged in');
+                    return;
+                  }
                   if (!confirm('Delete this comment?')) return;
                   try {
                     const { data, error } = await supabase.rpc('delete_comment_ext', {
