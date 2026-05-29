@@ -7,6 +7,7 @@ import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/us
 import { PostStats } from '@/components/post-stats'
 import supabase from '@/lib/supabase-client'
 import { useUserHistory } from '@/hooks/use-user-history'
+import AddToSpotlightButton from '@/components/add-to-spotlight-button'
 
 interface PostData {
   id: string
@@ -310,17 +311,20 @@ export default function PostDetailPage() {
             </div>
           ) : null}
 
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex items-center justify-between flex-wrap gap-2">
             <PostStats postId={post.id} initialViews={post.views} showDetailed />
-            {isOwner && (
-              <button
-                onClick={handleDeletePost}
-                disabled={deleting}
-                className="px-3 py-2 text-sm border border-red-500 text-red-600 hover:bg-red-50 disabled:opacity-50 rounded-lg transition-colors"
-              >
-                {deleting ? 'Deleting...' : 'Delete Post'}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              <AddToSpotlightButton postId={post.id} />
+              {isOwner && (
+                <button
+                  onClick={handleDeletePost}
+                  disabled={deleting}
+                  className="px-3 py-2 text-sm border border-red-500 text-red-600 hover:bg-red-50 disabled:opacity-50 rounded-lg transition-colors"
+                >
+                  {deleting ? 'Deleting...' : 'Delete Post'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

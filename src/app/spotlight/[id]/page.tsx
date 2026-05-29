@@ -20,6 +20,8 @@ interface SpotlightItem {
     title: string
     description?: string
     media_url?: string
+    audio_url?: string
+    video_url?: string
     content_type: string
     creator_id: string
     views: number
@@ -155,6 +157,8 @@ export default function SpotlightDetailPage() {
             title,
             description,
             media_url,
+            audio_url,
+            video_url,
             content_type,
             creator_id,
             views,
@@ -183,6 +187,8 @@ export default function SpotlightDetailPage() {
                 title: post.title,
                 description: post.description,
                 media_url: post.media_url || undefined,
+                audio_url: (post as any).audio_url || undefined,
+                video_url: (post as any).video_url || undefined,
                 content_type: post.content_type,
                 creator_id: post.creator_id,
                 views: post.views,
@@ -270,9 +276,9 @@ export default function SpotlightDetailPage() {
       title: post.title,
       description: post.description || '',
       imageUrl: post.media_url || '',
-      aspectRatio: 'square', // Default, could be enhanced with actual aspect ratio detection
-      audioUrl: post.content_type === 'music' ? post.media_url : undefined,
-      videoUrl: ['video', 'film'].includes(post.content_type) ? post.media_url : undefined,
+      aspectRatio: 'square',
+      audioUrl: post.content_type === 'music' ? (post.audio_url || post.media_url) : undefined,
+      videoUrl: ['video', 'film'].includes(post.content_type) ? (post.video_url || post.media_url) : undefined,
       creator: post.profiles?.username || 'Unknown',
       date: post.created_at,
       views: post.views,
@@ -311,9 +317,10 @@ export default function SpotlightDetailPage() {
     }
   }
 
-  // Handle audio playback for music posts
+  // Handle audio playback for music posts — uses audio_url, falls back to media_url
   const handleAudioPlay = (item: SpotlightItem) => {
-    if (item.posts.content_type !== 'music' || !item.posts.media_url) return
+    const audioSrc = item.posts.audio_url || item.posts.media_url
+    if (item.posts.content_type !== 'music' || !audioSrc) return
     
     const postId = item.post_id
     
@@ -326,21 +333,19 @@ export default function SpotlightDetailPage() {
       }
     }
     
-    // Create audio element if not exists
+    // Create audio element if not exists or src changed
     if (!audioRefs.current[postId]) {
-      audioRefs.current[postId] = new Audio(item.posts.media_url)
+      audioRefs.current[postId] = new Audio(audioSrc)
     }
     
     const audio = audioRefs.current[postId]
     
     if (playingAudio === postId) {
-      // Pause if currently playing
       audio.pause()
       audio.currentTime = 0
       setPlayingAudio(null)
     } else {
-      // Play if not playing
-      audio.play()
+      audio.play().catch(err => console.error('Audio play failed:', err))
       setPlayingAudio(postId)
       audio.onended = () => setPlayingAudio(null)
     }

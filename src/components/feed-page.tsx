@@ -12,6 +12,7 @@ import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/us
 import { PostStats } from './post-stats';
 import supabase from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
+import AddToSpotlightButton from './add-to-spotlight-button';
 // SiteHeader removed per request to avoid obstruction
 
 
@@ -665,6 +666,7 @@ export default function FeedPage() {
                     </span>
                   </button>
                   
+                  <AddToSpotlightButton postId={selectedCard.id} />
                   <EditPostButton postId={selectedCard.id} />
                   <DeletePostButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={refetchPosts} />
                 </div>
