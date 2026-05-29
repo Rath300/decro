@@ -691,36 +691,36 @@ export default function SpotlightDetailPage() {
                 <p className="text-gray-600">Click any post to view details</p>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 {items.map((item, index) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white border-2 border-black overflow-hidden cursor-pointer group"
                     onClick={(e) => item.posts.content_type === 'music' ? handleMusicClick(item, e) : handlePostClick(item)}
                   >
                     {/* Media Display */}
                     {item.posts.content_type === 'music' ? (
-                      <div className="relative aspect-square overflow-hidden" title="Single click to play/pause, double-click to view details">
+                      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '4/3' }} title="Single click to play/pause, double-click to view details">
                         {item.posts.media_url ? (
                           <>
                             <img
                               src={item.posts.media_url}
                               alt={item.posts.title}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                              <div className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center">
+                              <div className="w-20 h-20 bg-black bg-opacity-60 flex items-center justify-center">
                                 {playingAudio === item.post_id ? (
                                   <div className="flex space-x-1">
-                                    <div className="w-1 bg-white h-5 animate-pulse"></div>
-                                    <div className="w-1 bg-white h-7 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                                    <div className="w-1 bg-white h-5 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                    <div className="w-1.5 bg-white h-6 animate-pulse"></div>
+                                    <div className="w-1.5 bg-white h-9 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                                    <div className="w-1.5 bg-white h-6 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                                   </div>
                                 ) : (
-                                  <svg className="w-6 h-6 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-8 h-8 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>
                                   </svg>
                                 )}
@@ -728,17 +728,17 @@ export default function SpotlightDetailPage() {
                             </div>
                           </>
                         ) : (
-                          <div className="relative aspect-square bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                          <div className="w-full h-full bg-black flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
                             <div className="text-center text-white">
-                              <div className="w-16 h-16 mx-auto mb-3 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                              <div className="w-20 h-20 mx-auto mb-3 border-2 border-white flex items-center justify-center">
                                 {playingAudio === item.post_id ? (
                                   <div className="flex space-x-1">
-                                    <div className="w-1 bg-white h-5 animate-pulse"></div>
-                                    <div className="w-1 bg-white h-7 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                                    <div className="w-1 bg-white h-5 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                    <div className="w-1.5 bg-white h-6 animate-pulse"></div>
+                                    <div className="w-1.5 bg-white h-9 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                                    <div className="w-1.5 bg-white h-6 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                                   </div>
                                 ) : (
-                                  <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>
                                   </svg>
                                 )}
@@ -748,24 +748,24 @@ export default function SpotlightDetailPage() {
                         )}
                       </div>
                     ) : item.posts.content_type === 'text' ? (
-                      <div className="aspect-square bg-gray-50 flex items-center justify-center p-4">
+                      <div className="w-full bg-gray-50 border-b-2 border-black flex items-center justify-center p-8" style={{ aspectRatio: '4/3' }}>
                         <div className="text-center">
-                          <div className="text-3xl mb-2">📝</div>
-                          <div className="text-xs text-gray-500">TEXT POST</div>
+                          <div className="text-5xl mb-3 font-['Space_Mono'] font-bold">Aa</div>
+                          <div className="text-xs font-['Space_Mono'] text-gray-500 uppercase tracking-widest">Text Post</div>
                         </div>
                       </div>
                     ) : item.posts.media_url ? (
-                      <div className="relative aspect-square overflow-hidden">
+                      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '4/3' }}>
                         <img
                           src={item.posts.media_url}
                           alt={item.posts.title}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         {/* Play overlay for videos */}
                         {['video', 'film'].includes(item.posts.content_type) && (
-                          <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                            <div className="w-10 h-10 bg-white bg-opacity-90 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                              <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                            <div className="w-16 h-16 bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M8 5v14l11-7z"/>
                               </svg>
                             </div>
@@ -773,25 +773,25 @@ export default function SpotlightDetailPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                        <div className="text-gray-400">No Media</div>
+                      <div className="w-full bg-gray-100 flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
+                        <div className="text-gray-400 font-['Space_Mono'] text-sm">No Media</div>
                       </div>
                     )}
                     
                     {/* Post Info */}
-                    <div className="p-4">
-                      <h3 className="font-semibold text-black text-sm mb-1 line-clamp-2">
+                    <div className="p-5">
+                      <h3 className="font-['Space_Mono'] font-bold text-black text-base mb-1 line-clamp-2">
                         {item.posts.title}
                       </h3>
                       {item.posts.profiles?.username && (
-                        <p className="text-xs text-blue-600 mb-2">by {item.posts.profiles.username}</p>
+                        <p className="font-['Space_Mono'] text-sm text-blue-600 mb-2">by {item.posts.profiles.username}</p>
                       )}
                       {item.posts.description && (
-                        <p className="text-xs text-gray-600 line-clamp-2 mb-3">{item.posts.description}</p>
+                        <p className="font-['Space_Mono'] text-sm text-gray-600 line-clamp-2 mb-3">{item.posts.description}</p>
                       )}
                       <div className="flex items-center justify-between">
                         <PostStats postId={item.post_id} initialViews={item.posts.views} />
-                        <span className="text-xs text-gray-400">{getTimeAgo(item.posts.created_at)}</span>
+                        <span className="font-['Space_Mono'] text-xs text-gray-400">{getTimeAgo(item.posts.created_at)}</span>
                       </div>
                     </div>
                   </motion.div>
