@@ -73,7 +73,7 @@ export default function CreatePostPage() {
   const [postData, setPostData] = useState({
     title: '',
     description: '',
-    contentType: initialContentType as 'image' | 'music' | 'text' | 'physical-art' | 'edits' | 'video' | 'film' | 'graphic_design',
+    contentType: initialContentType as 'image' | 'music' | 'text' | 'physical_art' | 'edits' | 'video' | 'film' | 'graphic_design',
     file: null as File | null,
     audioFile: null as File | null,
     videoFile: null as File | null,
@@ -99,7 +99,7 @@ export default function CreatePostPage() {
   // Handle URL parameter for content type preselection
   useEffect(() => {
     const typeParam = searchParams?.get('type')
-    if (typeParam && ['image', 'music', 'video', 'physical-art', 'edits', 'film', 'graphic_design', 'text'].includes(typeParam)) {
+    if (typeParam && ['image', 'music', 'video', 'physical_art', 'edits', 'film', 'graphic_design', 'text'].includes(typeParam)) {
       setPostData(prev => ({
         ...prev,
         contentType: typeParam as typeof prev.contentType
@@ -215,7 +215,7 @@ export default function CreatePostPage() {
       alert('Please upload an audio file for music posts');
       return;
     }
-    if (['image', 'physical-art', 'edits', 'graphic_design'].includes(postData.contentType) && !postData.file) {
+    if (['image', 'physical_art', 'edits', 'graphic_design'].includes(postData.contentType) && !postData.file) {
       alert('Please upload an image file');
       return;
     }
@@ -320,7 +320,7 @@ export default function CreatePostPage() {
               {[
                 { id: 'image', label: 'Photo', icon: '📷' },
                 { id: 'music', label: 'Music', icon: '🎵' },
-                { id: 'physical-art', label: 'Physical Art', icon: '🎨' },
+                { id: 'physical_art', label: 'Physical Art', icon: '🎨' },
                 { id: 'edits', label: 'Edits', icon: '✂️' },
                 { id: 'video', label: 'Video', icon: '🎬' },
                 { id: 'film', label: 'Film', icon: '🎞️' },
@@ -386,10 +386,10 @@ export default function CreatePostPage() {
           </div>
 
           {/* File Upload Section */}
-          {['image', 'physical-art', 'edits', 'graphic_design'].includes(postData.contentType) && (
+          {['image', 'physical_art', 'edits', 'graphic_design'].includes(postData.contentType) && (
             <div>
               <label className="block text-sm font-['Space_Mono'] font-medium text-black mb-2">
-                Upload {postData.contentType === 'image' ? 'Photo / GIF' : postData.contentType === 'physical-art' ? 'Physical Art' : postData.contentType === 'graphic_design' ? 'Graphic Design' : postData.contentType}
+                Upload {postData.contentType === 'image' ? 'Photo / GIF' : postData.contentType === 'physical_art' ? 'Physical Art' : postData.contentType === 'graphic_design' ? 'Graphic Design' : postData.contentType}
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 {!postData.file ? (
