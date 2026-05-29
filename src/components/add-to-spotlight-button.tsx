@@ -117,7 +117,7 @@ export default function AddToSpotlightButton({ postId }: AddToSpotlightButtonPro
       if (error) throw error;
 
       if (data?.success) {
-        setAddedIds(prev => new Set([...prev, spotlightId]));
+        setAddedIds(prev => new Set(Array.from(prev).concat(spotlightId)));
       } else {
         console.warn('Add to spotlight result:', data?.error);
       }
