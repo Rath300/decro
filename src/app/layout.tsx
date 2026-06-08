@@ -6,6 +6,7 @@ import { ToastContainer } from '@/components/toast'
 import RootChrome from '@/components/RootChrome'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { ProfileInitializer } from '@/components/ProfileInitializer'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
   title: {
@@ -106,6 +107,7 @@ export default function RootLayout({
             });
           }
         ` }} />
+        <Analytics />
       </body>
     </html>
   )
