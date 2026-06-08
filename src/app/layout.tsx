@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import ClientProviders from '@/components/ClientProviders'
 import { PostProvider } from '@/context/post-context'
@@ -6,6 +7,8 @@ import { ToastContainer } from '@/components/toast'
 import RootChrome from '@/components/RootChrome'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { ProfileInitializer } from '@/components/ProfileInitializer'
+
+const GA_ID = 'G-TS03JV5TNX'
 
 export const metadata: Metadata = {
   title: {
@@ -85,6 +88,19 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#000000" />
+        {/* Google Analytics */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}');
+          `}
+        </Script>
       </head>
       <body>
         <ErrorBoundary>
