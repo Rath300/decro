@@ -13,7 +13,7 @@ import { uploadAvatar } from '@/lib/upload'
 import { useToast } from '@/hooks/use-toast'
 
 export default function EditProfilePage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, loading } = useAuth()
   const router = useRouter()
   const toast = useToast()
   const [loading, setLoading] = useState(true)
@@ -33,13 +33,14 @@ export default function EditProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string>('')
 
   useEffect(() => {
+    if (loading) return // wait until session is determined
     if (!isAuthenticated) {
       router.push('/')
       return
     }
 
     loadProfile()
-  }, [user?.id, isAuthenticated])
+  }, [user?.id, isAuthenticated, loading])
 
   const loadProfile = async () => {
     if (!user?.id) return
