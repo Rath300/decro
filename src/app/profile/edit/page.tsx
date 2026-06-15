@@ -13,10 +13,10 @@ import { uploadAvatar } from '@/lib/upload'
 import { useToast } from '@/hooks/use-toast'
 
 export default function EditProfilePage() {
-  const { user, isAuthenticated, loading } = useAuth()
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
   const router = useRouter()
   const toast = useToast()
-  const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -33,14 +33,14 @@ export default function EditProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string>('')
 
   useEffect(() => {
-    if (loading) return // wait until session is determined
+    if (authLoading) return // wait until session is determined
     if (!isAuthenticated) {
       router.push('/')
       return
     }
 
     loadProfile()
-  }, [user?.id, isAuthenticated, loading])
+  }, [user?.id, isAuthenticated, authLoading])
 
   const loadProfile = async () => {
     if (!user?.id) return
@@ -92,7 +92,7 @@ export default function EditProfilePage() {
     } catch (error) {
       console.error('Failed to load profile:', error)
     } finally {
-      setLoading(false)
+      setProfileLoading(false)
     }
   }
 
@@ -243,7 +243,7 @@ export default function EditProfilePage() {
     }
   }
 
-  if (!isAuthenticated || loading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-black"></div>
