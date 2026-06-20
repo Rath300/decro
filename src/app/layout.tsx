@@ -7,6 +7,7 @@ import { ToastContainer } from '@/components/toast'
 import RootChrome from '@/components/RootChrome'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { ProfileInitializer } from '@/components/ProfileInitializer'
+import { Analytics } from '@vercel/analytics/next'
 
 const GA_ID = 'G-TS03JV5TNX'
 
@@ -122,6 +123,7 @@ export default function RootLayout({
             });
           }
         ` }} />
+        <Analytics />
       </body>
     </html>
   )
