@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { uploadImage, uploadAudio, uploadVideo } from '@/lib/upload'
 import { useAuth } from '@/context/auth-context'
 
@@ -61,19 +62,52 @@ async function generateVideoThumbnailFile(videoFile: File): Promise<File> {
   })
 }
 
+type ContentType =
+  | 'image'
+  | 'music'
+  | 'text'
+  | 'physical-art'
+  | 'edits'
+  | 'video'
+  | 'film'
+  | 'graphic_design'
+
+const CONTENT_TYPES: ContentType[] = [
+  'image',
+  'music',
+  'text',
+  'physical-art',
+  'edits',
+  'video',
+  'film',
+  'graphic_design',
+]
+
+const CONTENT_TYPE_ALIASES: Record<string, ContentType> = {
+  photo: 'image',
+  audio: 'music',
+}
+
+function normaliseContentType(value: string | null): ContentType {
+  if (!value) return 'image'
+  if (CONTENT_TYPES.includes(value as ContentType)) return value as ContentType
+  return CONTENT_TYPE_ALIASES[value] ?? 'image'
+}
+
 export default function CreatePostPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuth();
   
-  // Get type from URL params
+  // Get type from URL params. 'photo' and 'audio' are kept as aliases for links
+  // that predate the canonical ids.
   const typeParam = searchParams.get('type');
-  const initialContentType = typeParam === 'photo' ? 'image' : typeParam === 'text' ? 'text' : typeParam === 'audio' ? 'music' : typeParam === 'video' ? 'video' : 'image';
+  const initialContentType = normaliseContentType(typeParam);
   
   const [postData, setPostData] = useState({
     title: '',
     description: '',
-    contentType: initialContentType as 'image' | 'music' | 'text' | 'physical-art' | 'edits' | 'video' | 'film' | 'graphic_design',
+    contentType: initialContentType as ContentType,
     file: null as File | null,
     audioFile: null as File | null,
     videoFile: null as File | null,
@@ -98,13 +132,9 @@ export default function CreatePostPage() {
 
   // Handle URL parameter for content type preselection
   useEffect(() => {
-    const typeParam = searchParams?.get('type')
-    if (typeParam && ['image', 'music', 'video', 'physical-art', 'edits', 'film', 'graphic_design', 'text'].includes(typeParam)) {
-      setPostData(prev => ({
-        ...prev,
-        contentType: typeParam as typeof prev.contentType
-      }))
-    }
+    const param = searchParams?.get('type')
+    if (!param) return
+    setPostData(prev => ({ ...prev, contentType: normaliseContentType(param) }))
   }, [searchParams])
 
   // Handle URL parameter for subgroup preselection
@@ -258,8 +288,7 @@ export default function CreatePostPage() {
       }
 
       // Create post via SECURITY DEFINER RPC with Better Auth external id
-      const { data: newId, error: rpcError } = await supabase.rpc('create_post_ext', {
-        external_id_param: user.id,
+      const { data: newId, error: rpcError } = await callRpc('create_post_ext', {
         title_param: postData.title.trim(),
         description_param: postData.description.trim() || null,
         content_type_param: postData.contentType,
@@ -597,7 +626,7 @@ export default function CreatePostPage() {
                   <div>
                     <div className="text-4xl mb-4">🖼️</div>
                     <p className="text-sm font-['Space_Mono'] text-gray-600 mb-4">
-                      Upload a custom thumbnail image for your video (optional). If not provided, we'll use an auto-generated frame.
+                      Upload a custom thumbnail image for your video (optional). If not provided, we&apos;ll use an auto-generated frame.
                     </p>
                     <button
                       onClick={() => thumbnailInputRef.current?.click()}

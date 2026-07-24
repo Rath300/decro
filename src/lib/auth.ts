@@ -2,18 +2,58 @@ import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { Pool } from "pg"
 import bcrypt from "bcryptjs"
+import { rateLimit } from "./rate-limit"
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
 
+// Certificate verification stays on so the connection cannot be transparently
+// intercepted. Set DATABASE_CA_CERT if the host uses a private CA, or
+// DATABASE_SSL_NO_VERIFY=true only as a temporary escape hatch.
+function sslConfig() {
+  if (process.env.NODE_ENV !== 'production') return false
+
+  if (process.env.DATABASE_CA_CERT) {
+    return { ca: process.env.DATABASE_CA_CERT, rejectUnauthorized: true }
+  }
+  if (process.env.DATABASE_SSL_NO_VERIFY === 'true') {
+    console.warn(
+      '[auth] DATABASE_SSL_NO_VERIFY is enabled: the database connection is ' +
+        'encrypted but not authenticated.'
+    )
+    return { rejectUnauthorized: false }
+  }
+  return { rejectUnauthorized: true }
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 10000, // Return error after 10 seconds if connection can't be established
+  ssl: sslConfig(),
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 })
+
+/** Shared pool for route handlers that touch the Better Auth tables. */
+export function getAuthPool() {
+  return pool
+}
+
+// A missing secret makes NextAuth fall back to an unsafe default in some
+// versions, so fail closed instead of starting up unauthenticated.
+function authSecret() {
+  const secret = process.env.NEXTAUTH_SECRET || process.env.BETTER_AUTH_SECRET
+  if (!secret) {
+    throw new Error(
+      'NEXTAUTH_SECRET is not set. Generate one with: openssl rand -base64 32'
+    )
+  }
+  return secret
+}
+
+// bcrypt hash of a value no user can produce, used to equalise timing.
+const DUMMY_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -21,62 +61,78 @@ export const authOptions: NextAuthOptions = {
       id: "credentials",
       name: "Email and Password",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email or username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
-          console.error('Missing credentials')
           throw new Error("Email and password required")
         }
 
+        // The same field accepts either an email or a username. Resolving the
+        // username here replaces the old /api/resolve-username endpoint, which
+        // returned any user's email address to unauthenticated callers.
+        const identifier = credentials.email.trim()
+
+        // Throttle by account and by source address, so neither hammering one
+        // account nor spraying many accounts from one host is free. bcrypt cost
+        // 12 already makes each guess slow; this caps the attempt rate too.
+        const forwarded = req?.headers?.['x-forwarded-for']
+        const ip =
+          (Array.isArray(forwarded) ? forwarded[0] : forwarded)
+            ?.split(',')[0]
+            ?.trim() || 'unknown'
+
+        const perAccount = rateLimit(`login:id:${identifier.toLowerCase()}`, {
+          limit: 10,
+          windowMs: 15 * 60 * 1000,
+        })
+        const perIp = rateLimit(`login:ip:${ip}`, {
+          limit: 30,
+          windowMs: 15 * 60 * 1000,
+        })
+
+        if (!perAccount.ok || !perIp.ok) {
+          throw new Error("Too many attempts. Try again in a few minutes.")
+        }
+
         try {
-          // Find user by email
           const result = await pool.query(
-            'SELECT * FROM "user" WHERE email = $1',
-            [credentials.email.toLowerCase().trim()]
+            'SELECT * FROM "user" WHERE lower(email) = lower($1) OR lower(name) = lower($1) LIMIT 1',
+            [identifier]
           )
 
           const user = result.rows[0]
 
-          if (!user) {
-            console.error('User not found:', credentials.email)
-            throw new Error("Invalid email or password")
-          }
-
-          // Get account with password
-          const accountResult = await pool.query(
-            'SELECT * FROM "account" WHERE "userId" = $1 AND "providerId" = $2',
-            [user.id, 'credential']
-          )
+          const accountResult = user
+            ? await pool.query(
+                'SELECT * FROM "account" WHERE "userId" = $1 AND "providerId" = $2',
+                [user.id, 'credential']
+              )
+            : { rows: [] as any[] }
 
           const account = accountResult.rows[0]
 
-          if (!account || !account.password) {
-            console.error('Account not found or missing password')
+          // Compare against a dummy hash when the user or account is missing so
+          // that response time does not reveal whether an account exists.
+          const hash = account?.password ?? DUMMY_HASH
+          const isValid = await bcrypt.compare(credentials.password, hash)
+
+          if (!user || !account?.password || !isValid) {
             throw new Error("Invalid email or password")
           }
 
-          // Verify password
-          const isValid = await bcrypt.compare(credentials.password, account.password)
-
-          if (!isValid) {
-            console.error('Invalid password')
-            throw new Error("Invalid email or password")
-          }
-
-          console.log('Authentication successful for user:', user.id)
-
-          // Return user object
           return {
             id: user.id,
             email: user.email,
-            name: user.name || user.email.split('@')[0],
+            name: user.name || user.email?.split('@')[0] || 'user',
             image: user.image,
           }
         } catch (error: any) {
-          console.error("Auth error:", error.message)
-          throw new Error(error.message || "Authentication failed")
+          // Never echo internal errors to the client.
+          if (error?.message === "Invalid email or password") throw error
+          console.error("Auth error:", error?.message)
+          throw new Error("Authentication failed")
         }
       },
     }),
@@ -109,5 +165,5 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || process.env.BETTER_AUTH_SECRET,
+  secret: authSecret(),
 }

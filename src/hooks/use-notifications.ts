@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 
 export interface Notification {
   id: string
@@ -118,49 +119,40 @@ export function useNotifications() {
     }
   }, [user?.id])
 
+  // These used to update the notifications table directly, which RLS rejected
+  // because notifications_update_own compares against a NULL auth.uid(). Both
+  // failed silently, so notifications could never be dismissed.
   const markAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId)
+    const previous = notifications
+    setNotifications(prev =>
+      prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
+    )
+    setUnreadCount(prev => Math.max(0, prev - 1))
 
-      if (error) throw error
+    const { error } = await callRpc('mark_notification_read_ext', {
+      notification_id_param: notificationId,
+    })
 
-      setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } as Notification : n))
-      setUnreadCount(prev => Math.max(0, prev - 1))
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error)
+    if (error) {
+      console.error('Failed to mark notification as read:', error.message)
+      setNotifications(previous)
+      setUnreadCount(previous.filter(n => !n.read).length)
     }
   }
 
   const markAllAsRead = async () => {
     if (!user?.id) return
-    try {
-      // Get profile UUID from external ID
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('external_id', user.id)
-        .maybeSingle()
-      
-      if (profileError || !profileData) {
-        console.error('Failed to get profile:', profileError)
-        return
-      }
 
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('user_id', profileData.id)
-        .eq('read', false)
+    const previous = notifications
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setUnreadCount(0)
 
-      if (error) throw error
+    const { error } = await callRpc('mark_all_notifications_read_ext')
 
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-      setUnreadCount(0)
-    } catch (error) {
-      console.error('Failed to mark all notifications as read:', error)
+    if (error) {
+      console.error('Failed to mark all notifications as read:', error.message)
+      setNotifications(previous)
+      setUnreadCount(previous.filter(n => !n.read).length)
     }
   }
 

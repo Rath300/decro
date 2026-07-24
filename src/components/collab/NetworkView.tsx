@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/auth-context'
-import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -38,7 +38,7 @@ export function NetworkView({ userId }: { userId?: string }) {
   const loadNetwork = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase.rpc('get_user_network', {
+      const { data, error } = await callRpc<Collaborator[]>('get_user_network', {
         user_profile_id: userId || null
       })
       
@@ -56,7 +56,7 @@ export function NetworkView({ userId }: { userId?: string }) {
     if (!confirm('Remove this collaboration? This action cannot be undone.')) return
 
     try {
-      const { data, error } = await supabase.rpc('remove_collaboration', {
+      const { data, error } = await callRpc<any>('remove_collaboration_ext', {
         collaboration_id: collabId
       })
       

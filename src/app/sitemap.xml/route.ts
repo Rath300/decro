@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase-client'
 
+// Subgroup slugs and usernames are interpolated into XML, so a name containing
+// & or < would produce a document no crawler can parse.
+function escapeXml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+function urlPath(...segments: string[]) {
+  return segments.map((s) => encodeURIComponent(s)).join('/')
+}
+
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://decro.vercel.app'
 
@@ -66,7 +81,7 @@ export async function GET() {
   <!-- Subgroups -->
   ${subgroups?.map((subgroup) => `
   <url>
-    <loc>${baseUrl}/subgroup/${subgroup.slug}</loc>
+    <loc>${escapeXml(`${baseUrl}/${urlPath('subgroup', subgroup.slug)}`)}</loc>
     <lastmod>${new Date(subgroup.updated_at).toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -75,7 +90,7 @@ export async function GET() {
   <!-- Profiles -->
   ${profiles?.map((profile) => `
   <url>
-    <loc>${baseUrl}/profile/${profile.username}</loc>
+    <loc>${escapeXml(`${baseUrl}/${urlPath('profile', profile.username)}`)}</loc>
     <lastmod>${new Date(profile.updated_at).toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>

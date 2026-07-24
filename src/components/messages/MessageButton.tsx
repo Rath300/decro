@@ -8,7 +8,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
-import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 
 interface MessageButtonProps {
@@ -31,21 +31,17 @@ export function MessageButton({ targetUserId, currentUserProfileId, className = 
 
     try {
       setLoading(true)
-      
-      // Get or create conversation
-      const { data, error } = await supabase.rpc('get_or_create_conversation', {
-        other_user_id: targetUserId,
-        current_user_id: currentUserProfileId
-      })
-      
-      if (error) throw error
-      
-      if (data.success) {
-        // Navigate to messages page with conversation ID
-        router.push(`/messages?conversation=${data.conversation_id}`)
-      } else {
-        toast.error(data.error || 'Failed to start conversation')
-      }
+
+      // Returns the conversation id directly, not a { success } envelope.
+      const { data: conversationId, error } = await callRpc<string>(
+        'get_or_create_conversation_with_profile_ext',
+        { other_profile_id_param: targetUserId }
+      )
+
+      if (error) throw new Error(error.message)
+      if (!conversationId) throw new Error('Failed to start conversation')
+
+      router.push(`/messages?conversation=${conversationId}`)
     } catch (error: any) {
       console.error('Failed to start conversation:', error)
       toast.error(error.message || 'Failed to start conversation')

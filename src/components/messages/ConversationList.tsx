@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 
 interface Conversation {
@@ -19,6 +20,18 @@ interface Conversation {
   last_message_preview: string | null
   last_message_at: string
   unread_count: number
+}
+
+/** Shape returned by get_user_conversations_ext. */
+interface ConversationRow {
+  conversation_id: string
+  other_user_id: string
+  other_username: string
+  other_full_name: string | null
+  other_avatar_url: string | null
+  last_message_at: string
+  last_message_preview: string | null
+  unread_count: number | string
 }
 
 interface ConversationListProps {
@@ -56,11 +69,30 @@ export function ConversationList({ selectedConversationId, onSelectConversation 
   const loadConversations = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase.rpc('get_user_conversations')
-      
-      if (error) throw error
-      setConversations(data || [])
-    } catch (error) {
+      // get_user_conversations resolves the caller with auth.uid(), which is
+      // always NULL under NextAuth, so it returned nothing. The _ext variant
+      // takes the caller from the session via /api/rpc.
+      const { data, error } = await callRpc<ConversationRow[]>(
+        'get_user_conversations_ext',
+        { page_size: 50, page_offset: 0 }
+      )
+
+      if (error) throw new Error(error.message)
+
+      // The RPC columns are other_username / other_avatar_url / other_full_name.
+      setConversations(
+        (data || []).map((row) => ({
+          conversation_id: row.conversation_id,
+          other_user_id: row.other_user_id,
+          other_user_username: row.other_username,
+          other_user_avatar_url: row.other_avatar_url,
+          other_user_full_name: row.other_full_name,
+          last_message_preview: row.last_message_preview,
+          last_message_at: row.last_message_at,
+          unread_count: Number(row.unread_count ?? 0),
+        }))
+      )
+    } catch (error: any) {
       console.error('Failed to load conversations:', error)
       toast.error('Failed to load conversations')
     } finally {
@@ -101,7 +133,7 @@ export function ConversationList({ selectedConversationId, onSelectConversation 
             <div className="text-4xl mb-4">💬</div>
             <p className="text-gray-600 mb-2">No messages yet</p>
             <p className="text-sm text-gray-500">
-              Start a conversation by visiting an artist's profile and clicking "Message"
+              Start a conversation by visiting an artist&apos;s profile and clicking &ldquo;Message&rdquo;
             </p>
           </div>
         </div>

@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/auth-context'
-import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -40,7 +40,7 @@ export function CollaborationRequests() {
   const loadRequests = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase.rpc('get_collaboration_requests', {
+      const { data, error } = await callRpc<CollabRequest[]>('get_collaboration_requests_ext', {
         request_type: activeTab
       })
       
@@ -56,7 +56,7 @@ export function CollaborationRequests() {
 
   const handleAccept = async (requestId: string) => {
     try {
-      const { data, error } = await supabase.rpc('respond_to_collaboration_request', {
+      const { data, error } = await callRpc<any>('respond_to_collaboration_request_ext', {
         request_id: requestId,
         response: 'accepted'
       })
@@ -77,7 +77,7 @@ export function CollaborationRequests() {
 
   const handleDecline = async (requestId: string) => {
     try {
-      const { data, error } = await supabase.rpc('respond_to_collaboration_request', {
+      const { data, error } = await callRpc<any>('respond_to_collaboration_request_ext', {
         request_id: requestId,
         response: 'declined'
       })
@@ -98,7 +98,7 @@ export function CollaborationRequests() {
 
   const handleCancel = async (requestId: string) => {
     try {
-      const { data, error } = await supabase.rpc('cancel_collaboration_request', {
+      const { data, error } = await callRpc<any>('cancel_collaboration_request_ext', {
         request_id: requestId
       })
       
@@ -216,7 +216,7 @@ export function CollaborationRequests() {
                   {/* Message */}
                   {request.message && (
                     <p className="text-sm text-gray-700 mb-3 whitespace-pre-wrap">
-                      "{request.message}"
+                      &ldquo;{request.message}&rdquo;
                     </p>
                   )}
                   

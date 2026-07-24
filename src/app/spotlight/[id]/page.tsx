@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { PostStats } from '@/components/post-stats'
@@ -295,14 +296,13 @@ export default function SpotlightDetailPage() {
     if (!confirmed) return
     
     try {
-      // Delete spotlight collection (items will cascade delete due to foreign key)
-      const { error } = await supabase
-        .from('spotlight_collections')
-        .delete()
-        .eq('id', spotlightId)
-      
-      if (error) throw error
-      
+      // Ownership is checked server-side; items cascade via foreign key.
+      const { error } = await callRpc('delete_spotlight_collection_ext', {
+        collection_id_param: spotlightId,
+      })
+
+      if (error) throw new Error(error.message)
+
       alert('Spotlight deleted successfully')
       router.push('/spotlight')
     } catch (error) {

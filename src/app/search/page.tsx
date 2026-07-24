@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { PostStats } from '@/components/post-stats'
 import { useAuth } from '@/context/auth-context'
 
@@ -88,9 +89,11 @@ export default function SearchPage() {
       console.log('Performing search:', { query, selectedTags, searchFilter })
       if (searchFilter === 'liked' && isAuthenticated && user?.id) {
         // Get user's liked post IDs first
-        const { data: likedData, error: likedError } = await supabase.rpc('get_user_liked_posts_ext', {
-          external_id_param: user.id
-        })
+        // Via the proxy so the server supplies the identity: called with the anon
+        // key this returned any user's likes to anyone who passed their id.
+        const { data: likedData, error: likedError } = await callRpc<any[]>(
+          'get_user_liked_posts_ext'
+        )
         if (likedError) throw likedError
         
         if (likedData && likedData.length > 0) {

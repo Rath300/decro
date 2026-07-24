@@ -6,39 +6,40 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:apply": "node scripts/db-apply.mjs",
+    "db:password": "node scripts/set-db-password.mjs"
   },
   "dependencies": {
-    "@better-auth/cli": "^1.3.4",
     "@supabase/supabase-js": "^2.54.0",
+    "bcryptjs": "^3.0.3",
+    "dexie": "^4.2.0",
+    "framer-motion": "^12.23.18",
+    "gsap": "^3.13.0",
+    "nanoid": "^5.1.6",
+    "next": "^13.5.11",
+    "next-auth": "^4.24.13",
+    "pg": "^8.16.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.15.5",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "autoprefixer": "^10.4.0",
-    "bcryptjs": "^3.0.3",
-    "better-auth": "^1.3.4",
-    "dexie": "^4.2.0",
-    "drizzle-orm": "^0.44.4",
-    "framer-motion": "^12.23.18",
-    "gsap": "^3.13.0",
-    "nanoid": "^5.1.6",
-    "next": "^13.5.6",
-    "next-auth": "^4.24.13",
-    "pg": "^8.16.3",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^13.5.11",
     "postcss": "^8.4.0",
-    "postgres": "^3.4.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5.0.0",
-    "zustand": "^5.0.8"
+    "typescript": "^5.0.0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@types/bcryptjs": "^2.4.6"
-  }
+  "description": "A slower, quieter place to put work online."
 }

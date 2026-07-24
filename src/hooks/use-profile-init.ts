@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 
 interface ProfileStatus {
   isReady: boolean
@@ -72,8 +73,7 @@ export function useProfileInit() {
         
         const username = user.name || user.email?.split('@')[0] || 'user'
         
-        const { data: profileId, error: upsertError } = await supabase.rpc('upsert_profile_from_external', {
-          external_id_param: user.id,
+        const { data: profileId, error: upsertError } = await callRpc('upsert_profile_from_external', {
           username_param: username,
           full_name_param: user.name || null
         })

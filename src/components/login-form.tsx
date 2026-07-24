@@ -155,7 +155,7 @@ export default function LoginForm() {
         {/* Sign Up Link - Moved down */}
         <div className="mt-4 text-center">
           <p className="text-sm font-normal text-black font-space-grotesk">
-            Don't Have an Account?{' '}
+            Don&apos;t Have an Account?{' '}
             <button 
               type="button"
               onClick={handleSignUpClick}

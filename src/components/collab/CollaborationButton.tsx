@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 
 interface CollaborationButtonProps {
@@ -65,11 +66,10 @@ export function CollaborationButton({ targetUserId, targetUsername, currentUserP
 
     try {
       setActionLoading(true)
-      const { data, error } = await supabase.rpc('send_collaboration_request', {
+      const { data, error } = await callRpc('send_collaboration_request', {
         receiver_profile_id: targetUserId,
         message_text: requestMessage || null,
         collab_type: 'general',
-        sender_profile_id: currentUserProfileId
       })
       
       if (error) throw error
@@ -95,7 +95,7 @@ export function CollaborationButton({ targetUserId, targetUsername, currentUserP
 
     try {
       setActionLoading(true)
-      const { data, error } = await supabase.rpc('respond_to_collaboration_request', {
+      const { data, error } = await callRpc<any>('respond_to_collaboration_request_ext', {
         request_id: status.request_id,
         response: 'accepted'
       })
@@ -121,7 +121,7 @@ export function CollaborationButton({ targetUserId, targetUsername, currentUserP
 
     try {
       setActionLoading(true)
-      const { data, error } = await supabase.rpc('respond_to_collaboration_request', {
+      const { data, error } = await callRpc<any>('respond_to_collaboration_request_ext', {
         request_id: status.request_id,
         response: 'declined'
       })
@@ -147,7 +147,7 @@ export function CollaborationButton({ targetUserId, targetUsername, currentUserP
 
     try {
       setActionLoading(true)
-      const { data, error } = await supabase.rpc('cancel_collaboration_request', {
+      const { data, error } = await callRpc<any>('cancel_collaboration_request_ext', {
         request_id: status.request_id
       })
       
@@ -243,7 +243,7 @@ export function CollaborationButton({ targetUserId, targetUsername, currentUserP
           <div className="bg-white border-2 border-black p-6 max-w-md w-full font-['Space_Mono']">
             <h3 className="text-xl font-bold mb-4">Request Collaboration</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Send a collaboration request to {targetUsername}. Add an optional message to introduce yourself or describe what you'd like to collaborate on.
+              Send a collaboration request to {targetUsername}. Add an optional message to introduce yourself or describe what you&apos;d like to collaborate on.
             </p>
             
             <textarea

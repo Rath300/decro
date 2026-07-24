@@ -1,130 +1,130 @@
 import { NextResponse } from "next/server"
-import { Pool } from "pg"
 import bcrypt from "bcryptjs"
 import { nanoid } from "nanoid"
+import { getAuthPool } from "@/lib/auth"
+import { clientKey, rateLimit, tooManyRequests } from "@/lib/rate-limit"
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-})
+// Uses the shared pool from lib/auth rather than opening a second one that
+// disabled TLS certificate verification.
+
+export const dynamic = 'force-dynamic'
+
+const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_PASSWORD_LENGTH = 8
 
 export async function POST(request: Request) {
+  const limit = rateLimit(clientKey(request, 'signup'), {
+    limit: 5,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!limit.ok) {
+    return tooManyRequests(limit, 'Too many signup attempts. Try again later.')
+  }
+
+  let body: any
   try {
-    const body = await request.json()
-    const { email, password, name } = body
-    
-    // Username is passed as 'name' from the form
-    const username = name
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
 
-    if (!password || !username) {
-      console.error('Missing required fields:', { password: !!password, username: !!username })
-      return NextResponse.json(
-        { error: "Password and username are required" },
-        { status: 400 }
-      )
-    }
-    
-    // Validate email format only if provided
-    if (email && email.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(email)) {
-        return NextResponse.json(
-          { error: "Invalid email format" },
-          { status: 400 }
-        )
-      }
-    }
-    
-    // Validate password length
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
-        { status: 400 }
-      )
-    }
+  const password = typeof body?.password === 'string' ? body.password : ''
+  // The signup form sends the username in `name`.
+  const username = typeof body?.name === 'string' ? body.name.trim() : ''
+  const email = typeof body?.email === 'string' ? body.email.trim() : ''
 
-    // Validate username format (alphanumeric, underscores, hyphens only)
-    const usernameRegex = /^[a-zA-Z0-9_-]+$/
-    if (!usernameRegex.test(username)) {
-      return NextResponse.json(
-        { error: "Username can only contain letters, numbers, underscores, and hyphens" },
-        { status: 400 }
-      )
-    }
-
-    if (username.length < 3 || username.length > 20) {
-      return NextResponse.json(
-        { error: "Username must be between 3 and 20 characters" },
-        { status: 400 }
-      )
-    }
-
-    // Check if email already exists (only if email is provided)
-    if (email && email.trim()) {
-      const existingEmail = await pool.query(
-        'SELECT * FROM "user" WHERE LOWER(TRIM(email)) = LOWER($1)',
-        [email.trim()]
-      )
-
-      if (existingEmail.rows.length > 0) {
-        console.error('Email already exists:', email)
-        return NextResponse.json(
-          { error: "Email already in use" },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Check if username is taken (case-insensitive and trimmed)
-    const existingUsername = await pool.query(
-      'SELECT * FROM "user" WHERE LOWER(TRIM(name)) = LOWER($1)',
-      [username.trim()]
+  if (!password || !username) {
+    return NextResponse.json(
+      { error: "Password and username are required" },
+      { status: 400 }
     )
+  }
 
-    if (existingUsername.rows.length > 0) {
-      console.error('Username already exists:', username)
-      return NextResponse.json(
-        { error: "Username already taken" },
-        { status: 400 }
-      )
-    }
+  if (email && !EMAIL_PATTERN.test(email)) {
+    return NextResponse.json({ error: "Invalid email format" }, { status: 400 })
+  }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
+  // Was 6 here but 8 on the settings page; both are 8 now.
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return NextResponse.json(
+      { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` },
+      { status: 400 }
+    )
+  }
 
-    // Create user with username as name (email optional)
+  if (password.length > 200) {
+    return NextResponse.json({ error: "Password is too long" }, { status: 400 })
+  }
+
+  if (!USERNAME_PATTERN.test(username)) {
+    return NextResponse.json(
+      { error: "Username can only contain letters, numbers, underscores, and hyphens" },
+      { status: 400 }
+    )
+  }
+
+  if (username.length < 3 || username.length > 20) {
+    return NextResponse.json(
+      { error: "Username must be between 3 and 20 characters" },
+      { status: 400 }
+    )
+  }
+
+  const pool = getAuthPool()
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 12)
     const userId = nanoid()
-    const emailValue = email && email.trim() ? email.trim() : null
-    console.log('Creating user:', { userId, email: emailValue, username })
-    
-    await pool.query(
-      'INSERT INTO "user" (id, email, name, "emailVerified", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6)',
-      [userId, emailValue, username.trim(), false, new Date(), new Date()]
-    )
+    const emailValue = email || null
 
-    // Create account with hashed password
-    const accountId = nanoid()
-    await pool.query(
-      'INSERT INTO "account" (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [accountId, userId, 'credential', userId, hashedPassword, new Date(), new Date()]
-    )
+    // The old code checked availability with a SELECT and then inserted, which
+    // two concurrent signups could both pass. The unique indexes added in
+    // migration 039 are now the authority; a violation is reported as a taken
+    // name rather than a 500.
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
 
-    console.log('User created successfully:', userId)
+      await client.query(
+        'INSERT INTO "user" (id, email, name, "emailVerified", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, now(), now())',
+        [userId, emailValue, username, false]
+      )
+
+      await client.query(
+        'INSERT INTO "account" (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, now(), now())',
+        [nanoid(), userId, 'credential', userId, hashedPassword]
+      )
+
+      await client.query('COMMIT')
+    } catch (error: any) {
+      await client.query('ROLLBACK')
+      throw error
+    } finally {
+      client.release()
+    }
 
     return NextResponse.json(
-      { 
+      {
         success: true,
         message: "User created successfully",
-        user: { id: userId, email: emailValue, name: username.trim() }
+        user: { id: userId, email: emailValue, name: username },
       },
       { status: 201 }
     )
   } catch (error: any) {
-    console.error("Signup error:", error)
+    // 23505 is unique_violation.
+    if (error?.code === '23505') {
+      const takenField = String(error.constraint || '').includes('email')
+        ? 'Email already in use'
+        : 'Username already taken'
+      return NextResponse.json({ error: takenField }, { status: 409 })
+    }
+
+    console.error("Signup error:", error?.message)
     return NextResponse.json(
-      { error: error.message || "Failed to create user. Please try again." },
+      { error: "Failed to create user. Please try again." },
       { status: 500 }
     )
   }
 }
-

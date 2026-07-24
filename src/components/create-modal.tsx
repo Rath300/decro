@@ -5,20 +5,32 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PlusIcon } from '@/components/NavIcons'
 
+// These must match the content types the create page accepts. Quote, Link and
+// Chat used to be listed here, but /create ignores any unrecognised ?type= and
+// falls back to 'image', so picking "Quote" silently opened a photo upload.
 interface CreateOption {
-  type: 'text' | 'photo' | 'quote' | 'link' | 'chat' | 'audio' | 'video'
+  type:
+    | 'text'
+    | 'image'
+    | 'music'
+    | 'video'
+    | 'physical-art'
+    | 'edits'
+    | 'film'
+    | 'graphic_design'
   label: string
   icon: string
 }
 
 const CREATE_OPTIONS: CreateOption[] = [
-  { type: 'text', label: 'Text', icon: 'Aa' },
-  { type: 'photo', label: 'Photo', icon: '📷' },
-  { type: 'quote', label: 'Quote', icon: '❝' },
-  { type: 'link', label: 'Link', icon: '🔗' },
-  { type: 'chat', label: 'Chat', icon: 'hi!' },
-  { type: 'audio', label: 'Audio', icon: '🎧' },
+  { type: 'image', label: 'Photo', icon: '📷' },
+  { type: 'music', label: 'Music', icon: '🎵' },
   { type: 'video', label: 'Video', icon: '🎬' },
+  { type: 'film', label: 'Film', icon: '🎞️' },
+  { type: 'physical-art', label: 'Physical Art', icon: '🎨' },
+  { type: 'edits', label: 'Edits', icon: '✂️' },
+  { type: 'graphic_design', label: 'Graphic Design', icon: '🎯' },
+  { type: 'text', label: 'Text', icon: '📝' },
 ]
 
 export function CreateModal() {

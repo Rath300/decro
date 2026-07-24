@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/context/auth-context'
-import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 
 export default function FeedbackPage() {
   const { isAuthenticated, user } = useAuth()
@@ -66,19 +66,17 @@ export default function FeedbackPage() {
     }
 
     setSubmitting(categoryId)
-    
-    try {
-      const { error } = await supabase
-        .from('feedback')
-        .insert([
-          {
-            user_id: user.id,
-            category: categoryId,
-            content: content
-          }
-        ])
 
-      if (error) throw error
+    try {
+      // The old direct insert passed the NextAuth nanoid into feedback.user_id,
+      // which is a uuid column, so every submission failed. The RPC resolves the
+      // profile id server-side.
+      const { error } = await callRpc('submit_feedback_ext', {
+        category_param: categoryId,
+        content_param: content,
+      })
+
+      if (error) throw new Error(error.message)
 
       alert('Thank you for your feedback!')
       setFeedbackText(prev => ({ ...prev, [categoryId]: '' }))

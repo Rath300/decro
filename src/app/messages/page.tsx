@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react'
 import { ConversationList } from '@/components/messages/ConversationList'
 import { MessageView } from '@/components/messages/MessageView'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 
 export default function MessagesPage() {
   const { isAuthenticated, user, loading } = useAuth()
@@ -79,30 +80,27 @@ export default function MessagesPage() {
 
   const startNewConversation = async (userId: string) => {
     try {
-      // Get or create conversation
-      const { data, error } = await supabase.rpc('get_or_create_conversation', {
-        other_user_id: userId
+      const { data: conversationId, error } = await callRpc<string>(
+        'get_or_create_conversation_with_profile_ext',
+        { other_profile_id_param: userId }
+      )
+
+      if (error) throw new Error(error.message)
+      if (!conversationId) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .maybeSingle()
+
+      setSelectedConversation({
+        id: conversationId,
+        userId: userId,
+        username: profile?.username || 'User'
       })
 
-      if (error) throw error
-
-      if (data.success) {
-        // Get username
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', userId)
-          .maybeSingle()
-
-        setSelectedConversation({
-          id: data.conversation_id,
-          userId: userId,
-          username: profile?.username || 'User'
-        })
-
-        // Update URL
-        router.replace(`/messages?conversation=${data.conversation_id}`)
-      }
+      router.replace(`/messages?conversation=${conversationId}`)
     } catch (error) {
       console.error('Failed to start conversation:', error)
     }

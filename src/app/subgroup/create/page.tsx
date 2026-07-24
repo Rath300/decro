@@ -9,6 +9,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { uploadImage } from '@/lib/upload'
 import { useToast } from '@/hooks/use-toast'
 // Global header/menu are provided by layout
@@ -121,30 +122,17 @@ export default function CreateSubgroupPage() {
         setUploadingCover(false)
       }
 
-      // Create subgroup (created_by is TEXT, not UUID - use external_id)
-      const { data, error } = await supabase
-        .from('subgroups')
-        .insert({
-          name: formData.name.trim(),
-          slug: formData.slug,
-          description: formData.description.trim() || null,
-          cover_image_url: coverUrl,
-          created_by: user.id
-        })
-        .select('slug')
-        .single()
+      const { error } = await callRpc('create_subgroup_ext', {
+        name_param: formData.name.trim(),
+        slug_param: formData.slug,
+        description_param: formData.description.trim() || null,
+        cover_image_url_param: coverUrl,
+      })
 
-      if (error) {
-        console.error('Failed to create subgroup:', error)
-        throw error
-      }
-      
-      if (!data || !data.slug) {
-        throw new Error('No slug returned from subgroup creation')
-      }
+      if (error) throw new Error(error.message)
 
       toast.success('Subgroup created successfully!')
-      router.push(`/subgroup/${data.slug}`)
+      router.push(`/subgroup/${formData.slug}`)
       router.refresh()
     } catch (error: any) {
       console.error('Failed to create subgroup:', error)

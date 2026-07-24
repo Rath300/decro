@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useAuth } from '@/context/auth-context'
 import { uploadImage } from '@/lib/upload'
 
@@ -152,11 +153,10 @@ export default function SpotlightCreatePage() {
         console.warn('No posts selected for spotlight creation')
       }
       
-      const { data: collectionResult, error: insertErr } = await supabase.rpc('create_spotlight_collection_ext_with_items', {
+      const { data: collectionResult, error: insertErr } = await callRpc('create_spotlight_collection_ext_with_items', {
         title_param: title.trim(),
         description_param: description.trim() || null,
         cover_image_url_param: coverUrl,
-        external_id_param: user.id,
         post_ids_param: validatedPostIds
       })
 

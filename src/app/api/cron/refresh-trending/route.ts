@@ -1,51 +1,60 @@
 /**
  * Cron Job: Refresh Trending Posts
- * Should be called every 15-30 minutes
+ * Intended to run every 15-30 minutes.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import supabase from '@/lib/supabase-client'
+import { timingSafeEqual } from 'node:crypto'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
-export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
+
+function isAuthorised(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET
+
+  // The previous check was `if (cronSecret && ...)`, so an unset CRON_SECRET
+  // left the endpoint open to anyone. Fail closed instead.
+  if (!cronSecret) return false
+
+  const authHeader = request.headers.get('authorization') ?? ''
+  const expected = Buffer.from(`Bearer ${cronSecret}`)
+  const received = Buffer.from(authHeader)
+
+  if (expected.length !== received.length) return false
+  return timingSafeEqual(expected, received)
+}
 
 export async function GET(request: NextRequest) {
-  try {
-    // Verify cron secret for security
-    const authHeader = request.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET
-    
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
+  if (!isAuthorised(request)) {
+    return new NextResponse('Unauthorized', { status: 401 })
+  }
 
-    // Call the refresh_trending_posts function
-    const { data, error } = await supabase.rpc('refresh_trending_posts')
+  try {
+    // refresh_trending_posts is service_role only (migration 037).
+    const { data, error } = await getSupabaseAdmin().rpc('refresh_trending_posts')
 
     if (error) {
-      console.error('Failed to refresh trending posts:', error)
+      console.error('Failed to refresh trending posts:', error.message)
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 500 }
       )
     }
 
-    console.log('Trending posts refreshed successfully')
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      message: 'Trending posts refreshed'
+      result: data,
     })
   } catch (error: any) {
-    console.error('Unexpected error refreshing trending:', error)
+    console.error('Unexpected error refreshing trending:', error?.message)
     return NextResponse.json(
-      { success: false, error: error.message || 'Unknown error' },
+      { success: false, error: 'Refresh failed' },
       { status: 500 }
     )
   }
 }
 
-// Also support POST for manual triggers
 export async function POST(request: NextRequest) {
   return GET(request)
 }
-

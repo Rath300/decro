@@ -7,6 +7,7 @@ import CardGrid from '@/components/card-grid'
 import DetailModal from '@/components/detail-modal'
 import { useEffect, useState } from 'react'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useAuth } from '@/context/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
@@ -154,9 +155,8 @@ export default function SubgroupDetail() {
     setFollowLoading(true)
 
     try {
-      const { data, error } = await supabase.rpc('toggle_follow_subgroup_ext', {
+      const { data, error } = await callRpc('toggle_follow_subgroup_ext', {
         target_subgroup_id: subgroupId,
-        external_id_param: user.id
       })
 
       if (error) throw error
@@ -172,13 +172,22 @@ export default function SubgroupDetail() {
     }
   }
 
-  // Sort cards based on current sort mode
+  // "Hot" and "Top" both sorted by raw views, so the two tabs produced an
+  // identical order. Top stays all-time views; Hot decays views by age so a post
+  // picking up attention now can outrank an older one with a bigger total.
+  const hotScore = (card: MediaCard) => {
+    const ageHours = Math.max(
+      0,
+      (Date.now() - new Date(card.date).getTime()) / 3_600_000
+    )
+    return (card.views + 1) / Math.pow(ageHours + 2, 1.5)
+  }
+
   const getSortedCards = (cards: MediaCard[]) => {
     switch (sortMode) {
       case 'hot':
-        return [...cards].sort((a, b) => b.views - a.views)
+        return [...cards].sort((a, b) => hotScore(b) - hotScore(a))
       case 'top':
-        // For now, use views as the primary metric since we don't have likes count in MediaCard
         return [...cards].sort((a, b) => b.views - a.views)
       default:
         return [...cards].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

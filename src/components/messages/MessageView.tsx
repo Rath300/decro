@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -21,7 +22,12 @@ interface Message {
   attachment_url: string | null
   created_at: string
   is_deleted: boolean
-  read_by: string[]
+}
+
+/** Shape returned by get_conversation_messages_ext. */
+interface MessageRow extends Omit<Message, 'id'> {
+  message_id: string
+  is_read: boolean
 }
 
 interface MessageViewProps {
@@ -55,10 +61,11 @@ export function MessageView({ conversationId, otherUserId, otherUsername }: Mess
             table: 'messages',
             filter: `conversation_id=eq.${conversationId}`
           },
-          (payload) => {
-            setMessages(prev => [...prev, payload.new as Message])
+          () => {
+            // The raw row has no sender_username, so refetch rather than
+            // appending a partially populated message.
+            loadMessages()
             markAsRead()
-            scrollToBottom()
           }
         )
         .subscribe()
@@ -76,16 +83,36 @@ export function MessageView({ conversationId, otherUserId, otherUsername }: Mess
   const loadMessages = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase.rpc('get_conversation_messages', {
-        conversation_id_param: conversationId,
-        limit_param: 100,
-        offset_param: 0
-      })
-      
-      if (error) throw error
-      // Reverse to show oldest first
-      setMessages((data || []).reverse())
-    } catch (error) {
+      // The non-_ext variants resolve the caller with auth.uid(), which is
+      // always NULL under NextAuth, so loading and sending both failed.
+      const { data, error } = await callRpc<MessageRow[]>(
+        'get_conversation_messages_ext',
+        {
+          conversation_id_param: conversationId,
+          page_size: 100,
+          page_offset: 0,
+        }
+      )
+
+      if (error) throw new Error(error.message)
+
+      // The RPC returns newest first and names the key message_id.
+      setMessages(
+        (data || [])
+          .map((row) => ({
+            id: row.message_id,
+            sender_id: row.sender_id,
+            sender_username: row.sender_username,
+            sender_avatar_url: row.sender_avatar_url,
+            content: row.content,
+            message_type: row.message_type,
+            attachment_url: row.attachment_url,
+            created_at: row.created_at,
+            is_deleted: row.is_deleted,
+          }))
+          .reverse()
+      )
+    } catch (error: any) {
       console.error('Failed to load messages:', error)
       toast.error('Failed to load messages')
     } finally {
@@ -94,38 +121,34 @@ export function MessageView({ conversationId, otherUserId, otherUsername }: Mess
   }
 
   const markAsRead = async () => {
-    try {
-      await supabase.rpc('mark_messages_read', {
-        conversation_id_param: conversationId
-      })
-    } catch (error) {
-      console.error('Failed to mark messages as read:', error)
-    }
+    const { error } = await callRpc('mark_messages_read_ext', {
+      conversation_id_param: conversationId,
+    })
+    if (error) console.error('Failed to mark messages as read:', error.message)
   }
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!newMessage.trim()) return
-    
+
+    const content = newMessage.trim()
+    if (!content) return
+
     try {
       setSending(true)
-      const { data, error } = await supabase.rpc('send_message', {
+      // Returns the new message id, not a { success } envelope.
+      const { error } = await callRpc<string>('send_message_ext', {
         conversation_id_param: conversationId,
-        content_param: newMessage.trim(),
+        content_param: content,
         message_type_param: 'text',
         attachment_url_param: null
       })
-      
-      if (error) throw error
-      
-      if (data.success) {
-        setNewMessage('')
-        inputRef.current?.focus()
-        // Message will be added via realtime subscription
-      } else {
-        toast.error(data.error || 'Failed to send message')
-      }
+
+      if (error) throw new Error(error.message)
+
+      setNewMessage('')
+      inputRef.current?.focus()
+      // The realtime subscription appends the message.
+      await loadMessages()
     } catch (error: any) {
       console.error('Failed to send message:', error)
       toast.error(error.message || 'Failed to send message')

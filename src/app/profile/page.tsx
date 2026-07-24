@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { PostStats } from '@/components/post-stats'
 import { usePosts } from '@/context/post-context'
 import DetailModal from '@/components/detail-modal'
@@ -63,8 +64,7 @@ export default function ProfilePage() {
     
     try {
       // Map external auth id -> profiles.id
-      const { data: profileId, error: ensureErr } = await supabase.rpc('ensure_profile', {
-        external_id_param: user.id,
+      const { data: profileId, error: ensureErr } = await callRpc('ensure_profile', {
       })
       if (ensureErr) throw ensureErr
 
@@ -189,8 +189,7 @@ export default function ProfilePage() {
 
     try {
       // Map external auth id -> profiles.id and get username
-      const { data: userId, error: ensureErr } = await supabase.rpc('ensure_profile', {
-        external_id_param: user.id,
+      const { data: userId, error: ensureErr } = await callRpc('ensure_profile', {
       })
       if (ensureErr) throw ensureErr
 

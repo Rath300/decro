@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useAuth } from '@/context/auth-context'
 import db from '@/lib/db'
 
@@ -113,9 +114,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
       let error = null
       
       while (retries < 3) {
-        const result = await supabase.rpc('toggle_like_ext', {
+        const result = await callRpc('toggle_like_ext', {
           post_id_param: cardId,
-          external_id_param: user.id
         })
         
         data = result.data
@@ -134,11 +134,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
       }
       
       if (error) {
-        console.error('=== RPC ERROR ===')
-        console.error('Error details:', error)
-        console.error('Error message:', error.message)
-        console.error('Error code:', error.code)
-        throw error
+        console.error('toggle_like_ext failed:', error.message)
+        throw new Error(error.message)
       }
       
       console.log('=== RPC SUCCESS ===')
@@ -428,8 +425,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       console.log('🔄 Loading user likes for:', user.id)
       
       try {
-        const { data, error } = await supabase
-          .rpc('get_user_likes_ext', { external_id_param: user.id })
+        const { data, error } = await callRpc<any[]>('get_user_likes_ext')
         
         if (error) {
           console.error('❌ Failed to load likes RPC error:', error)
@@ -549,7 +545,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       }
 
       // Track view in Supabase (allows null user)
-      await supabase.rpc('track_view', {
+      await callRpc('track_view', {
         post_id_param: postId,
         user_id_param: null
       })
@@ -594,20 +590,17 @@ export function PostProvider({ children }: { children: ReactNode }) {
           try {
             if (action.type === 'like') {
               if (action.add) {
-                await supabase.rpc('toggle_like_ext', {
+                await callRpc('toggle_like_ext', {
                   post_id_param: action.postId,
-                  external_id_param: action.userId
                 })
               } else {
-                await supabase.rpc('toggle_like_ext', {
+                await callRpc('toggle_like_ext', {
                   post_id_param: action.postId,
-                  external_id_param: action.userId
                 })
               }
             } else if (action.type === 'comment') {
-              await supabase.rpc('add_comment_ext', {
+              await callRpc('add_comment_ext', {
                 post_id_param: action.postId,
-                external_id_param: action.userId,
                 content_param: action.content
               })
             }

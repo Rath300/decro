@@ -8,7 +8,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
-import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 
 export default function SettingsPage() {
@@ -44,11 +44,20 @@ export default function SettingsPage() {
     setIsChanging(true)
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwordData.newPassword
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
       })
 
-      if (error) throw error
+      const result = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Failed to change password')
+      }
 
       toast.success('Password changed successfully')
       setPasswordData({
@@ -79,28 +88,16 @@ export default function SettingsPage() {
     setIsDeleting(true)
 
     try {
-      // Delete user's posts
-      const { error: postsError } = await supabase
-        .from('posts')
-        .delete()
-        .eq('creator_id', user?.id)
+      // Previously this deleted rows directly, matching a NextAuth nanoid
+      // against uuid columns so nothing was ever removed, then called
+      // supabase.auth.admin.deleteUser for a user that does not exist in
+      // Supabase Auth. delete_account_ext removes every owned row and the
+      // Better Auth user in one transaction.
+      const { error } = await callRpc<boolean>('delete_account_ext')
 
-      if (postsError) throw postsError
+      if (error) throw new Error(error.message)
 
-      // Delete user's profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user?.id)
-
-      if (profileError) throw profileError
-
-      // Delete auth user
-      const { error: authError } = await supabase.auth.admin.deleteUser(user?.id || '')
-
-      if (authError) throw authError
-
-      toast.success('Account deleted successfully')
+      toast.success('Account deleted')
       await signOut()
       router.push('/')
     } catch (error: any) {
@@ -163,7 +160,7 @@ export default function SettingsPage() {
           <div className="max-w-md">
             <h2 className="text-xl font-bold mb-4 text-black">Change Password</h2>
             <p className="text-sm text-gray-600 mb-6">
-              Choose a strong password that you don't use elsewhere
+              Choose a strong password that you don&apos;t use elsewhere
             </p>
 
             <div className="space-y-4">

@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth-context'
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments'
 import { PostStats } from '@/components/post-stats'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 
 interface DetailModalProps {
@@ -266,7 +267,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
 
     const resolveProfileId = async () => {
       try {
-        const { data, error } = await supabase.rpc('ensure_profile', { external_id_param: user.id })
+        const { data, error } = await callRpc('ensure_profile', { external_id_param: user.id })
         if (!cancelled && !error && data) {
           setCurrentProfileId(data as string)
           return
@@ -359,11 +360,10 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
         const commentIds = merged.map(c => c.id);
         if (commentIds.length === 0) return;
 
-        const { data: likedCommentData, error: likedError } = await supabase
-          .rpc('get_user_liked_comment_ids', {
-            external_id_param: user.id,
-            comment_ids_param: commentIds
-          });
+        const { data: likedCommentData, error: likedError } = await callRpc<any[]>(
+          'get_user_liked_comment_ids',
+          { comment_ids_param: commentIds }
+        );
 
         if (!likedError && likedCommentData) {
           const likedIds = likedCommentData.map((item: any) => item.comment_id as string);
@@ -563,9 +563,8 @@ function RedditComment({
     if (!confirmed) return
 
     try {
-      const { data, error } = await supabase.rpc('delete_comment_ext', {
+      const { data, error } = await callRpc('delete_comment_ext', {
         comment_id_param: commentId,
-        external_id_param: user.id
       })
 
       if (error) throw error
@@ -592,9 +591,8 @@ function RedditComment({
     if (!confirmed) return
 
     try {
-      const { data, error } = await supabase.rpc('delete_comment_ext', {
+      const { data, error } = await callRpc('delete_comment_ext', {
         comment_id_param: replyId,
-        external_id_param: user.id
       })
 
       if (error) throw error
@@ -655,9 +653,8 @@ function RedditComment({
                   onClick={async () => {
                     if (!confirm('Delete this comment?')) return;
                     try {
-                      const { data, error } = await supabase.rpc('delete_comment_ext', {
+                      const { data, error } = await callRpc('delete_comment_ext', {
                         comment_id_param: commentId,
-                        external_id_param: user.id
                       });
                       if (error) throw error;
                       if (data && data.success) {
@@ -735,9 +732,8 @@ function RedditComment({
                 onClick={async () => {
                   if (!isAuthenticated || !user?.id) return;
                   try {
-                    const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
+                    const { data, error: rpcError } = await callRpc('toggle_comment_vote_ext', { 
                       comment_id_param: commentId, 
-                      external_id_param: user.id, 
                       direction: 1 
                     });
                     
@@ -819,7 +815,7 @@ function RedditComment({
                         
                         try {
                           // Submit reply to server
-                          await supabase.rpc('add_reply_ext', { comment_id_param: commentId, external_id_param: user.id, content_param: content });
+                          await callRpc('add_reply_ext', { comment_id_param: commentId, external_id_param: user.id, content_param: content });
                           
                           // Refresh ONLY replies for this comment (not all comments)
                           const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: commentId, page_size: 20, page_offset: 0 });
@@ -901,9 +897,8 @@ function RedditComment({
                                 onClick={async () => {
                                   if (!isAuthenticated || !user?.id) return
                                   try {
-                                    const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
+                                    const { data, error: rpcError } = await callRpc('toggle_comment_vote_ext', { 
                                       comment_id_param: r.id, 
-                                      external_id_param: user.id, 
                                       direction: 1 
                                     })
                                     
@@ -1025,9 +1020,8 @@ function OwnerDeleteButton({ postId, onDeleted, refetchPosts }: { postId: string
     try {
       console.log('Attempting to delete post:', postId, 'user:', user?.id)
       
-      const { data, error } = await supabase.rpc('delete_post_ext', {
+      const { data, error } = await callRpc('delete_post_ext', {
         post_id_param: postId,
-        external_id_param: user?.id
       })
 
       console.log('Delete result:', { data, error })

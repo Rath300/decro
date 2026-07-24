@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { uploadAvatar } from '@/lib/upload'
 import { useToast } from '@/hooks/use-toast'
 
@@ -189,44 +190,26 @@ export default function EditProfilePage() {
         setUploading(false)
       }
 
-      let targetProfileId = profileId
-
-      if (!targetProfileId) {
-        try {
-          const { data: ensuredId, error: ensureError } = await supabase
-            .rpc('ensure_profile', { external_id_param: user.id })
-          if (ensureError) throw ensureError
-          if (ensuredId) {
-            targetProfileId = ensuredId as string
-            setProfileId(targetProfileId)
-          }
-        } catch (ensureError) {
-          console.error('Failed to resolve profile id:', ensureError)
-          throw ensureError
-        }
+      if (!profileId) {
+        const { data: ensuredId, error: ensureError } = await callRpc<string>('ensure_profile')
+        if (ensureError) throw new Error(ensureError.message)
+        if (ensuredId) setProfileId(ensuredId)
       }
 
       const usernameNormalized = formData.username.trim()
 
-      // Update profile
-      const updateBuilder = supabase
-        .from('profiles')
-        .update({
-          username: usernameNormalized,
-          full_name: formData.full_name.trim() || null,
-          bio: formData.bio.trim() || null,
-          avatar_url: avatarUrl || null,
-          external_id: user.id
-        })
+      // Replaces a direct profiles update that relied on profiles_update_all
+      // being WITH CHECK (true) — i.e. anyone could rewrite anyone's profile.
+      // The RPC scopes the write to the caller and re-checks username uniqueness
+      // inside the same statement.
+      const { error } = await callRpc('update_profile_ext', {
+        username_param: usernameNormalized,
+        full_name_param: formData.full_name.trim() || null,
+        bio_param: formData.bio.trim() || null,
+        avatar_url_param: avatarUrl || null,
+      })
 
-      const { error } = targetProfileId
-        ? await updateBuilder.eq('id', targetProfileId)
-        : await updateBuilder.eq('external_id', user.id)
-
-      if (error) {
-        console.error('Profile update error:', error)
-        throw error
-      }
+      if (error) throw new Error(error.message)
 
       toast.success('Profile updated successfully!')
       setOriginalUsername(usernameNormalized)

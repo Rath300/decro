@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/auth-context'
 import { usePosts } from '@/context/post-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { PostStats } from '@/components/post-stats'
 import { useToast } from '@/hooks/use-toast'
 import DetailModal from '@/components/detail-modal'
@@ -137,7 +138,7 @@ export default function PublicProfilePage() {
       // Track profile view
       if (currentUser?.id) {
         try {
-          await supabase.rpc('track_profile_view', {
+          await callRpc('track_profile_view', {
             profile_id_param: profileData.id,
             viewer_id_param: currentUser.id
           })
@@ -232,9 +233,8 @@ export default function PublicProfilePage() {
     setFollowLoading(true)
 
     try {
-      const { data, error } = await supabase.rpc('toggle_follow_user', {
+      const { data, error } = await callRpc('toggle_follow_user', {
         target_user_id: profile.id,
-        current_user_id: currentUserProfileId
       })
 
       if (error) throw error

@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments';
 import { PostStats } from './post-stats';
 import supabase from '@/lib/supabase-client';
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast';
 // SiteHeader removed per request to avoid obstruction
 
@@ -38,7 +39,10 @@ export default function FeedPage() {
   // Global header handles navigation; keep state for legacy references if any
   const [activeTab, setActiveTab] = useState('feed');
   const [displayedCards, setDisplayedCards] = useState<MediaCard[]>([]);
-  const [sortMode, setSortMode] = useState<'random' | 'newest'>('random');
+  // Chronological by default. The feed opened in 'random' before, which made it
+  // impossible to tell whether new posts had arrived and reshuffled the grid on
+  // every refetch.
+  const [sortMode, setSortMode] = useState<'random' | 'newest'>('newest');
   const [showStats, setShowStats] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalAction, setAuthModalAction] = useState('');
@@ -46,14 +50,20 @@ export default function FeedPage() {
 
   useEffect(() => {
     if (sortMode === 'random') {
-      const shuffled = [...posts].sort(() => Math.random() - 0.5);
+      // Fisher-Yates. Comparator-based shuffling (`sort(() => Math.random() - 0.5)`)
+      // is not uniform and its result depends on the engine's sort algorithm.
+      const shuffled = [...posts];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
       setDisplayedCards(shuffled);
-    } else if (sortMode === 'newest') {
-      const sorted = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setDisplayedCards(sorted);
-    } else {
-      setDisplayedCards(posts);
+      return;
     }
+
+    setDisplayedCards(
+      [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    );
   }, [posts, sortMode]);
 
   // Handle hash navigation (from notifications/history)
@@ -810,11 +820,10 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
         const commentIds = merged.map(c => c.id);
         if (commentIds.length === 0) return;
 
-        const { data: likedCommentData, error: likedError } = await supabase
-          .rpc('get_user_liked_comment_ids', {
-            external_id_param: user.id,
-            comment_ids_param: commentIds
-          });
+        const { data: likedCommentData, error: likedError } = await callRpc<any[]>(
+          'get_user_liked_comment_ids',
+          { comment_ids_param: commentIds }
+        );
 
         if (!likedError && likedCommentData) {
           const likedIds = likedCommentData.map((item: any) => item.comment_id as string);
@@ -893,9 +902,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                   onClick={async () => {
                     if (!confirm('Delete this comment?')) return;
                     try {
-                      const { data, error } = await supabase.rpc('delete_comment_ext', {
+                      const { data, error } = await callRpc('delete_comment_ext', {
                         comment_id_param: comment.id,
-                        external_id_param: user.id
                       });
                       if (error) throw error;
                       if (data && data.success) {
@@ -962,9 +970,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                 onClick={async () => {
                   if (!isAuthenticated || !user?.id) return;
                   try {
-                    const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
+                    const { data, error: rpcError } = await callRpc('toggle_comment_vote_ext', { 
                       comment_id_param: comment.id, 
-                      external_id_param: user.id, 
                       direction: 1 
                     });
                     
@@ -1050,7 +1057,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                         
                         // Submit reply
                         try {
-                          await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                          await callRpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
                         } catch (error) {
                           console.error('Failed to add reply:', error);
                           return;
@@ -1081,7 +1088,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                       
                       // Submit reply
                       try {
-                        await supabase.rpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                        await callRpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
                       } catch (error) {
                         console.error('Failed to add reply:', error);
                         return;
@@ -1242,9 +1249,8 @@ function DeletePostButton({ postId, onDeleted, refetchPosts }: { postId: string;
     try {
       console.log('Attempting to delete post:', postId, 'user:', user?.id);
       
-      const { data, error } = await supabase.rpc('delete_post_ext', {
+      const { data, error } = await callRpc('delete_post_ext', {
         post_id_param: postId,
-        external_id_param: user?.id
       });
 
       console.log('Delete result:', { data, error });

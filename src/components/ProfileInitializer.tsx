@@ -49,7 +49,7 @@ export function ProfileInitializer({
           <div className="text-6xl mb-4">⚠️</div>
           <h2 className="text-xl font-bold text-black mb-4">Profile Setup Issue</h2>
           <p className="text-sm text-gray-600 mb-6">
-            We're having trouble setting up your profile. This might be a temporary issue.
+            We&apos;re having trouble setting up your profile. This might be a temporary issue.
           </p>
           <p className="text-xs text-gray-500 mb-6 font-mono bg-gray-50 p-3 border border-gray-200">
             {error.message}

@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
 
 export default function EditPostPage() {
@@ -104,46 +105,26 @@ export default function EditPostPage() {
     setSaving(true)
 
     try {
-      // Update post via RPC (bypasses RLS)
-      const { data: updateResult, error: updateError } = await supabase.rpc('update_post_ext', {
+      const { data: updateResult, error: updateError } = await callRpc<any>('update_post_ext', {
         post_id_param: postId,
-        external_id_param: user.id,
         title_param: formData.title.trim(),
         description_param: formData.description.trim() || null
       })
 
-      if (updateError) throw updateError
-      
-      if (updateResult && !updateResult.success) {
+      if (updateError) throw new Error(updateError.message)
+
+      if (updateResult && updateResult.success === false) {
         throw new Error(updateResult.error || 'Failed to update post')
       }
 
-      // Update tags - delete old tags and add new ones
-      const { error: deleteError } = await supabase
-        .from('post_tags')
-        .delete()
-        .eq('post_id', postId)
+      // Replaces the old delete-then-insert loop against post_tags, which
+      // depended on an always-true insert policy and did not check ownership.
+      const { error: tagsError } = await callRpc('set_post_tags_ext', {
+        post_id_param: postId,
+        tags_param: formData.tags,
+      })
 
-      if (deleteError) throw deleteError
-
-      // Add new tags
-      if (formData.tags.length > 0) {
-        for (const tagName of formData.tags) {
-          try {
-            const { data: tagId, error: tagError } = await supabase.rpc('get_or_create_tag', {
-              tag_name: tagName
-            })
-
-            if (!tagError && tagId) {
-              await supabase
-                .from('post_tags')
-                .insert({ post_id: postId, tag_id: tagId })
-            }
-          } catch (tagErr) {
-            console.warn('Failed to add tag:', tagName, tagErr)
-          }
-        }
-      }
+      if (tagsError) throw new Error(tagsError.message)
 
       toast.success('Post updated successfully!')
       router.push('/feed')
@@ -169,7 +150,7 @@ export default function EditPostPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Edit Post</h1>
           <p className="text-gray-600 text-sm">
-            Update your post's title, description, and tags
+            Update your post&apos;s title, description, and tags
           </p>
         </div>
 
