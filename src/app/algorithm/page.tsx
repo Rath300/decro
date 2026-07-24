@@ -105,7 +105,7 @@ export default function AlgorithmPage() {
         {/* What We DON'T Do */}
         <div className="border-2 border-black p-6 mb-6 bg-white">
           <h2 className="text-2xl font-bold mb-4 border-b-2 border-black pb-2 text-red-600">
-            What We DON'T Do
+            What We DON&apos;T Do
           </h2>
           
           <div className="space-y-3 text-sm">
@@ -114,7 +114,7 @@ export default function AlgorithmPage() {
               <div>
                 <strong>No Paid Promotion</strong>
                 <p className="text-gray-600">
-                  Your ranking cannot be bought. We don't accept money for visibility.
+                  Your ranking cannot be bought. We don&apos;t accept money for visibility.
                 </p>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function AlgorithmPage() {
               <div>
                 <strong>No Shadowbanning</strong>
                 <p className="text-gray-600">
-                  If your content is legal, it's shown. We don't hide accounts without telling you.
+                  If your content is legal, it&apos;s shown. We don&apos;t hide accounts without telling you.
                 </p>
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function AlgorithmPage() {
               <div>
                 <strong>No Exploitation of Addiction</strong>
                 <p className="text-gray-600">
-                  We don't optimize for "engagement at all costs" or manipulate your feed to keep you scrolling.
+                  We don&apos;t optimize for &ldquo;engagement at all costs&rdquo; or manipulate your feed to keep you scrolling.
                 </p>
               </div>
             </div>
@@ -166,10 +166,10 @@ export default function AlgorithmPage() {
           <h2 className="text-xl font-bold mb-4">Try It Yourself</h2>
           <p className="text-sm mb-4">
             On the <Link href="/feed" className="underline font-bold">Feed page</Link>, 
-            toggle between "Chronological" and "Fair Algorithm" to see the difference.
+            toggle between &ldquo;Chronological&rdquo; and &ldquo;Fair Algorithm&rdquo; to see the difference.
           </p>
           <p className="text-xs text-gray-600">
-            The Fair Algorithm is always improving. We're committed to transparency and 
+            The Fair Algorithm is always improving. We&apos;re committed to transparency and 
             will update this page as we refine the system.
           </p>
         </div>
