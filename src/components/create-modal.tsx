@@ -14,7 +14,7 @@ interface CreateOption {
     | 'image'
     | 'music'
     | 'video'
-    | 'physical-art'
+    | 'physical_art'
     | 'edits'
     | 'film'
     | 'graphic_design'
