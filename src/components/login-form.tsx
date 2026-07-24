@@ -72,15 +72,16 @@ export default function LoginForm() {
           {/* Email Field */}
           <div className="space-y-2">
             <label htmlFor="email" className="block text-sm font-normal text-black font-space-grotesk">
-              Email
+              Email or username
             </label>
             <input
-              type="email"
+              type="text"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input-field focus:outline-none focus:ring-2 focus:ring-blue-500 font-space-grotesk"
-              placeholder="Enter your email"
+              placeholder="Email or username"
+              autoComplete="username"
               required
             />
           </div>

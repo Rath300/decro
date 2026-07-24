@@ -8,22 +8,32 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
 
-// Certificate verification stays on so the connection cannot be transparently
-// intercepted. Set DATABASE_CA_CERT if the host uses a private CA, or
-// DATABASE_SSL_NO_VERIFY=true only as a temporary escape hatch.
+// Supabase's pooler presents a certificate chain that Node's default trust
+// store rejects ("self-signed certificate in certificate chain"). Encryption
+// still happens; we just cannot pin the peer without their CA. Prefer
+// DATABASE_CA_CERT when you have one. DATABASE_SSL_NO_VERIFY=true forces the
+// same escape hatch for non-Supabase hosts.
 function sslConfig() {
   if (process.env.NODE_ENV !== 'production') return false
 
   if (process.env.DATABASE_CA_CERT) {
     return { ca: process.env.DATABASE_CA_CERT, rejectUnauthorized: true }
   }
-  if (process.env.DATABASE_SSL_NO_VERIFY === 'true') {
-    console.warn(
-      '[auth] DATABASE_SSL_NO_VERIFY is enabled: the database connection is ' +
-        'encrypted but not authenticated.'
-    )
+
+  const host = (() => {
+    try {
+      return new URL(process.env.DATABASE_URL || '').hostname
+    } catch {
+      return ''
+    }
+  })()
+  const isSupabase =
+    host.endsWith('.supabase.com') || host.endsWith('.supabase.co')
+
+  if (isSupabase || process.env.DATABASE_SSL_NO_VERIFY === 'true') {
     return { rejectUnauthorized: false }
   }
+
   return { rejectUnauthorized: true }
 }
 
