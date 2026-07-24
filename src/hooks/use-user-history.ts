@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import db from '@/lib/db'
 import { useAuth } from '@/context/auth-context'
 import supabase from '@/lib/supabase-client'
+import { callRpc } from '@/lib/rpc'
 
 export interface UserHistoryItem {
   id?: number
@@ -58,9 +59,7 @@ export function useUserHistory() {
           .filter(item => item.targetType === 'post' && item.action === 'view')
           .slice(0, 5)
 
-        // Get liked posts from Supabase
-        const likesResult = await supabase
-          .rpc('get_user_liked_posts_ext', { external_id_param: user.id })
+        const likesResult = await callRpc<any[]>('get_user_liked_posts_ext')
 
         // Process recent posts by fetching their titles
         const recentPosts = []

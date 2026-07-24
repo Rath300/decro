@@ -509,7 +509,7 @@ export default function ProfilePage() {
                       : 'border-transparent text-gray-500 hover:text-black'
                   }`}
                 >
-                  Network
+                  Connections
                 </button>
                 <button
                   onClick={() => setActiveTab('requests')}
@@ -519,7 +519,7 @@ export default function ProfilePage() {
                       : 'border-transparent text-gray-500 hover:text-black'
                   }`}
                 >
-                  Requests
+                  Connection Requests
                 </button>
               </div>
             </div>

@@ -64,7 +64,7 @@ export function CollaborationRequests() {
       if (error) throw error
       
       if (data.success) {
-        toast.success('Collaboration request accepted!')
+        toast.success('Connection request accepted!')
         await loadRequests()
       } else {
         toast.error(data.error || 'Failed to accept request')
@@ -131,7 +131,7 @@ export function CollaborationRequests() {
 
   return (
     <div className="font-['Space_Mono']">
-      <h2 className="text-2xl font-bold mb-6">Collaboration Requests</h2>
+      <h2 className="text-2xl font-bold mb-6">Connection Requests</h2>
       
       {/* Tabs */}
       <div className="border-b-2 border-gray-200 mb-6">
@@ -171,8 +171,8 @@ export function CollaborationRequests() {
         <div className="text-center py-12 border-2 border-dashed border-gray-300">
           <p className="text-gray-600">
             {activeTab === 'received' 
-              ? 'No collaboration requests received yet' 
-              : 'No collaboration requests sent yet'}
+              ? 'No connection requests received yet' 
+              : 'No connection requests sent yet'}
           </p>
         </div>
       )}

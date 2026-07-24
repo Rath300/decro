@@ -1089,7 +1089,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                         
                         // Submit reply
                         try {
-                          await callRpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                          await callRpc('add_reply_ext', { comment_id_param: comment.id, content_param: content });
                         } catch (error) {
                           console.error('Failed to add reply:', error);
                           return;
@@ -1120,7 +1120,7 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                       
                       // Submit reply
                       try {
-                        await callRpc('add_reply_ext', { comment_id_param: comment.id, external_id_param: user.id, content_param: content });
+                        await callRpc('add_reply_ext', { comment_id_param: comment.id, content_param: content });
                       } catch (error) {
                         console.error('Failed to add reply:', error);
                         return;
@@ -1179,9 +1179,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                                     }
                                     if (!confirm('Delete this reply?')) return;
                                     try {
-                                      const { data, error } = await supabase.rpc('delete_comment_ext', {
+                                      const { data, error } = await callRpc('delete_comment_ext', {
                                         comment_id_param: r.id,
-                                        external_id_param: user.id
                                       });
                                       if (error) throw error;
                                       if (data && data.success) {
@@ -1230,9 +1229,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                                 onClick={async () => {
                                   if (!isAuthenticated || !user?.id) return;
                                   try {
-                                    const { data, error: rpcError } = await supabase.rpc('toggle_comment_vote_ext', { 
+                                    const { data, error: rpcError } = await callRpc('toggle_comment_vote_ext', { 
                                       comment_id_param: r.id, 
-                                      external_id_param: user.id, 
                                       direction: 1 
                                     });
                                     
@@ -1312,9 +1310,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                                         setOpenReplyFor(null);
                                         
                                         try {
-                                          await supabase.rpc('add_reply_ext', { 
+                                          await callRpc('add_reply_ext', { 
                                             comment_id_param: r.id, 
-                                            external_id_param: user.id, 
                                             content_param: content 
                                           });
                                         } catch (error) {
@@ -1347,9 +1344,8 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                                       setOpenReplyFor(null);
                                       
                                       try {
-                                        await supabase.rpc('add_reply_ext', { 
+                                        await callRpc('add_reply_ext', { 
                                           comment_id_param: r.id, 
-                                          external_id_param: user.id, 
                                           content_param: content 
                                         });
                                       } catch (error) {

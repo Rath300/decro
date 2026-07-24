@@ -53,7 +53,7 @@ export function NetworkView({ userId }: { userId?: string }) {
   }
 
   const handleRemoveCollab = async (collabId: string) => {
-    if (!confirm('Remove this collaboration? This action cannot be undone.')) return
+    if (!confirm('Remove this connection? This action cannot be undone.')) return
 
     try {
       const { data, error } = await callRpc<any>('remove_collaboration_ext', {
@@ -63,14 +63,14 @@ export function NetworkView({ userId }: { userId?: string }) {
       if (error) throw error
       
       if (data.success) {
-        toast.success('Collaboration removed')
+        toast.success('Connection removed')
         await loadNetwork()
       } else {
-        toast.error(data.error || 'Failed to remove collaboration')
+        toast.error(data.error || 'Failed to remove connection')
       }
     } catch (error: any) {
-      console.error('Failed to remove collaboration:', error)
-      toast.error(error.message || 'Failed to remove collaboration')
+      console.error('Failed to remove connection:', error)
+      toast.error(error.message || 'Failed to remove connection')
     }
   }
 
@@ -92,7 +92,7 @@ export function NetworkView({ userId }: { userId?: string }) {
     <div className="font-['Space_Mono']">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Your Network</h2>
-        <span className="text-sm text-gray-600">{network.length} Collaborator{network.length !== 1 ? 's' : ''}</span>
+        <span className="text-sm text-gray-600">{network.length} Connection{network.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Loading */}
@@ -106,9 +106,9 @@ export function NetworkView({ userId }: { userId?: string }) {
       {!loading && network.length === 0 && (
         <div className="text-center py-12 border-2 border-dashed border-gray-300">
           <div className="text-4xl mb-4">🤝</div>
-          <p className="text-gray-600 mb-2">No collaborations yet</p>
+          <p className="text-gray-600 mb-2">No connections yet</p>
           <p className="text-sm text-gray-500">
-            Start building your creative network by sending collaboration requests to other artists
+            Send a connection request from someone&apos;s profile to start building your network
           </p>
         </div>
       )}
@@ -175,7 +175,7 @@ export function NetworkView({ userId }: { userId?: string }) {
                   <button
                     onClick={() => handleRemoveCollab(collab.collaboration_id)}
                     className="px-3 py-2 border-2 border-red-300 text-red-600 hover:bg-red-50 transition-colors text-sm"
-                    title="Remove collaboration"
+                    title="Remove connection"
                   >
                     ✕
                   </button>

@@ -57,7 +57,7 @@ const ALLOWLIST: Record<string, RpcSpec> = {
 
   // Views. Anonymous visitors are counted, so identity may be null.
   track_view: EXTERNAL('external_id_param', false),
-  track_profile_view: EXTERNAL('viewer_id', false),
+  track_profile_view: EXTERNAL('viewer_id_param', false),
 
   // Profile lifecycle.
   upsert_profile_from_external: EXTERNAL('external_id_param'),
@@ -81,7 +81,8 @@ const ALLOWLIST: Record<string, RpcSpec> = {
   add_post_to_spotlight_ext: EXTERNAL('external_id_param'),
   delete_spotlight_collection_ext: EXTERNAL('external_id_param'),
 
-  // Collaboration.
+  // Connections (friend requests; same tables as the old "collaboration" feature).
+  check_collaboration_status: PROFILE('current_user_id'),
   send_collaboration_request: PROFILE('sender_profile_id'),
   respond_to_collaboration_request_ext: EXTERNAL('external_id_param'),
   cancel_collaboration_request_ext: EXTERNAL('external_id_param'),

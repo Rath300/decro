@@ -64,9 +64,7 @@ export default function PublicProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [posts, setPosts] = useState<UserPost[]>([])
   const [stats, setStats] = useState<UserStats | null>(null)
-  const [isFollowing, setIsFollowing] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [followLoading, setFollowLoading] = useState(false)
   const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null)
   const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'most_liked'>('newest')
   const [displayedPosts, setDisplayedPosts] = useState<UserPost[]>([])
@@ -140,26 +138,9 @@ export default function PublicProfilePage() {
         try {
           await callRpc('track_profile_view', {
             profile_id_param: profileData.id,
-            viewer_id_param: currentUser.id
           })
         } catch (error) {
           console.error('Failed to track profile view:', error)
-        }
-      }
-
-      // Check if current user is following
-      if (currentUser?.id && currentUserProfileId) {
-        try {
-          const { data: followData, error: followError } = await supabase.rpc('is_following_user', {
-            target_user_id: profileData.id,
-            current_user_id: currentUserProfileId
-          })
-          if (!followError) {
-            setIsFollowing(followData || false)
-          }
-        } catch (followError) {
-          console.warn('Failed to check follow status:', followError)
-          setIsFollowing(false)
         }
       }
 
@@ -219,42 +200,6 @@ export default function PublicProfilePage() {
       toast.error('Failed to load profile: ' + (error.message || 'Please try again'))
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleFollow = async () => {
-    if (!currentUser?.id || !currentUserProfileId) {
-      toast.error('Please sign in to follow users')
-      return
-    }
-
-    if (!profile) return
-
-    setFollowLoading(true)
-
-    try {
-      const { data, error } = await callRpc('toggle_follow_user', {
-        target_user_id: profile.id,
-      })
-
-      if (error) throw error
-
-      setIsFollowing(data.following)
-      
-      // Update follower count
-      if (stats) {
-        setStats({
-          ...stats,
-          follower_count: data.following ? stats.follower_count + 1 : stats.follower_count - 1
-        })
-      }
-
-      toast.success(data.following ? 'Following!' : 'Unfollowed')
-    } catch (error: any) {
-      console.error('Follow toggle failed:', error)
-      toast.error(error.message || 'Failed to follow user')
-    } finally {
-      setFollowLoading(false)
     }
   }
 
@@ -421,19 +366,15 @@ export default function PublicProfilePage() {
               </button>
             ) : (
               <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={handleFollow}
-                  disabled={followLoading}
-                  className={`flex-1 sm:flex-none px-4 py-2 border-2 transition-colors text-sm ${
-                    isFollowing
-                      ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
-                      : 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  {followLoading ? '...' : isFollowing ? 'Connected' : 'Connect'}
-                </button>
-                <MessageButton targetUserId={profile.id} currentUserProfileId={currentUserProfileId} />
-                <CollaborationButton targetUserId={profile.id} targetUsername={profile.username} currentUserProfileId={currentUserProfileId} />
+                <CollaborationButton
+                  targetUserId={profile.id}
+                  targetUsername={profile.username}
+                  currentUserProfileId={currentUserProfileId}
+                />
+                <MessageButton
+                  targetUserId={profile.id}
+                  currentUserProfileId={currentUserProfileId}
+                />
               </div>
             )}
           </div>

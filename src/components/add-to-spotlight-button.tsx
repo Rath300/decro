@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/auth-context';
 import supabase from '@/lib/supabase-client';
+import { callRpc } from '@/lib/rpc';
 import { useRouter } from 'next/navigation';
 
 interface Spotlight {
@@ -108,10 +109,9 @@ export default function AddToSpotlightButton({ postId }: AddToSpotlightButtonPro
     if (!user?.id || saving) return;
     setSaving(spotlightId);
     try {
-      const { data, error } = await supabase.rpc('add_post_to_spotlight_ext', {
+      const { data, error } = await callRpc<any>('add_post_to_spotlight_ext', {
         collection_id_param: spotlightId,
         post_id_param: postId,
-        external_id_param: user.id,
       });
 
       if (error) throw error;
