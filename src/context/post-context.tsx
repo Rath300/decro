@@ -8,7 +8,7 @@ import db from '@/lib/db'
 
 export interface MediaCard {
   id: string;
-  type: 'music' | 'physical-art' | 'image' | 'edits' | 'video' | 'film' | 'graphic_design' | 'text';
+  type: 'music' | 'physical_art' | 'image' | 'edits' | 'video' | 'film' | 'graphic_design' | 'text';
   title: string;
   description?: string;
   imageUrl: string;
@@ -53,6 +53,10 @@ interface PostContextType {
   trackView: (postId: string) => void;
   // Refetch posts with server sort
   refetchPosts: (sortBy?: 'created_at' | 'likes' | 'comments') => Promise<void>;
+  // Fair feed algorithm
+  useFairFeed: boolean;
+  setUseFairFeed: (use: boolean) => void;
+  fetchFairFeed: () => Promise<void>;
   
   // User action tracking
   trackUserAction: (action: string, targetId: string, targetType: string) => void;
@@ -68,6 +72,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const [selectedCard, setSelectedCard] = useState<MediaCard | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [useFairFeed, setUseFairFeed] = useState(false);
   const { user } = useAuth();
 
   const toggleLike = async (cardId: string) => {
@@ -378,6 +383,51 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Fair feed algorithm fetch
+  const fetchFairFeed = async () => {
+    try {
+      console.log('Fetching fair feed...')
+      const { data: fairPosts, error: fairError } = await supabase
+        .rpc('get_fair_feed', {
+          viewer_id_param: user?.id || null,
+          page_size_param: 100,
+          page_offset_param: 0
+        })
+
+      if (fairError) {
+        console.error('Failed to fetch fair feed:', fairError)
+        throw fairError
+      }
+
+      if (fairPosts && Array.isArray(fairPosts)) {
+        const mapped: MediaCard[] = fairPosts
+          .filter((post: any) => post && post.id)
+          .map((post: any) => ({
+            id: String(post.id),
+            type: post.content_type || 'image',
+            title: post.title || 'Untitled',
+            description: post.description ?? undefined,
+            imageUrl: post.media_url || '',
+            aspectRatio: 'square' as const,
+            audioUrl: post.audio_url ?? undefined,
+            videoUrl: post.video_url ?? undefined,
+            creator: post.creator_username || 'Anonymous',
+            date: post.created_at || new Date().toISOString(),
+            isCurated: false,
+            views: post.views_count ?? 0,
+            tags: [],
+          }))
+
+        console.log('Fair feed posts:', mapped.length)
+        setPosts(mapped)
+      }
+    } catch (e: any) {
+      console.error('Failed to fetch fair feed:', e)
+      // Fallback to regular feed
+      await refetchPosts('created_at')
+    }
+  }
+
   useEffect(() => {
     (async () => {
       // 1. Load from local cache first for instant display
@@ -644,6 +694,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
     handleComment,
     trackView,
     refetchPosts,
+    useFairFeed,
+    setUseFairFeed,
+    fetchFairFeed,
     trackUserAction,
     trackSubgroupVisit
   };

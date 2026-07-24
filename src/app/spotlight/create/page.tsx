@@ -17,7 +17,7 @@ interface PostRow {
 
 export default function SpotlightCreatePage() {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -31,11 +31,12 @@ export default function SpotlightCreatePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (authLoading) return
     if (!isAuthenticated) {
       router.push('/')
       return
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, authLoading])
 
   useEffect(() => {
     const loadPosts = async () => {

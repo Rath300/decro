@@ -27,7 +27,7 @@ const CREATE_OPTIONS: CreateOption[] = [
   { type: 'music', label: 'Music', icon: '🎵' },
   { type: 'video', label: 'Video', icon: '🎬' },
   { type: 'film', label: 'Film', icon: '🎞️' },
-  { type: 'physical-art', label: 'Physical Art', icon: '🎨' },
+  { type: 'physical_art', label: 'Physical Art', icon: '🎨' },
   { type: 'edits', label: 'Edits', icon: '✂️' },
   { type: 'graphic_design', label: 'Graphic Design', icon: '🎯' },
   { type: 'text', label: 'Text', icon: '📝' },

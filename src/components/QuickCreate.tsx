@@ -21,7 +21,7 @@ const contentTypes: ContentType[] = [
   { id: 'music', label: 'Music', icon: '🎵', color: 'bg-white' },
   { id: 'video', label: 'Video', icon: '🎬', color: 'bg-white' },
   { id: 'text', label: 'Text', icon: 'Aa', color: 'bg-white' },
-  { id: 'physical-art', label: 'Art', icon: '🎨', color: 'bg-white' },
+  { id: 'physical_art', label: 'Art', icon: '🎨', color: 'bg-white' },
 ]
 
 export default function QuickCreate() {

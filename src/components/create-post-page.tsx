@@ -66,7 +66,7 @@ type ContentType =
   | 'image'
   | 'music'
   | 'text'
-  | 'physical-art'
+  | 'physical_art'
   | 'edits'
   | 'video'
   | 'film'
@@ -76,7 +76,7 @@ const CONTENT_TYPES: ContentType[] = [
   'image',
   'music',
   'text',
-  'physical-art',
+  'physical_art',
   'edits',
   'video',
   'film',
@@ -86,6 +86,7 @@ const CONTENT_TYPES: ContentType[] = [
 const CONTENT_TYPE_ALIASES: Record<string, ContentType> = {
   photo: 'image',
   audio: 'music',
+  'physical-art': 'physical_art',
 }
 
 function normaliseContentType(value: string | null): ContentType {
@@ -245,7 +246,7 @@ export default function CreatePostPage() {
       alert('Please upload an audio file for music posts');
       return;
     }
-    if (['image', 'physical-art', 'edits', 'graphic_design'].includes(postData.contentType) && !postData.file) {
+    if (['image', 'physical_art', 'edits', 'graphic_design'].includes(postData.contentType) && !postData.file) {
       alert('Please upload an image file');
       return;
     }
@@ -349,7 +350,7 @@ export default function CreatePostPage() {
               {[
                 { id: 'image', label: 'Photo', icon: '📷' },
                 { id: 'music', label: 'Music', icon: '🎵' },
-                { id: 'physical-art', label: 'Physical Art', icon: '🎨' },
+                { id: 'physical_art', label: 'Physical Art', icon: '🎨' },
                 { id: 'edits', label: 'Edits', icon: '✂️' },
                 { id: 'video', label: 'Video', icon: '🎬' },
                 { id: 'film', label: 'Film', icon: '🎞️' },
@@ -415,10 +416,10 @@ export default function CreatePostPage() {
           </div>
 
           {/* File Upload Section */}
-          {['image', 'physical-art', 'edits', 'graphic_design'].includes(postData.contentType) && (
+          {['image', 'physical_art', 'edits', 'graphic_design'].includes(postData.contentType) && (
             <div>
               <label className="block text-sm font-['Space_Mono'] font-medium text-black mb-2">
-                Upload {postData.contentType === 'image' ? 'Photo / GIF' : postData.contentType === 'physical-art' ? 'Physical Art' : postData.contentType === 'graphic_design' ? 'Graphic Design' : postData.contentType}
+                Upload {postData.contentType === 'image' ? 'Photo / GIF' : postData.contentType === 'physical_art' ? 'Physical Art' : postData.contentType === 'graphic_design' ? 'Graphic Design' : postData.contentType}
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 {!postData.file ? (

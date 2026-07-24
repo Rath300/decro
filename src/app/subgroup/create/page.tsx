@@ -8,9 +8,6 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
-import supabase from '@/lib/supabase-client'
-import { callRpc } from '@/lib/rpc'
-import { uploadImage } from '@/lib/upload'
 import { useToast } from '@/hooks/use-toast'
 // Global header/menu are provided by layout
 
@@ -19,7 +16,6 @@ export default function CreateSubgroupPage() {
   const router = useRouter()
   const toast = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [uploadingCover, setUploadingCover] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -55,27 +51,12 @@ export default function CreateSubgroupPage() {
     }
   }
 
-  const checkSlugAvailable = async (slug: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('subgroups')
-        .select('id')
-        .eq('slug', slug)
-        .single()
-
-      return !data
-    } catch {
-      return true
-    }
-  }
-
   const handleSubmit = async () => {
     if (!user?.id) {
       toast.error('You must be logged in')
       return
     }
 
-    // Validation
     if (!formData.name.trim()) {
       toast.error('Name is required')
       return
@@ -90,49 +71,39 @@ export default function CreateSubgroupPage() {
       toast.error('Invalid slug - must be at least 3 characters')
       return
     }
-    
-    // Prevent double submission
+
     if (isSubmitting) return
 
     setIsSubmitting(true)
 
     try {
-      // Check slug availability
-      const isAvailable = await checkSlugAvailable(formData.slug)
-      if (!isAvailable) {
-        toast.error('This name/slug is already taken')
-        setIsSubmitting(false)
-        return
-      }
-
-      let coverUrl: string | null = null
-
-      // Upload cover image if provided
+      // Cover upload has to go through the authenticated API route; the browser
+      // cannot call create_subgroup_ext with a cover URL alone after EXECUTE was
+      // revoked from anon.
+      const body = new FormData()
+      body.append('name', formData.name.trim())
+      body.append('slug', formData.slug)
+      body.append('description', formData.description.trim())
       if (coverFile) {
-        setUploadingCover(true)
-        try {
-          const result = await uploadImage(coverFile, 'media')
-          coverUrl = result.url
-        } catch (uploadError) {
-          toast.error('Failed to upload cover image')
-          setIsSubmitting(false)
-          setUploadingCover(false)
-          return
-        }
-        setUploadingCover(false)
+        body.append('coverFile', coverFile)
       }
 
-      const { error } = await callRpc('create_subgroup_ext', {
-        name_param: formData.name.trim(),
-        slug_param: formData.slug,
-        description_param: formData.description.trim() || null,
-        cover_image_url_param: coverUrl,
+      const response = await fetch('/api/subgroups', {
+        method: 'POST',
+        body,
       })
 
-      if (error) throw new Error(error.message)
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create subgroup')
+      }
+
+      if (!result.slug) {
+        throw new Error('No slug returned from subgroup creation')
+      }
 
       toast.success('Subgroup created successfully!')
-      router.push(`/subgroup/${formData.slug}`)
+      router.push(`/subgroup/${result.slug}`)
       router.refresh()
     } catch (error: any) {
       console.error('Failed to create subgroup:', error)
@@ -277,22 +248,18 @@ export default function CreateSubgroupPage() {
           <div className="flex gap-3 pt-4">
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting || uploadingCover}
+              disabled={isSubmitting}
               className={`flex-1 py-3 text-sm font-medium border-2 border-black transition-colors ${
-                isSubmitting || uploadingCover
+                isSubmitting
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-black text-white hover:bg-gray-800'
               }`}
             >
-              {isSubmitting
-                ? 'Creating...'
-                : uploadingCover
-                ? 'Uploading Image...'
-                : 'Create Subgroup'}
+              {isSubmitting ? 'Creating...' : 'Create Subgroup'}
             </button>
             <button
               onClick={() => router.back()}
-              disabled={isSubmitting || uploadingCover}
+              disabled={isSubmitting}
               className="px-6 py-3 text-sm border-2 border-gray-300 hover:border-black transition-colors disabled:opacity-50 text-black bg-white"
             >
               Cancel
@@ -303,4 +270,3 @@ export default function CreateSubgroupPage() {
     </div>
   )
 }
-
