@@ -50,7 +50,19 @@ const nextConfig = {
     ],
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }]
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      {
+        // Must never be sticky — clients need the kill-switch SW immediately.
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, max-age=0',
+          },
+        ],
+      },
+    ]
   },
 }
 

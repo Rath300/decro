@@ -115,13 +115,26 @@ export default function RootLayout({
             </ProfileInitializer>
           </ClientProviders>
         </ErrorBoundary>
-        <script dangerouslySetInnerHTML={{ __html: `
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+          // The old SW cache-first'd HTML and hashed Next chunks, which pinned
+          // pre-security bundles after deploy. Register the kill-switch once so
+          // it can wipe caches and unregister; do not keep a persistent SW.
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-              navigator.serviceWorker.register('/sw.js').catch(() => {});
+              navigator.serviceWorker.getRegistrations().then((regs) => {
+                if (regs.length === 0) return;
+                navigator.serviceWorker.register('/sw.js?v=kill-1').catch(() => {});
+              });
+              if (window.caches && caches.keys) {
+                caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).catch(() => {});
+              }
             });
           }
-        ` }} />
+        `,
+          }}
+        />
       </body>
     </html>
   )
