@@ -12,7 +12,7 @@ const GA_ID = 'G-TS03JV5TNX'
 
 export const metadata: Metadata = {
   title: {
-    default: 'Decro - Creative Social Platform',
+    default: 'Decro',
     template: '%s | Decro'
   },
   description: 'Share your creativity with the world. A social platform for artists, musicians, photographers, and creators. No algorithm, just authentic content.',
@@ -34,20 +34,20 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: '/',
     siteName: 'Decro',
-    title: 'Decro - Creative Social Platform',
+    title: 'Decro',
     description: 'Share your creativity with the world. A social platform for artists, musicians, photographers, and creators.',
     images: [
       {
         url: '/decky.png',
         width: 1200,
         height: 630,
-        alt: 'Decro - Creative Social Platform',
+        alt: 'Decro',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Decro - Creative Social Platform',
+    title: 'Decro',
     description: 'Share your creativity with the world. A social platform for artists, musicians, and creators.',
     images: ['/decky.png'],
   },
