@@ -61,10 +61,15 @@ export default function PitchWeb({
   const [dims, setDims] = useState({ w: 800, h: 600 })
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const hoverIdRef = useRef<string | null>(null)
   const imageCache = useRef(new Map<string, HTMLImageElement | null>())
   const posCache = useRef(
     new Map<string, { x: number; y: number; vx?: number; vy?: number }>()
   )
+
+  useEffect(() => {
+    hoverIdRef.current = hoverId
+  }, [hoverId])
 
   useEffect(() => {
     const el = containerRef.current
@@ -121,24 +126,78 @@ export default function PitchWeb({
     }
   }, [graphData])
 
+  // Trackpad / cursor navigation without click-drag:
+  // - two-finger scroll pans
+  // - pinch (ctrl+wheel) zooms
+  // - moving the pointer over empty space pans the camera
   useEffect(() => {
-    const fg = fgRef.current
-    if (!fg) return
-    // Slow zoom / pan interpolation for a drifty camera.
-    try {
-      const zoom = fg.zoom
-      if (typeof zoom === 'function') {
-        // force-graph exposes d3Zoom via zoom() accessor in some versions
+    const el = containerRef.current
+    if (!el) return
+
+    let raf = 0
+    const configureZoom = () => {
+      const fg = fgRef.current
+      if (!fg?.d3Zoom) {
+        raf = window.requestAnimationFrame(configureZoom)
+        return
       }
-      const d3Zoom = fg.d3Zoom?.()
-      if (d3Zoom?.wheelDelta) {
-        d3Zoom.wheelDelta((event: WheelEvent) => -event.deltaY * 0.0018)
+      try {
+        const d3Zoom = fg.d3Zoom()
+        // Own the wheel; keep click-drag pan/zoom gestures from d3.
+        d3Zoom.filter((event: any) => {
+          if (event.type === 'wheel') return false
+          return !event.ctrlKey && !event.button
+        })
+        if (typeof d3Zoom.duration === 'function') d3Zoom.duration(700)
+      } catch {
+        /* ignore */
       }
-      if (d3Zoom?.duration) {
-        d3Zoom.duration(900)
+    }
+    configureZoom()
+
+    const panBy = (dx: number, dy: number) => {
+      const fg = fgRef.current
+      if (!fg?.screen2GraphCoords || !fg.centerAt) return
+      const k = fg.zoom?.() || 1
+      const center = fg.screen2GraphCoords(el.clientWidth / 2, el.clientHeight / 2)
+      if (!center) return
+      fg.centerAt(center.x + dx / k, center.y + dy / k, 0)
+    }
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const fg = fgRef.current
+      if (!fg) return
+
+      if (e.ctrlKey || e.metaKey) {
+        const k = fg.zoom?.() || 1
+        const next = Math.min(6, Math.max(0.25, k * Math.exp(-e.deltaY * 0.01)))
+        fg.zoom(next, 0)
+        return
       }
-    } catch {
-      /* ignore */
+
+      // Natural trackpad: finger moves the web under you.
+      panBy(e.deltaX, e.deltaY)
+    }
+
+    const onPointerMove = (e: PointerEvent) => {
+      // Leave click-drag and node hovering alone.
+      if (e.buttons !== 0) return
+      if (hoverIdRef.current) return
+      const dx = e.movementX
+      const dy = e.movementY
+      if (!dx && !dy) return
+      // Cursor moves the viewpoint (grab-the-map without clicking).
+      panBy(-dx, -dy)
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false, capture: true })
+    el.addEventListener('pointermove', onPointerMove, { capture: true })
+    return () => {
+      window.cancelAnimationFrame(raf)
+      el.removeEventListener('wheel', onWheel, true)
+      el.removeEventListener('pointermove', onPointerMove, true)
     }
   }, [dims.w, dims.h])
 

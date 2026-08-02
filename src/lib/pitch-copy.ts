@@ -9,7 +9,7 @@ export const PITCH_PARAGRAPHS = [
 
 export const PITCH_ENTER_CTA = 'Enter the web'
 
-export const PITCH_HINT = 'drag · scroll to zoom · click a group'
+export const PITCH_HINT = 'move or scroll to pan · pinch to zoom · click a group'
 
 export const PITCH_EMAIL = 'helpdecro.net@gmail.com'
 export const PITCH_DISCORD = 'existsneel'
