@@ -1,13 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+} from 'react'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import { PITCH_HINT } from '@/lib/pitch-copy'
 
-const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
-  ssr: false,
-}) as any
+type ForceGraphComponent = ComponentType<any>
 
 type GraphNode = PitchGraphNode & {
   x?: number
@@ -51,7 +55,6 @@ function layoutKey(n: Pick<PitchGraphNode, 'id' | 'clientKey'>) {
 
 function hubFontPx(postCount: number | null | undefined, globalScale: number) {
   const n = Math.max(0, postCount ?? 0)
-  // ~0 posts → 11px, busy hubs grow toward ~22px (screen space)
   const base = 11 + Math.min(11, Math.sqrt(n) * 1.8)
   return Math.max(base / globalScale, 4)
 }
@@ -65,6 +68,8 @@ export default function PitchWeb({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const fgRef = useRef<any>(null)
+  const [ForceGraph2D, setForceGraph2D] = useState<ForceGraphComponent | null>(null)
+  const [graphReady, setGraphReady] = useState(false)
   const [dims, setDims] = useState({ w: 800, h: 600 })
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -72,6 +77,17 @@ export default function PitchWeb({
   const posCache = useRef(
     new Map<string, { x: number; y: number; vx?: number; vy?: number }>()
   )
+
+  // Load after mount so the imperative ref (zoom/centerAt) actually attaches.
+  useEffect(() => {
+    let alive = true
+    import('./PitchForceGraph').then((mod) => {
+      if (alive) setForceGraph2D(() => mod.default as ForceGraphComponent)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   useEffect(() => {
     const el = containerRef.current
@@ -103,35 +119,61 @@ export default function PitchWeb({
   }, [nodes, links])
 
   useEffect(() => {
+    if (!graphReady) return
     const fg = fgRef.current
     if (!fg) return
 
-    fg.d3Force('charge')?.strength((node: GraphNode) => {
+    fg.d3Force?.('charge')?.strength((node: GraphNode) => {
       if (node.kind !== 'subgroup') return -28
       const weight = Math.min(40, Math.sqrt(node.postCount ?? 0) * 4)
       return -100 - weight
     })
-    fg.d3Force('charge')?.distanceMax?.(480)
-    fg.d3Force('link')?.distance((link: any) => {
+    fg.d3Force?.('charge')?.distanceMax?.(480)
+    fg.d3Force?.('link')?.distance((link: any) => {
       const t = typeof link.target === 'object' ? link.target : null
       return t?.kind === 'subgroup' ? 72 : 48
     })
-    fg.d3Force('link')?.strength?.(0.2)
-    fg.d3Force('center')?.strength?.(0.03)
+    fg.d3Force?.('link')?.strength?.(0.2)
+    fg.d3Force?.('center')?.strength?.(0.03)
     try {
-      fg.d3AlphaTarget?.(0.012)
       fg.d3ReheatSimulation?.()
     } catch {
       /* ignore */
     }
-  }, [graphData])
+  }, [graphData, graphReady])
 
-  // Figma-style navigation using only public force-graph APIs
-  // (react-force-graph does NOT expose d3Zoom on the ref):
-  // - two-finger scroll → pan via centerAt
-  // - pinch / ctrl+scroll → let the graph zoom (enableZoomInteraction)
-  // - click-drag → pan (enablePanInteraction)
+  const getFg = useCallback(() => {
+    const fg = fgRef.current
+    if (!fg || typeof fg.zoom !== 'function' || typeof fg.centerAt !== 'function') {
+      return null
+    }
+    return fg
+  }, [])
+
+  const panByScreen = useCallback(
+    (dx: number, dy: number) => {
+      const fg = getFg()
+      if (!fg) return
+      const c = fg.centerAt()
+      const k = fg.zoom() || 1
+      if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y)) return
+      fg.centerAt(c.x + dx / k, c.y + dy / k, 0)
+    },
+    [getFg]
+  )
+
+  const setZoomLevel = useCallback(
+    (next: number, ms = 0) => {
+      const fg = getFg()
+      if (!fg) return
+      fg.zoom(Math.min(6, Math.max(0.25, next)), ms)
+    },
+    [getFg]
+  )
+
+  // Two-finger scroll → pan; pinch/ctrl+scroll → zoom.
   useEffect(() => {
+    if (!graphReady) return
     const el = containerRef.current
     if (!el) return
 
@@ -139,32 +181,19 @@ export default function PitchWeb({
     let raf = 0
     let cancelled = false
 
-    const panByScreen = (dx: number, dy: number) => {
-      const fg = fgRef.current
-      if (!fg?.centerAt || !fg?.zoom) return
-      const c = fg.centerAt()
-      const k = fg.zoom() || 1
-      if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y)) return
-      // Match d3-zoom translateBy(-dx,-dy): scroll moves the web under your fingers.
-      fg.centerAt(c.x + dx / k, c.y + dy / k, 0)
-    }
-
     const onWheel = (e: WheelEvent) => {
-      const fg = fgRef.current
-      if (!fg?.centerAt || !fg?.zoom) return
+      const fg = getFg()
+      if (!fg) return
 
       e.preventDefault()
-      e.stopPropagation()
+      e.stopImmediatePropagation()
 
-      // Pinch (macOS sends ctrl+wheel) or ctrl/cmd+scroll → zoom.
       if (e.ctrlKey || e.metaKey) {
         const k = fg.zoom() || 1
-        const next = Math.min(6, Math.max(0.25, k * Math.exp(-e.deltaY * 0.01)))
-        fg.zoom(next, 0)
+        setZoomLevel(k * Math.exp(-e.deltaY * 0.01))
         return
       }
 
-      // Two-finger trackpad / mouse wheel → pan.
       const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 24 : 1
       panByScreen(e.deltaX * scale, e.deltaY * scale)
     }
@@ -177,8 +206,9 @@ export default function PitchWeb({
         return
       }
       target = canvas
-      // Bind on the canvas itself (where force-graph listens) so we win reliably.
       target.addEventListener('wheel', onWheel, { passive: false, capture: true })
+      // Also on the wrapper — some browsers target the parent.
+      el.addEventListener('wheel', onWheel, { passive: false, capture: true })
     }
     bind()
 
@@ -186,26 +216,32 @@ export default function PitchWeb({
       cancelled = true
       window.cancelAnimationFrame(raf)
       target?.removeEventListener('wheel', onWheel, true)
+      el.removeEventListener('wheel', onWheel, true)
     }
-  }, [dims.w, dims.h])
+  }, [graphReady, getFg, panByScreen, setZoomLevel])
 
-  const nudgeZoom = useCallback((factor: number) => {
-    const fg = fgRef.current
-    if (!fg?.zoom) return
-    const k = fg.zoom() || 1
-    fg.zoom(Math.min(6, Math.max(0.25, k * factor)), 200)
-  }, [])
+  const nudgeZoom = useCallback(
+    (factor: number) => {
+      const fg = getFg()
+      if (!fg) return
+      const k = fg.zoom() || 1
+      setZoomLevel(k * factor, 180)
+    },
+    [getFg, setZoomLevel]
+  )
 
   useEffect(() => {
-    if (!highlightPostId || !fgRef.current) return
+    if (!graphReady || !highlightPostId) return
+    const fg = getFg()
+    if (!fg) return
     const node = graphData.nodes.find(
       (n) => n.id === highlightPostId || n.id === `p:${highlightPostId}`
     )
     if (!node || node.x == null || node.y == null) return
-    fgRef.current.centerAt(node.x, node.y, 900)
-    fgRef.current.zoom(2.0, 900)
+    fg.centerAt(node.x, node.y, 900)
+    fg.zoom(2.0, 900)
     setSelectedId(node.id)
-  }, [highlightPostId, graphData.nodes])
+  }, [highlightPostId, graphData.nodes, graphReady, getFg])
 
   const paintNode = useCallback(
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -219,7 +255,6 @@ export default function PitchWeb({
       if (n.pending) ctx.globalAlpha = 0.55
 
       if (isHub) {
-        // Text-only hubs — no boxes. Size scales with activity.
         const fontPx = hubFontPx(n.postCount, globalScale)
         ctx.font = `400 ${fontPx}px "Space Mono", monospace`
         ctx.textAlign = 'center'
@@ -300,7 +335,7 @@ export default function PitchWeb({
 
   const zoomToHubCluster = useCallback(
     (n: GraphNode) => {
-      const fg = fgRef.current
+      const fg = getFg()
       if (!fg || n.x == null || n.y == null) return
       const hubId = n.subgroupId
       const members = graphData.nodes.filter(
@@ -320,7 +355,7 @@ export default function PitchWeb({
       fg.centerAt(cx, cy, 1000)
       fg.zoom(zoom, 1000)
     },
-    [graphData.nodes, dims.w, dims.h]
+    [graphData.nodes, dims.w, dims.h, getFg]
   )
 
   const handleClick = useCallback(
@@ -363,64 +398,76 @@ export default function PitchWeb({
       ref={containerRef}
       className="relative h-[calc(100dvh-3.5rem)] w-full bg-white overflow-hidden cursor-grab active:cursor-grabbing"
     >
-      <ForceGraph2D
-        ref={fgRef}
-        width={dims.w}
-        height={dims.h}
-        graphData={graphData}
-        nodeId="id"
-        linkSource="source"
-        linkTarget="target"
-        backgroundColor="#ffffff"
-        linkColor={() => 'rgba(0,0,0,0.16)'}
-        linkWidth={1}
-        nodeCanvasObject={paintNode}
-        nodePointerAreaPaint={(
-          node: any,
-          color: string,
-          ctx: CanvasRenderingContext2D,
-          globalScale: number
-        ) => {
-          const n = node as GraphNode
-          if (n.kind === 'subgroup') {
-            const fontPx = hubFontPx(n.postCount, globalScale)
-            const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
-            const h = fontPx * 1.4
+      {ForceGraph2D ? (
+        <ForceGraph2D
+          ref={(instance: any) => {
+            fgRef.current = instance
+            if (instance && typeof instance.zoom === 'function') {
+              setGraphReady(true)
+            } else {
+              setGraphReady(false)
+            }
+          }}
+          width={dims.w}
+          height={dims.h}
+          graphData={graphData}
+          nodeId="id"
+          linkSource="source"
+          linkTarget="target"
+          backgroundColor="#ffffff"
+          linkColor={() => 'rgba(0,0,0,0.16)'}
+          linkWidth={1}
+          nodeCanvasObject={paintNode}
+          nodePointerAreaPaint={(
+            node: any,
+            color: string,
+            ctx: CanvasRenderingContext2D,
+            globalScale: number
+          ) => {
+            const n = node as GraphNode
+            if (n.kind === 'subgroup') {
+              const fontPx = hubFontPx(n.postCount, globalScale)
+              const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
+              const h = fontPx * 1.4
+              ctx.fillStyle = color
+              ctx.fillRect((n.x || 0) - w / 2, (n.y || 0) - h / 2, w, h)
+              return
+            }
+            const size = 10 / Math.sqrt(globalScale)
             ctx.fillStyle = color
-            ctx.fillRect((n.x || 0) - w / 2, (n.y || 0) - h / 2, w, h)
-            return
-          }
-          const size = 10 / Math.sqrt(globalScale)
-          ctx.fillStyle = color
-          ctx.fillRect((n.x || 0) - size, (n.y || 0) - size, size * 2, size * 2)
-        }}
-        onNodeHover={(node: any) => {
-          setHoverId(node?.id ?? null)
-          if (containerRef.current) {
-            containerRef.current.style.cursor = node ? 'pointer' : 'grab'
-          }
-        }}
-        onNodeClick={handleClick}
-        onBackgroundClick={handleBackgroundClick}
-        onNodeDrag={(node: any) => {
-          node.fx = node.x
-          node.fy = node.y
-        }}
-        onNodeDragEnd={(node: any) => {
-          node.fx = undefined
-          node.fy = undefined
-          persistPositions()
-        }}
-        onEngineTick={persistPositions}
-        cooldownTicks={Infinity}
-        d3AlphaDecay={0.014}
-        d3VelocityDecay={0.16}
-        warmupTicks={60}
-        enableNodeDrag={true}
-        // Wheel is owned by our canvas listener (pan + pinch-zoom). Drag still pans.
-        enableZoomInteraction={false}
-        enablePanInteraction={true}
-      />
+            ctx.fillRect((n.x || 0) - size, (n.y || 0) - size, size * 2, size * 2)
+          }}
+          onNodeHover={(node: any) => {
+            setHoverId(node?.id ?? null)
+            if (containerRef.current) {
+              containerRef.current.style.cursor = node ? 'pointer' : 'grab'
+            }
+          }}
+          onNodeClick={handleClick}
+          onBackgroundClick={handleBackgroundClick}
+          onNodeDrag={(node: any) => {
+            node.fx = node.x
+            node.fy = node.y
+          }}
+          onNodeDragEnd={(node: any) => {
+            node.fx = undefined
+            node.fy = undefined
+            persistPositions()
+          }}
+          onEngineTick={persistPositions}
+          cooldownTicks={Infinity}
+          d3AlphaDecay={0.014}
+          d3VelocityDecay={0.16}
+          warmupTicks={60}
+          enableNodeDrag={true}
+          enableZoomInteraction={false}
+          enablePanInteraction={true}
+        />
+      ) : (
+        <div className="h-full w-full flex items-center justify-center font-['Space_Mono'] text-xs text-black/40">
+          Loading web…
+        </div>
+      )}
 
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
         <div className="flex border border-black bg-white">
