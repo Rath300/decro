@@ -138,7 +138,7 @@ export default function PitchWeb({
         ctx.fillRect(x - w / 2, y - h / 2, w, h)
         ctx.strokeRect(x - w / 2, y - h / 2, w, h)
         ctx.fillStyle = active ? '#fff' : '#000'
-        ctx.font = `700 ${Math.max(8 / globalScale, 3)}px "Space Mono", monospace`
+        ctx.font = `400 ${Math.max(8 / globalScale, 3)}px "Space Mono", monospace`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         const label = (n.label || '').toUpperCase().slice(0, 18)
@@ -173,7 +173,7 @@ export default function PitchWeb({
             ctx.restore()
           } else {
             ctx.fillStyle = active ? '#fff' : '#000'
-            ctx.font = `700 ${Math.max(9 / globalScale, 4)}px "Space Mono", monospace`
+            ctx.font = `400 ${Math.max(9 / globalScale, 4)}px "Space Mono", monospace`
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
             ctx.fillText(typeMark(n.contentType), x, y)
