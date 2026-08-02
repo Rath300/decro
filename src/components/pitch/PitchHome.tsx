@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import {
-  PITCH_DISCORD,
+  PITCH_DISCORD_HANDLES,
   PITCH_EMAIL,
   PITCH_ENTER_CTA,
   PITCH_PARAGRAPHS,
@@ -325,7 +325,9 @@ export default function PitchHome() {
                   return <p key={paragraph.slice(0, 24)}>{paragraph}</p>
                 }
                 const [before, after] = paragraph.split(PITCH_EMAIL)
-                const [mid, end] = (after || '').split(PITCH_DISCORD)
+                const [handleA, handleB] = PITCH_DISCORD_HANDLES
+                const [mid, rest] = (after || '').split(handleA)
+                const [between, end] = (rest || '').split(handleB)
                 return (
                   <p key="contact">
                     {before}
@@ -336,7 +338,9 @@ export default function PitchHome() {
                       {PITCH_EMAIL}
                     </a>
                     {mid}
-                    <span className="underline underline-offset-2">{PITCH_DISCORD}</span>
+                    <span className="underline underline-offset-2">{handleA}</span>
+                    {between}
+                    <span className="underline underline-offset-2">{handleB}</span>
                     {end}
                   </p>
                 )
