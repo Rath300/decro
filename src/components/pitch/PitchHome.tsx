@@ -119,7 +119,10 @@ export default function PitchHome() {
             subgroupId: commit.subgroupId,
             username: displayUsername(commit.username),
             imageUrl: commit.imageUrl ?? n.imageUrl,
+            audioUrl: commit.audioUrl ?? n.audioUrl,
+            videoUrl: commit.videoUrl ?? n.videoUrl,
             pending: false,
+            clientKey: commit.tempPostId,
           }
         }
         if (tempHubId && n.id === tempHubId) {
@@ -152,6 +155,8 @@ export default function PitchHome() {
         subgroupId: commit.subgroupId,
         username: displayUsername(commit.username),
         imageUrl: commit.imageUrl ?? prev.imageUrl,
+        audioUrl: commit.audioUrl ?? prev.audioUrl,
+        videoUrl: commit.videoUrl ?? prev.videoUrl,
         pending: false,
       }
     })
@@ -200,39 +205,59 @@ export default function PitchHome() {
       )}
 
       {selected?.kind === 'post' && (
-        <div className="absolute top-20 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 border border-black bg-white z-20 font-['Space_Mono'] max-h-[70vh] overflow-y-auto">
-          {selected.imageUrl && (
+        <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-[26rem] md:w-[30rem] border border-black bg-white z-20 font-['Space_Mono'] max-h-[78vh] overflow-y-auto shadow-none">
+          {(selected.contentType === 'video' || selected.contentType === 'film') &&
+          selected.videoUrl ? (
+            <video
+              key={selected.videoUrl}
+              src={selected.videoUrl}
+              controls
+              playsInline
+              className="w-full max-h-80 bg-black border-b border-black"
+            />
+          ) : selected.contentType === 'music' && selected.audioUrl ? (
+            <div className="border-b border-black px-5 py-6 bg-white">
+              <audio
+                key={selected.audioUrl}
+                src={selected.audioUrl}
+                controls
+                className="w-full"
+              />
+            </div>
+          ) : selected.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={selected.imageUrl}
               alt=""
-              className="w-full max-h-56 object-cover border-b border-black"
+              className="w-full max-h-80 object-cover border-b border-black"
             />
-          )}
-          <div className="p-3 space-y-2">
+          ) : null}
+          <div className="p-5 space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] uppercase text-black/50">
+              <p className="text-xs uppercase text-black/50">
                 {selected.contentType || 'post'}
               </p>
               {selected.pending && (
-                <p className="text-[10px] uppercase text-black/40">Saving…</p>
+                <p className="text-xs uppercase text-black/40">Saving…</p>
               )}
             </div>
-            <h3 className="text-sm font-normal">{selected.label}</h3>
-            <p className="text-xs text-black/60">
+            <h3 className="text-base sm:text-lg font-normal leading-snug">
+              {selected.label}
+            </h3>
+            <p className="text-sm text-black/60">
               by {displayUsername(selected.username)}
             </p>
             {selected.description ? (
               <div className="pt-1">
-                <p className="text-[10px] uppercase text-black/40 mb-1">{bodyLabel}</p>
-                <p className="text-xs leading-relaxed whitespace-pre-wrap">
+                <p className="text-xs uppercase text-black/40 mb-2">{bodyLabel}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
                   {selected.description}
                 </p>
               </div>
             ) : null}
             <button
               type="button"
-              className="text-xs underline"
+              className="text-sm underline pt-1"
               onClick={() => setSelected(null)}
             >
               Close
@@ -242,22 +267,24 @@ export default function PitchHome() {
       )}
 
       {selected?.kind === 'subgroup' && (
-        <div className="absolute top-20 left-4 right-4 sm:left-auto sm:right-4 sm:w-72 border border-black bg-white z-20 p-3 font-['Space_Mono']">
-          <p className="text-[10px] uppercase text-black/50">Group</p>
-          <h3 className="text-sm font-normal uppercase mt-1">{selected.label}</h3>
+        <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 border border-black bg-white z-20 p-5 font-['Space_Mono']">
+          <p className="text-xs uppercase text-black/50">Group</p>
+          <h3 className="text-base sm:text-lg font-normal uppercase mt-2">
+            {selected.label}
+          </h3>
           {selected.pending && (
-            <p className="text-[10px] uppercase text-black/40 mt-1">Saving…</p>
+            <p className="text-xs uppercase text-black/40 mt-2">Saving…</p>
           )}
           <button
             type="button"
-            className="mt-3 text-xs border border-black px-3 py-1.5 uppercase hover:bg-black hover:text-white"
+            className="mt-4 text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
             onClick={() => setUploadOpen(true)}
           >
             Upload here
           </button>
           <button
             type="button"
-            className="ml-3 text-xs underline"
+            className="ml-3 text-sm underline"
             onClick={() => setSelected(null)}
           >
             Close

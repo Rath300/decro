@@ -20,6 +20,8 @@ export type UploadCommit = {
   subgroupId: string
   username: string
   imageUrl?: string | null
+  audioUrl?: string | null
+  videoUrl?: string | null
 }
 
 type Props = {
@@ -187,6 +189,10 @@ export default function PitchUploadSheet({
     const shownUser = displayUsername(username)
     const localImage =
       contentType === 'image' && file ? URL.createObjectURL(file) : preview || null
+    const localAudio =
+      contentType === 'music' && file ? URL.createObjectURL(file) : null
+    const localVideo =
+      contentType === 'video' && file ? URL.createObjectURL(file) : null
 
     const optimisticNodes: PitchGraphNode[] = []
     if (creatingGroup && tempHubId) {
@@ -206,9 +212,12 @@ export default function PitchUploadSheet({
       description: description.trim() || null,
       username: shownUser,
       imageUrl: localImage,
+      audioUrl: localAudio,
+      videoUrl: localVideo,
       contentType,
       subgroupId: hubSubgroupId,
       pending: true,
+      clientKey: tempPostId,
     })
 
     const optimisticLinks: PitchGraphLink[] = [
@@ -292,14 +301,16 @@ export default function PitchUploadSheet({
         subgroupId: data.subgroupId as string,
         username: displayUsername((data.username as string) || shownUser),
         imageUrl: mediaUrl || localImage,
+        audioUrl: audioUrl || localAudio,
+        videoUrl: videoUrl || localVideo,
       })
 
-      if (localImage?.startsWith('blob:')) {
-        URL.revokeObjectURL(localImage)
+      for (const url of [localImage, localAudio, localVideo]) {
+        if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
       }
     } catch (err: any) {
-      if (localImage?.startsWith('blob:')) {
-        URL.revokeObjectURL(localImage)
+      for (const url of [localImage, localAudio, localVideo]) {
+        if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
       }
       onFail(tempPostId, tempHubId, err?.message || 'Upload failed')
     }

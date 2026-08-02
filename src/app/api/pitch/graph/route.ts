@@ -13,12 +13,16 @@ export type PitchGraphNode = {
   kind: 'subgroup' | 'post'
   label: string
   imageUrl?: string | null
+  audioUrl?: string | null
+  videoUrl?: string | null
   contentType?: string | null
   subgroupId?: string | null
   slug?: string | null
   description?: string | null
   username?: string | null
   pending?: boolean
+  /** Stable client id so layout can survive optimistic → real id swaps */
+  clientKey?: string
 }
 
 export type PitchGraphLink = {
@@ -62,7 +66,7 @@ export async function GET(request: Request) {
       admin
         .from('posts')
         .select(
-          'id,title,description,content_type,media_url,subgroup_id,created_at, profiles!posts_creator_id_fkey(username)'
+          'id,title,description,content_type,media_url,audio_url,video_url,subgroup_id,created_at, profiles!posts_creator_id_fkey(username)'
         )
         .not('subgroup_id', 'is', null)
         .order('created_at', { ascending: false })
@@ -122,6 +126,8 @@ export async function GET(request: Request) {
       description: p.description || null,
       username: displayUsername(profile?.username),
       imageUrl: p.media_url,
+      audioUrl: p.audio_url,
+      videoUrl: p.video_url,
       contentType: p.content_type,
       subgroupId: p.subgroup_id,
     })

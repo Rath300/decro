@@ -45,6 +45,10 @@ function typeMark(contentType?: string | null): string {
   return '·'
 }
 
+function layoutKey(n: Pick<PitchGraphNode, 'id' | 'clientKey'>) {
+  return n.clientKey || n.id
+}
+
 export default function PitchWeb({
   nodes,
   links,
@@ -58,6 +62,9 @@ export default function PitchWeb({
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const imageCache = useRef(new Map<string, HTMLImageElement | null>())
+  const posCache = useRef(
+    new Map<string, { x: number; y: number; vx?: number; vy?: number }>()
+  )
 
   useEffect(() => {
     const el = containerRef.current
@@ -73,9 +80,14 @@ export default function PitchWeb({
 
   const graphData = useMemo(() => {
     const gNodes: GraphNode[] = nodes.map((n) => {
-      const seed = hashSeed(n.id)
+      const key = layoutKey(n)
+      const cached = posCache.current.get(key)
+      if (cached) {
+        return { ...n, ...cached }
+      }
+      const seed = hashSeed(key)
       const angle = ((seed % 360) / 360) * Math.PI * 2
-      const radius = 80 + (seed % 420)
+      const radius = 120 + (seed % 520)
       return {
         ...n,
         x: Math.cos(angle) * radius,
@@ -88,16 +100,47 @@ export default function PitchWeb({
   useEffect(() => {
     const fg = fgRef.current
     if (!fg) return
-    // Heavier hubs, posts orbit.
+
     fg.d3Force('charge')?.strength((node: GraphNode) =>
-      node.kind === 'subgroup' ? -180 : -40
+      node.kind === 'subgroup' ? -120 : -28
     )
+    fg.d3Force('charge')?.distanceMax?.(420)
     fg.d3Force('link')?.distance((link: any) => {
       const t = typeof link.target === 'object' ? link.target : null
-      return t?.kind === 'subgroup' ? 48 : 36
+      return t?.kind === 'subgroup' ? 64 : 44
     })
-    fg.d3ReheatSimulation()
+    fg.d3Force('link')?.strength?.(0.22)
+    fg.d3Force('center')?.strength?.(0.035)
+
+    // Soft continuous motion instead of hard settle + jolt reheats.
+    try {
+      fg.d3AlphaTarget?.(0.015)
+      fg.d3ReheatSimulation?.()
+    } catch {
+      /* ignore */
+    }
   }, [graphData])
+
+  useEffect(() => {
+    const fg = fgRef.current
+    if (!fg) return
+    // Slow zoom / pan interpolation for a drifty camera.
+    try {
+      const zoom = fg.zoom
+      if (typeof zoom === 'function') {
+        // force-graph exposes d3Zoom via zoom() accessor in some versions
+      }
+      const d3Zoom = fg.d3Zoom?.()
+      if (d3Zoom?.wheelDelta) {
+        d3Zoom.wheelDelta((event: WheelEvent) => -event.deltaY * 0.0018)
+      }
+      if (d3Zoom?.duration) {
+        d3Zoom.duration(900)
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [dims.w, dims.h])
 
   useEffect(() => {
     if (!highlightPostId || !fgRef.current) return
@@ -105,20 +148,10 @@ export default function PitchWeb({
       (n) => n.id === highlightPostId || n.id === `p:${highlightPostId}`
     )
     if (!node || node.x == null || node.y == null) return
-    // Brief reheat so neighbors make room for the new post.
-    fgRef.current.d3ReheatSimulation()
-    fgRef.current.centerAt(node.x, node.y, 600)
-    fgRef.current.zoom(2.2, 600)
+    fgRef.current.centerAt(node.x, node.y, 1400)
+    fgRef.current.zoom(2.0, 1400)
     setSelectedId(node.id)
   }, [highlightPostId, graphData.nodes])
-
-  // Light residual drift after the initial settle — alive, not screensaver-y.
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      fgRef.current?.d3ReheatSimulation?.()
-    }, 10_000)
-    return () => window.clearInterval(id)
-  }, [])
 
   const paintNode = useCallback(
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -171,7 +204,12 @@ export default function PitchWeb({
           if (img) {
             ctx.save()
             ctx.beginPath()
-            ctx.rect(x - s / 2 + 1 / globalScale, y - s / 2 + 1 / globalScale, s - 2 / globalScale, s - 2 / globalScale)
+            ctx.rect(
+              x - s / 2 + 1 / globalScale,
+              y - s / 2 + 1 / globalScale,
+              s - 2 / globalScale,
+              s - 2 / globalScale
+            )
             ctx.clip()
             ctx.drawImage(img, x - s / 2, y - s / 2, s, s)
             ctx.restore()
@@ -197,26 +235,30 @@ export default function PitchWeb({
 
   const lastClickRef = useRef<{ id: string; at: number } | null>(null)
 
-  const zoomToHubCluster = useCallback((n: GraphNode) => {
-    const fg = fgRef.current
-    if (!fg || n.x == null || n.y == null) return
-    const hubId = n.subgroupId
-    const members = graphData.nodes.filter(
-      (m) => m.kind === 'post' && m.subgroupId === hubId && m.x != null && m.y != null
-    )
-    const xs = [n.x, ...members.map((m) => m.x!)]
-    const ys = [n.y, ...members.map((m) => m.y!)]
-    const minX = Math.min(...xs)
-    const maxX = Math.max(...xs)
-    const minY = Math.min(...ys)
-    const maxY = Math.max(...ys)
-    const cx = (minX + maxX) / 2
-    const cy = (minY + maxY) / 2
-    const span = Math.max(maxX - minX, maxY - minY, 80)
-    const zoom = Math.min(3.2, Math.max(1.2, (Math.min(dims.w, dims.h) * 0.55) / span))
-    fg.centerAt(cx, cy, 750)
-    fg.zoom(zoom, 750)
-  }, [graphData.nodes, dims.w, dims.h])
+  const zoomToHubCluster = useCallback(
+    (n: GraphNode) => {
+      const fg = fgRef.current
+      if (!fg || n.x == null || n.y == null) return
+      const hubId = n.subgroupId
+      const members = graphData.nodes.filter(
+        (m) =>
+          m.kind === 'post' && m.subgroupId === hubId && m.x != null && m.y != null
+      )
+      const xs = [n.x, ...members.map((m) => m.x!)]
+      const ys = [n.y, ...members.map((m) => m.y!)]
+      const minX = Math.min(...xs)
+      const maxX = Math.max(...xs)
+      const minY = Math.min(...ys)
+      const maxY = Math.max(...ys)
+      const cx = (minX + maxX) / 2
+      const cy = (minY + maxY) / 2
+      const span = Math.max(maxX - minX, maxY - minY, 80)
+      const zoom = Math.min(2.8, Math.max(1.1, (Math.min(dims.w, dims.h) * 0.55) / span))
+      fg.centerAt(cx, cy, 1600)
+      fg.zoom(zoom, 1600)
+    },
+    [graphData.nodes, dims.w, dims.h]
+  )
 
   const handleClick = useCallback(
     (node: any) => {
@@ -241,8 +283,23 @@ export default function PitchWeb({
     onNodeSelect?.(null)
   }, [onNodeSelect])
 
+  const persistPositions = useCallback(() => {
+    for (const n of graphData.nodes) {
+      if (n.x == null || n.y == null) continue
+      posCache.current.set(layoutKey(n), {
+        x: n.x,
+        y: n.y,
+        vx: n.vx,
+        vy: n.vy,
+      })
+    }
+  }, [graphData.nodes])
+
   return (
-    <div ref={containerRef} className="relative h-[calc(100dvh-3.5rem)] w-full bg-white overflow-hidden">
+    <div
+      ref={containerRef}
+      className="relative h-[calc(100dvh-3.5rem)] w-full bg-white overflow-hidden"
+    >
       <ForceGraph2D
         ref={fgRef}
         width={dims.w}
@@ -252,10 +309,15 @@ export default function PitchWeb({
         linkSource="source"
         linkTarget="target"
         backgroundColor="#ffffff"
-        linkColor={() => 'rgba(0,0,0,0.22)'}
+        linkColor={() => 'rgba(0,0,0,0.18)'}
         linkWidth={1}
         nodeCanvasObject={paintNode}
-        nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D, globalScale: number) => {
+        nodePointerAreaPaint={(
+          node: any,
+          color: string,
+          ctx: CanvasRenderingContext2D,
+          globalScale: number
+        ) => {
           const n = node as GraphNode
           const isHub = n.kind === 'subgroup'
           const size = isHub ? 18 / Math.sqrt(globalScale) : 10 / Math.sqrt(globalScale)
@@ -265,14 +327,21 @@ export default function PitchWeb({
         onNodeHover={(node: any) => setHoverId(node?.id ?? null)}
         onNodeClick={handleClick}
         onBackgroundClick={handleBackgroundClick}
-        onNodeDragEnd={(node: any) => {
+        onNodeDrag={(node: any) => {
           node.fx = node.x
           node.fy = node.y
         }}
-        cooldownTicks={120}
-        d3AlphaDecay={0.022}
-        d3VelocityDecay={0.3}
-        warmupTicks={40}
+        onNodeDragEnd={(node: any) => {
+          // Release pin so the web keeps drifting instead of freezing.
+          node.fx = undefined
+          node.fy = undefined
+          persistPositions()
+        }}
+        onEngineTick={persistPositions}
+        cooldownTicks={Infinity}
+        d3AlphaDecay={0.014}
+        d3VelocityDecay={0.16}
+        warmupTicks={60}
         enableNodeDrag={true}
         enableZoomInteraction={true}
         enablePanInteraction={true}
