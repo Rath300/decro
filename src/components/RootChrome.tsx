@@ -4,22 +4,48 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import AppHeader from '@/components/AppHeader'
 import VersionIndicator from '@/components/VersionIndicator'
+import PitchChrome from '@/components/pitch/PitchChrome'
+import { isPitchMode } from '@/lib/pitch-mode'
 import dynamic from 'next/dynamic'
-const StaggeredMenu = dynamic(() => import('@/components/StaggeredMenu').then(m => m.StaggeredMenu), { ssr: false })
+
+const StaggeredMenu = dynamic(
+  () => import('@/components/StaggeredMenu').then((m) => m.StaggeredMenu),
+  { ssr: false }
+)
 
 const HIDE_HEADER_PATHS = new Set<string>(['/', '/signup', '/forgot-password'])
 
 export default function RootChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '/'
   const { isAuthenticated } = useAuth()
-  // Hide header on auth pages, and also when unauthenticated on profile routes
-  const hide = HIDE_HEADER_PATHS.has(pathname) || (!isAuthenticated && pathname.startsWith('/profile'))
+
+  if (isPitchMode()) {
+    return (
+      <>
+        <PitchChrome
+          onUpload={() => {
+            window.dispatchEvent(new Event('pitch:open-upload'))
+          }}
+          onPitch={() => {
+            try {
+              sessionStorage.removeItem('decro_pitch_entered')
+            } catch {}
+            window.dispatchEvent(new Event('pitch:show-overlay'))
+          }}
+        />
+        <div className="pt-14">{children}</div>
+      </>
+    )
+  }
+
+  const hide =
+    HIDE_HEADER_PATHS.has(pathname) ||
+    (!isAuthenticated && pathname.startsWith('/profile'))
 
   return (
     <>
       {!hide && (
         <>
-          {/* Global Staggered Menu overlay */}
           <div className="fixed inset-0 z-50 pointer-events-none">
             <StaggeredMenu
               position="right"
@@ -36,17 +62,11 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
               logoUrl=""
             />
           </div>
-          {/* Global header */}
           <AppHeader />
-          {/* Version indicator */}
           <VersionIndicator />
         </>
       )}
-      <div className={hide ? '' : 'pt-20'}>
-        {children}
-      </div>
+      <div className={hide ? '' : 'pt-20'}>{children}</div>
     </>
   )
 }
-
-

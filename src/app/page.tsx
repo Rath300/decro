@@ -4,16 +4,24 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import LoginForm from '@/components/login-form'
+import PitchHome from '@/components/pitch/PitchHome'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function Home() {
+  const pitch = isPitchMode()
   const { isAuthenticated, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
+    if (pitch) return
     if (!loading && isAuthenticated) {
       router.push('/feed')
     }
-  }, [isAuthenticated, loading, router])
+  }, [pitch, isAuthenticated, loading, router])
+
+  if (pitch) {
+    return <PitchHome />
+  }
 
   if (loading) {
     return (
@@ -24,7 +32,7 @@ export default function Home() {
   }
 
   if (isAuthenticated) {
-    return null // Will redirect via useEffect
+    return null
   }
 
   return <LoginForm />

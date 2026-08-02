@@ -9,7 +9,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "db:apply": "node scripts/db-apply.mjs",
-    "db:password": "node scripts/set-db-password.mjs"
+    "db:password": "node scripts/set-db-password.mjs",
+    "seed:genres": "node scripts/seed-pitch-genres.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",
@@ -23,6 +24,7 @@
     "pg": "^8.16.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-force-graph-2d": "^1.29.1",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

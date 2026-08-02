@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { rateLimit } from '@/lib/rate-limit'
+import { isPitchMode, isPitchParkedPath } from '@/lib/pitch-mode'
 
 // Paths that must be reachable without a session. Profile and tag pages are
 // listed in sitemap.xml and are the site's public shopfront, but the previous
@@ -102,6 +103,18 @@ export async function middleware(req: NextRequest) {
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml'
   ) {
+    return NextResponse.next()
+  }
+
+  // 14-day pitch prototype: park the full product surface behind `/`.
+  if (isPitchMode() && isPitchParkedPath(pathname)) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
+  if (isPitchMode()) {
     return NextResponse.next()
   }
 
