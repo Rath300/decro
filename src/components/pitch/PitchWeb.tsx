@@ -101,7 +101,9 @@ export default function PitchWeb({
 
   useEffect(() => {
     if (!highlightPostId || !fgRef.current) return
-    const node = graphData.nodes.find((n) => n.id === `p:${highlightPostId}`)
+    const node = graphData.nodes.find(
+      (n) => n.id === highlightPostId || n.id === `p:${highlightPostId}`
+    )
     if (!node || node.x == null || node.y == null) return
     // Brief reheat so neighbors make room for the new post.
     fgRef.current.d3ReheatSimulation()
@@ -128,9 +130,11 @@ export default function PitchWeb({
       const y = n.y || 0
 
       ctx.save()
+      if (n.pending) ctx.globalAlpha = 0.55
       ctx.lineWidth = active ? 2.5 / globalScale : 1 / globalScale
       ctx.strokeStyle = '#000'
       ctx.fillStyle = active ? '#000' : '#fff'
+      if (n.pending) ctx.setLineDash([3 / globalScale, 3 / globalScale])
 
       if (isHub) {
         const w = Math.max(size * 3.2, (n.label?.length || 4) * (5.2 / globalScale))

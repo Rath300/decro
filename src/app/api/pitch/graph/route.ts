@@ -16,11 +16,19 @@ export type PitchGraphNode = {
   contentType?: string | null
   subgroupId?: string | null
   slug?: string | null
+  description?: string | null
+  username?: string | null
+  pending?: boolean
 }
 
 export type PitchGraphLink = {
   source: string
   target: string
+}
+
+function displayUsername(raw?: string | null) {
+  if (!raw || /^anonymous(_|$)/i.test(raw)) return 'anonymous'
+  return raw
 }
 
 export async function GET(request: Request) {
@@ -53,7 +61,9 @@ export async function GET(request: Request) {
         .limit(MAX_GROUPS),
       admin
         .from('posts')
-        .select('id,title,content_type,media_url,subgroup_id,created_at')
+        .select(
+          'id,title,description,content_type,media_url,subgroup_id,created_at, profiles!posts_creator_id_fkey(username)'
+        )
         .not('subgroup_id', 'is', null)
         .order('created_at', { ascending: false })
         .limit(MAX_POSTS),
@@ -67,13 +77,11 @@ export async function GET(request: Request) {
   const groupRows = groups || []
   const postRows = (posts || []).filter((p) => p.subgroup_id)
 
-  // Keep hubs that have posts or are seed genres (all groups we fetched).
   const groupIds = new Set(groupRows.map((g) => g.id))
   for (const p of postRows) {
     if (p.subgroup_id) groupIds.add(p.subgroup_id)
   }
 
-  // If a post references a group outside the top-N, fetch those hubs too.
   const missing = [...groupIds].filter((id) => !groupRows.some((g) => g.id === id))
   let extraGroups: typeof groupRows = []
   if (missing.length) {
@@ -104,10 +112,15 @@ export async function GET(request: Request) {
   for (const p of postRows) {
     if (!p.subgroup_id || !seen.has(p.subgroup_id)) continue
     const id = `p:${p.id}`
+    const profile = Array.isArray((p as any).profiles)
+      ? (p as any).profiles[0]
+      : (p as any).profiles
     nodes.push({
       id,
       kind: 'post',
       label: p.title || 'Untitled',
+      description: p.description || null,
+      username: displayUsername(profile?.username),
       imageUrl: p.media_url,
       contentType: p.content_type,
       subgroupId: p.subgroup_id,
@@ -119,7 +132,7 @@ export async function GET(request: Request) {
     { nodes, links },
     {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=60',
+        'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=30',
       },
     }
   )

@@ -1,18 +1,43 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import supabase from '@/lib/supabase-client'
 
 type GroupHit = { id: string; name: string; slug: string }
 
+export type OptimisticUpload = {
+  tempPostId: string
+  tempHubId?: string
+  nodes: PitchGraphNode[]
+  links: PitchGraphLink[]
+}
+
+export type UploadCommit = {
+  tempPostId: string
+  tempHubId?: string
+  postId: string
+  subgroupId: string
+  username: string
+  imageUrl?: string | null
+}
+
 type Props = {
   open: boolean
   onClose: () => void
-  onCreated: (postId: string) => void
+  onOptimistic: (upload: OptimisticUpload) => void
+  onCommit: (commit: UploadCommit) => void
+  onFail: (tempPostId: string, tempHubId: string | undefined, message: string) => void
   preferredGroup?: GroupHit | null
 }
 
 type ContentType = 'image' | 'music' | 'video' | 'text'
+
+function displayUsername(raw: string) {
+  const trimmed = raw.trim()
+  if (!trimmed || /^anonymous(_|$)/i.test(trimmed)) return 'anonymous'
+  return trimmed
+}
 
 async function uploadPitch(
   kind: 'image' | 'audio' | 'video',
@@ -47,7 +72,9 @@ async function uploadPitch(
 export default function PitchUploadSheet({
   open,
   onClose,
-  onCreated,
+  onOptimistic,
+  onCommit,
+  onFail,
   preferredGroup = null,
 }: Props) {
   const [contentType, setContentType] = useState<ContentType>('image')
@@ -60,7 +87,6 @@ export default function PitchUploadSheet({
   const [groupHits, setGroupHits] = useState<GroupHit[]>([])
   const [selectedGroup, setSelectedGroup] = useState<GroupHit | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
-  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const honeypotRef = useRef<HTMLInputElement>(null)
@@ -128,14 +154,12 @@ export default function PitchUploadSheet({
   }
 
   const handleClose = () => {
-    if (submitting) return
     reset()
     onClose()
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (submitting) return
     setError('')
 
     if (honeypotRef.current?.value) {
@@ -150,20 +174,95 @@ export default function PitchUploadSheet({
       setError('Add a file')
       return
     }
+    if (contentType === 'text' && !title.trim() && !description.trim()) {
+      setError('Add a title or text')
+      return
+    }
 
-    setSubmitting(true)
+    const tempPostId = `temp-${crypto.randomUUID()}`
+    const creatingGroup = !selectedGroup
+    const tempHubId = creatingGroup ? `temp-hub-${crypto.randomUUID()}` : undefined
+    const hubSubgroupId = selectedGroup?.id || tempHubId!
+    const hubLabel = selectedGroup?.name || newGroupName.trim()
+    const shownUser = displayUsername(username)
+    const localImage =
+      contentType === 'image' && file ? URL.createObjectURL(file) : preview || null
+
+    const optimisticNodes: PitchGraphNode[] = []
+    if (creatingGroup && tempHubId) {
+      optimisticNodes.push({
+        id: `g:${tempHubId}`,
+        kind: 'subgroup',
+        label: hubLabel,
+        slug: '',
+        subgroupId: tempHubId,
+        pending: true,
+      })
+    }
+    optimisticNodes.push({
+      id: `p:${tempPostId}`,
+      kind: 'post',
+      label: title.trim() || 'Untitled',
+      description: description.trim() || null,
+      username: shownUser,
+      imageUrl: localImage,
+      contentType,
+      subgroupId: hubSubgroupId,
+      pending: true,
+    })
+
+    const optimisticLinks: PitchGraphLink[] = [
+      {
+        source: `p:${tempPostId}`,
+        target: `g:${hubSubgroupId}`,
+      },
+    ]
+
+    // Capture form values before reset — upload continues in background.
+    const submitFile = file
+    const submitTitle = title
+    const submitDescription = description
+    const submitUsername = username
+    const submitContentType = contentType
+    const submitGroupId = selectedGroup?.id ?? null
+    const submitNewGroup = selectedGroup ? '' : newGroupName.trim()
+
+    onOptimistic({
+      tempPostId,
+      tempHubId,
+      nodes: optimisticNodes,
+      links: optimisticLinks,
+    })
+    reset()
+    onClose()
+
     try {
       let mediaUrl: string | null = null
       let audioUrl: string | null = null
       let videoUrl: string | null = null
 
-      if (file) {
-        if (contentType === 'music') {
-          audioUrl = await uploadPitch('audio', file, file.name, file.type || 'audio/mpeg')
-        } else if (contentType === 'video') {
-          videoUrl = await uploadPitch('video', file, file.name, file.type || 'video/mp4')
-        } else if (contentType === 'image') {
-          mediaUrl = await uploadPitch('image', file, file.name, file.type || 'image/jpeg')
+      if (submitFile) {
+        if (submitContentType === 'music') {
+          audioUrl = await uploadPitch(
+            'audio',
+            submitFile,
+            submitFile.name,
+            submitFile.type || 'audio/mpeg'
+          )
+        } else if (submitContentType === 'video') {
+          videoUrl = await uploadPitch(
+            'video',
+            submitFile,
+            submitFile.name,
+            submitFile.type || 'video/mp4'
+          )
+        } else if (submitContentType === 'image') {
+          mediaUrl = await uploadPitch(
+            'image',
+            submitFile,
+            submitFile.name,
+            submitFile.type || 'image/jpeg'
+          )
         }
       }
 
@@ -171,32 +270,45 @@ export default function PitchUploadSheet({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title,
-          description,
-          username,
-          contentType,
+          title: submitTitle,
+          description: submitDescription,
+          username: submitUsername,
+          contentType: submitContentType,
           mediaUrl,
           audioUrl,
           videoUrl,
-          subgroupId: selectedGroup?.id ?? null,
-          newGroupName: selectedGroup ? '' : newGroupName.trim(),
+          subgroupId: submitGroupId,
+          newGroupName: submitNewGroup,
           website: '',
         }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Failed to post')
 
-      onCreated(data.id as string)
-      reset()
-      onClose()
+      onCommit({
+        tempPostId,
+        tempHubId,
+        postId: data.id as string,
+        subgroupId: data.subgroupId as string,
+        username: displayUsername((data.username as string) || shownUser),
+        imageUrl: mediaUrl || localImage,
+      })
+
+      if (localImage?.startsWith('blob:')) {
+        URL.revokeObjectURL(localImage)
+      }
     } catch (err: any) {
-      setError(err?.message || 'Something went wrong')
-    } finally {
-      setSubmitting(false)
+      if (localImage?.startsWith('blob:')) {
+        URL.revokeObjectURL(localImage)
+      }
+      onFail(tempPostId, tempHubId, err?.message || 'Upload failed')
     }
   }
 
   if (!open) return null
+
+  const bodyLabel = contentType === 'text' ? 'Text' : 'Description'
+  const bodyPlaceholder = contentType === 'text' ? 'Write something…' : 'Optional'
 
   return (
     <div className="fixed inset-0 z-[80] flex justify-end">
@@ -207,11 +319,18 @@ export default function PitchUploadSheet({
         onClick={handleClose}
       />
       <aside className="relative h-full w-full max-w-md bg-white border-l border-black overflow-y-auto">
-        <form onSubmit={handleSubmit} className="flex flex-col min-h-full p-5 sm:p-6 gap-5 font-['Space_Mono']">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col min-h-full p-5 sm:p-6 gap-5 font-['Space_Mono']"
+        >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">Upload</h2>
-              <p className="text-xs text-black/60 mt-1">Optional username. Lands on the web.</p>
+              <h2 className="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">
+                Upload
+              </h2>
+              <p className="text-xs text-black/60 mt-1">
+                Optional username. Lands on the web.
+              </p>
             </div>
             <button
               type="button"
@@ -252,7 +371,11 @@ export default function PitchUploadSheet({
               />
               {preview && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview} alt="" className="mt-3 w-full max-h-48 object-cover border border-black" />
+                <img
+                  src={preview}
+                  alt=""
+                  className="mt-3 w-full max-h-48 object-cover border border-black"
+                />
               )}
             </div>
           )}
@@ -269,14 +392,14 @@ export default function PitchUploadSheet({
           </div>
 
           <div>
-            <label className="block text-xs mb-2 uppercase">Description</label>
+            <label className="block text-xs mb-2 uppercase">{bodyLabel}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={2000}
-              rows={3}
+              rows={contentType === 'text' ? 6 : 3}
               className="w-full border border-black px-3 py-2 text-sm bg-white outline-none resize-none focus:bg-black focus:text-white"
-              placeholder="Optional"
+              placeholder={bodyPlaceholder}
             />
           </div>
 
@@ -342,7 +465,6 @@ export default function PitchUploadSheet({
             )}
           </div>
 
-          {/* Honeypot */}
           <input
             ref={honeypotRef}
             type="text"
@@ -353,14 +475,15 @@ export default function PitchUploadSheet({
             aria-hidden="true"
           />
 
-          {error && <p className="text-xs text-red-700 border border-red-700 px-3 py-2">{error}</p>}
+          {error && (
+            <p className="text-xs text-red-700 border border-red-700 px-3 py-2">{error}</p>
+          )}
 
           <button
             type="submit"
-            disabled={submitting}
-            className="mt-auto border border-black bg-black text-white py-3 text-sm uppercase tracking-wide disabled:opacity-50 hover:bg-white hover:text-black"
+            className="mt-auto border border-black bg-black text-white py-3 text-sm uppercase tracking-wide hover:bg-white hover:text-black"
           >
-            {submitting ? 'Posting…' : 'Post to the web'}
+            Post to the web
           </button>
         </form>
       </aside>
