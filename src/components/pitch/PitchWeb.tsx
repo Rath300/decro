@@ -180,7 +180,7 @@ export default function PitchWeb({
           }
         } else {
           ctx.fillStyle = active ? '#fff' : '#000'
-          ctx.font = `700 ${Math.max(9 / globalScale, 4)}px "Space Mono", monospace`
+          ctx.font = `400 ${Math.max(9 / globalScale, 4)}px "Space Mono", monospace`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillText(typeMark(n.contentType), x, y)
