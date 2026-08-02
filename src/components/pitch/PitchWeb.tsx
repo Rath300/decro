@@ -126,93 +126,75 @@ export default function PitchWeb({
     }
   }, [graphData])
 
-  // Figma / Obsidian-plugin style: two-finger scroll pans, pinch zooms,
-  // click-drag pans. No clickless cursor-follow (that made the web undriveable).
+  // Figma-style navigation using only public force-graph APIs
+  // (react-force-graph does NOT expose d3Zoom on the ref):
+  // - two-finger scroll → pan via centerAt
+  // - pinch / ctrl+scroll → let the graph zoom (enableZoomInteraction)
+  // - click-drag → pan (enablePanInteraction)
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
 
+    let target: HTMLElement | null = null
     let raf = 0
-    const configureZoom = () => {
-      const fg = fgRef.current
-      if (!fg?.d3Zoom) {
-        raf = window.requestAnimationFrame(configureZoom)
-        return
-      }
-      try {
-        const d3Zoom = fg.d3Zoom()
-        d3Zoom.filter((event: any) => {
-          // We own wheel; keep left-drag pan from d3-zoom.
-          if (event.type === 'wheel') return false
-          return !event.ctrlKey && !event.button
-        })
-        if (typeof d3Zoom.duration === 'function') d3Zoom.duration(0)
-      } catch {
-        /* ignore */
-      }
-    }
-    configureZoom()
+    let cancelled = false
 
     const panByScreen = (dx: number, dy: number) => {
       const fg = fgRef.current
-      if (!fg) return
-
-      // Prefer d3 translateBy — same path as click-drag, feels native.
-      try {
-        const zoomBeh = fg.d3Zoom?.()
-        const base = zoomBeh?.__baseElem
-        if (zoomBeh && base && typeof zoomBeh.translateBy === 'function') {
-          zoomBeh.translateBy(base, -dx, -dy)
-          return
-        }
-      } catch {
-        /* fall through */
-      }
-
-      const c = typeof fg.centerAt === 'function' ? fg.centerAt() : null
-      const k = typeof fg.zoom === 'function' ? fg.zoom() || 1 : 1
-      if (!c || c.x == null || c.y == null) return
+      if (!fg?.centerAt || !fg?.zoom) return
+      const c = fg.centerAt()
+      const k = fg.zoom() || 1
+      if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y)) return
+      // Match d3-zoom translateBy(-dx,-dy): scroll moves the web under your fingers.
       fg.centerAt(c.x + dx / k, c.y + dy / k, 0)
     }
 
     const onWheel = (e: WheelEvent) => {
+      const fg = fgRef.current
+      if (!fg?.centerAt || !fg?.zoom) return
+
       e.preventDefault()
       e.stopPropagation()
-      const fg = fgRef.current
-      if (!fg) return
 
-      // Pinch on macOS arrives as ctrl+wheel; meta for cmd+scroll zoom.
+      // Pinch (macOS sends ctrl+wheel) or ctrl/cmd+scroll → zoom.
       if (e.ctrlKey || e.metaKey) {
-        const k = fg.zoom?.() || 1
-        const next = Math.min(6, Math.max(0.2, k * Math.exp(-e.deltaY * 0.012)))
-        // Zoom toward pointer when we can.
-        try {
-          const abs = fg.screen2GraphCoords?.(e.offsetX, e.offsetY)
-          fg.zoom(next, 0)
-          if (abs) {
-            const after = fg.screen2GraphCoords?.(e.offsetX, e.offsetY)
-            if (after) {
-              const c = fg.centerAt()
-              fg.centerAt(c.x + (abs.x - after.x), c.y + (abs.y - after.y), 0)
-            }
-          }
-        } catch {
-          fg.zoom(next, 0)
-        }
+        const k = fg.zoom() || 1
+        const next = Math.min(6, Math.max(0.25, k * Math.exp(-e.deltaY * 0.01)))
+        fg.zoom(next, 0)
         return
       }
 
-      // Trackpad / mouse wheel → pan (Figma / maps). Slight boost for feel.
-      const speed = e.deltaMode === 1 ? 18 : 1.35
-      panByScreen(e.deltaX * speed, e.deltaY * speed)
+      // Two-finger trackpad / mouse wheel → pan.
+      const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 24 : 1
+      panByScreen(e.deltaX * scale, e.deltaY * scale)
     }
 
-    el.addEventListener('wheel', onWheel, { passive: false, capture: true })
+    const bind = () => {
+      if (cancelled) return
+      const canvas = el.querySelector('canvas')
+      if (!canvas) {
+        raf = window.requestAnimationFrame(bind)
+        return
+      }
+      target = canvas
+      // Bind on the canvas itself (where force-graph listens) so we win reliably.
+      target.addEventListener('wheel', onWheel, { passive: false, capture: true })
+    }
+    bind()
+
     return () => {
+      cancelled = true
       window.cancelAnimationFrame(raf)
-      el.removeEventListener('wheel', onWheel, true)
+      target?.removeEventListener('wheel', onWheel, true)
     }
   }, [dims.w, dims.h])
+
+  const nudgeZoom = useCallback((factor: number) => {
+    const fg = fgRef.current
+    if (!fg?.zoom) return
+    const k = fg.zoom() || 1
+    fg.zoom(Math.min(6, Math.max(0.25, k * factor)), 200)
+  }, [])
 
   useEffect(() => {
     if (!highlightPostId || !fgRef.current) return
@@ -435,21 +417,42 @@ export default function PitchWeb({
         d3VelocityDecay={0.16}
         warmupTicks={60}
         enableNodeDrag={true}
-        enableZoomInteraction={true}
+        // Wheel is owned by our canvas listener (pan + pinch-zoom). Drag still pans.
+        enableZoomInteraction={false}
         enablePanInteraction={true}
       />
+
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+        <div className="flex border border-black bg-white">
+          <button
+            type="button"
+            aria-label="Zoom out"
+            onClick={() => nudgeZoom(1 / 1.25)}
+            className="w-9 h-9 text-lg font-['Space_Mono'] leading-none hover:bg-black hover:text-white border-r border-black"
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label="Zoom in"
+            onClick={() => nudgeZoom(1.25)}
+            className="w-9 h-9 text-lg font-['Space_Mono'] leading-none hover:bg-black hover:text-white"
+          >
+            +
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onUploadClick}
+          className="sm:hidden border border-black bg-black text-white px-4 py-2 text-xs font-['Space_Mono'] uppercase"
+        >
+          Upload
+        </button>
+      </div>
 
       <p className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-['Space_Mono'] text-black/50 tracking-wide">
         {PITCH_HINT}
       </p>
-
-      <button
-        type="button"
-        onClick={onUploadClick}
-        className="absolute bottom-4 right-4 sm:hidden border border-black bg-black text-white px-4 py-2 text-xs font-['Space_Mono'] uppercase"
-      >
-        Upload
-      </button>
     </div>
   )
 }
