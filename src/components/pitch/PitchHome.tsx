@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import {
   PITCH_DISCORD,
@@ -272,23 +273,38 @@ export default function PitchHome() {
           <h3 className="text-base sm:text-lg font-normal uppercase mt-2">
             {selected.label}
           </h3>
+          {typeof selected.postCount === 'number' && (
+            <p className="text-xs text-black/50 mt-1">
+              {selected.postCount} post{selected.postCount === 1 ? '' : 's'}
+            </p>
+          )}
           {selected.pending && (
             <p className="text-xs uppercase text-black/40 mt-2">Saving…</p>
           )}
-          <button
-            type="button"
-            className="mt-4 text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
-            onClick={() => setUploadOpen(true)}
-          >
-            Upload here
-          </button>
-          <button
-            type="button"
-            className="ml-3 text-sm underline"
-            onClick={() => setSelected(null)}
-          >
-            Close
-          </button>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="text-sm border border-black bg-black text-white px-4 py-2 uppercase hover:bg-white hover:text-black"
+              onClick={() => setUploadOpen(true)}
+            >
+              Upload
+            </button>
+            {selected.slug && !selected.pending ? (
+              <Link
+                href={`/subgroup/${selected.slug}`}
+                className="text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
+              >
+                Open group
+              </Link>
+            ) : null}
+            <button
+              type="button"
+              className="text-sm underline px-1"
+              onClick={() => setSelected(null)}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
 

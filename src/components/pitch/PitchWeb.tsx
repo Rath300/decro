@@ -49,6 +49,13 @@ function layoutKey(n: Pick<PitchGraphNode, 'id' | 'clientKey'>) {
   return n.clientKey || n.id
 }
 
+function hubFontPx(postCount: number | null | undefined, globalScale: number) {
+  const n = Math.max(0, postCount ?? 0)
+  // ~0 posts → 11px, busy hubs grow toward ~22px (screen space)
+  const base = 11 + Math.min(11, Math.sqrt(n) * 1.8)
+  return Math.max(base / globalScale, 4)
+}
+
 export default function PitchWeb({
   nodes,
   links,
@@ -61,15 +68,10 @@ export default function PitchWeb({
   const [dims, setDims] = useState({ w: 800, h: 600 })
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const hoverIdRef = useRef<string | null>(null)
   const imageCache = useRef(new Map<string, HTMLImageElement | null>())
   const posCache = useRef(
     new Map<string, { x: number; y: number; vx?: number; vy?: number }>()
   )
-
-  useEffect(() => {
-    hoverIdRef.current = hoverId
-  }, [hoverId])
 
   useEffect(() => {
     const el = containerRef.current
@@ -87,9 +89,7 @@ export default function PitchWeb({
     const gNodes: GraphNode[] = nodes.map((n) => {
       const key = layoutKey(n)
       const cached = posCache.current.get(key)
-      if (cached) {
-        return { ...n, ...cached }
-      }
+      if (cached) return { ...n, ...cached }
       const seed = hashSeed(key)
       const angle = ((seed % 360) / 360) * Math.PI * 2
       const radius = 120 + (seed % 520)
@@ -106,30 +106,28 @@ export default function PitchWeb({
     const fg = fgRef.current
     if (!fg) return
 
-    fg.d3Force('charge')?.strength((node: GraphNode) =>
-      node.kind === 'subgroup' ? -120 : -28
-    )
-    fg.d3Force('charge')?.distanceMax?.(420)
+    fg.d3Force('charge')?.strength((node: GraphNode) => {
+      if (node.kind !== 'subgroup') return -28
+      const weight = Math.min(40, Math.sqrt(node.postCount ?? 0) * 4)
+      return -100 - weight
+    })
+    fg.d3Force('charge')?.distanceMax?.(480)
     fg.d3Force('link')?.distance((link: any) => {
       const t = typeof link.target === 'object' ? link.target : null
-      return t?.kind === 'subgroup' ? 64 : 44
+      return t?.kind === 'subgroup' ? 72 : 48
     })
-    fg.d3Force('link')?.strength?.(0.22)
-    fg.d3Force('center')?.strength?.(0.035)
-
-    // Soft continuous motion instead of hard settle + jolt reheats.
+    fg.d3Force('link')?.strength?.(0.2)
+    fg.d3Force('center')?.strength?.(0.03)
     try {
-      fg.d3AlphaTarget?.(0.015)
+      fg.d3AlphaTarget?.(0.012)
       fg.d3ReheatSimulation?.()
     } catch {
       /* ignore */
     }
   }, [graphData])
 
-  // Trackpad / cursor navigation without click-drag:
-  // - two-finger scroll pans
-  // - pinch (ctrl+wheel) zooms
-  // - moving the pointer over empty space pans the camera
+  // Figma / Obsidian-plugin style: two-finger scroll pans, pinch zooms,
+  // click-drag pans. No clickless cursor-follow (that made the web undriveable).
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -143,25 +141,38 @@ export default function PitchWeb({
       }
       try {
         const d3Zoom = fg.d3Zoom()
-        // Own the wheel; keep click-drag pan/zoom gestures from d3.
         d3Zoom.filter((event: any) => {
+          // We own wheel; keep left-drag pan from d3-zoom.
           if (event.type === 'wheel') return false
           return !event.ctrlKey && !event.button
         })
-        if (typeof d3Zoom.duration === 'function') d3Zoom.duration(700)
+        if (typeof d3Zoom.duration === 'function') d3Zoom.duration(0)
       } catch {
         /* ignore */
       }
     }
     configureZoom()
 
-    const panBy = (dx: number, dy: number) => {
+    const panByScreen = (dx: number, dy: number) => {
       const fg = fgRef.current
-      if (!fg?.screen2GraphCoords || !fg.centerAt) return
-      const k = fg.zoom?.() || 1
-      const center = fg.screen2GraphCoords(el.clientWidth / 2, el.clientHeight / 2)
-      if (!center) return
-      fg.centerAt(center.x + dx / k, center.y + dy / k, 0)
+      if (!fg) return
+
+      // Prefer d3 translateBy — same path as click-drag, feels native.
+      try {
+        const zoomBeh = fg.d3Zoom?.()
+        const base = zoomBeh?.__baseElem
+        if (zoomBeh && base && typeof zoomBeh.translateBy === 'function') {
+          zoomBeh.translateBy(base, -dx, -dy)
+          return
+        }
+      } catch {
+        /* fall through */
+      }
+
+      const c = typeof fg.centerAt === 'function' ? fg.centerAt() : null
+      const k = typeof fg.zoom === 'function' ? fg.zoom() || 1 : 1
+      if (!c || c.x == null || c.y == null) return
+      fg.centerAt(c.x + dx / k, c.y + dy / k, 0)
     }
 
     const onWheel = (e: WheelEvent) => {
@@ -170,34 +181,36 @@ export default function PitchWeb({
       const fg = fgRef.current
       if (!fg) return
 
+      // Pinch on macOS arrives as ctrl+wheel; meta for cmd+scroll zoom.
       if (e.ctrlKey || e.metaKey) {
         const k = fg.zoom?.() || 1
-        const next = Math.min(6, Math.max(0.25, k * Math.exp(-e.deltaY * 0.01)))
-        fg.zoom(next, 0)
+        const next = Math.min(6, Math.max(0.2, k * Math.exp(-e.deltaY * 0.012)))
+        // Zoom toward pointer when we can.
+        try {
+          const abs = fg.screen2GraphCoords?.(e.offsetX, e.offsetY)
+          fg.zoom(next, 0)
+          if (abs) {
+            const after = fg.screen2GraphCoords?.(e.offsetX, e.offsetY)
+            if (after) {
+              const c = fg.centerAt()
+              fg.centerAt(c.x + (abs.x - after.x), c.y + (abs.y - after.y), 0)
+            }
+          }
+        } catch {
+          fg.zoom(next, 0)
+        }
         return
       }
 
-      // Natural trackpad: finger moves the web under you.
-      panBy(e.deltaX, e.deltaY)
-    }
-
-    const onPointerMove = (e: PointerEvent) => {
-      // Leave click-drag and node hovering alone.
-      if (e.buttons !== 0) return
-      if (hoverIdRef.current) return
-      const dx = e.movementX
-      const dy = e.movementY
-      if (!dx && !dy) return
-      // Cursor moves the viewpoint (grab-the-map without clicking).
-      panBy(-dx, -dy)
+      // Trackpad / mouse wheel → pan (Figma / maps). Slight boost for feel.
+      const speed = e.deltaMode === 1 ? 18 : 1.35
+      panByScreen(e.deltaX * speed, e.deltaY * speed)
     }
 
     el.addEventListener('wheel', onWheel, { passive: false, capture: true })
-    el.addEventListener('pointermove', onPointerMove, { capture: true })
     return () => {
       window.cancelAnimationFrame(raf)
       el.removeEventListener('wheel', onWheel, true)
-      el.removeEventListener('pointermove', onPointerMove, true)
     }
   }, [dims.w, dims.h])
 
@@ -207,8 +220,8 @@ export default function PitchWeb({
       (n) => n.id === highlightPostId || n.id === `p:${highlightPostId}`
     )
     if (!node || node.x == null || node.y == null) return
-    fgRef.current.centerAt(node.x, node.y, 1400)
-    fgRef.current.zoom(2.0, 1400)
+    fgRef.current.centerAt(node.x, node.y, 900)
+    fgRef.current.zoom(2.0, 900)
     setSelectedId(node.id)
   }, [highlightPostId, graphData.nodes])
 
@@ -216,31 +229,40 @@ export default function PitchWeb({
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const n = node as GraphNode
       const isHub = n.kind === 'subgroup'
-      const size = isHub ? 14 / Math.sqrt(globalScale) : 7 / Math.sqrt(globalScale)
       const active = n.id === hoverId || n.id === selectedId
       const x = n.x || 0
       const y = n.y || 0
 
       ctx.save()
       if (n.pending) ctx.globalAlpha = 0.55
-      ctx.lineWidth = active ? 2.5 / globalScale : 1 / globalScale
-      ctx.strokeStyle = '#000'
-      ctx.fillStyle = active ? '#000' : '#fff'
-      if (n.pending) ctx.setLineDash([3 / globalScale, 3 / globalScale])
 
       if (isHub) {
-        const w = Math.max(size * 3.2, (n.label?.length || 4) * (5.2 / globalScale))
-        const h = size * 1.6
-        ctx.fillRect(x - w / 2, y - h / 2, w, h)
-        ctx.strokeRect(x - w / 2, y - h / 2, w, h)
-        ctx.fillStyle = active ? '#fff' : '#000'
-        ctx.font = `400 ${Math.max(8 / globalScale, 3)}px "Space Mono", monospace`
+        // Text-only hubs — no boxes. Size scales with activity.
+        const fontPx = hubFontPx(n.postCount, globalScale)
+        ctx.font = `400 ${fontPx}px "Space Mono", monospace`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        const label = (n.label || '').toUpperCase().slice(0, 18)
+        const label = (n.label || '').toUpperCase()
+        if (active) {
+          const metrics = ctx.measureText(label)
+          const padX = 6 / globalScale
+          const padY = 4 / globalScale
+          const tw = metrics.width + padX * 2
+          const th = fontPx + padY * 2
+          ctx.fillStyle = '#000'
+          ctx.fillRect(x - tw / 2, y - th / 2, tw, th)
+          ctx.fillStyle = '#fff'
+        } else {
+          ctx.fillStyle = '#000'
+        }
         ctx.fillText(label, x, y)
       } else {
+        const size = 7 / Math.sqrt(globalScale)
         const s = size * 1.6
+        ctx.lineWidth = active ? 2.5 / globalScale : 1 / globalScale
+        ctx.strokeStyle = '#000'
+        ctx.fillStyle = active ? '#000' : '#fff'
+        if (n.pending) ctx.setLineDash([3 / globalScale, 3 / globalScale])
         ctx.fillRect(x - s / 2, y - s / 2, s, s)
         ctx.strokeRect(x - s / 2, y - s / 2, s, s)
 
@@ -313,8 +335,8 @@ export default function PitchWeb({
       const cy = (minY + maxY) / 2
       const span = Math.max(maxX - minX, maxY - minY, 80)
       const zoom = Math.min(2.8, Math.max(1.1, (Math.min(dims.w, dims.h) * 0.55) / span))
-      fg.centerAt(cx, cy, 1600)
-      fg.zoom(zoom, 1600)
+      fg.centerAt(cx, cy, 1000)
+      fg.zoom(zoom, 1000)
     },
     [graphData.nodes, dims.w, dims.h]
   )
@@ -357,7 +379,7 @@ export default function PitchWeb({
   return (
     <div
       ref={containerRef}
-      className="relative h-[calc(100dvh-3.5rem)] w-full bg-white overflow-hidden"
+      className="relative h-[calc(100dvh-3.5rem)] w-full bg-white overflow-hidden cursor-grab active:cursor-grabbing"
     >
       <ForceGraph2D
         ref={fgRef}
@@ -368,7 +390,7 @@ export default function PitchWeb({
         linkSource="source"
         linkTarget="target"
         backgroundColor="#ffffff"
-        linkColor={() => 'rgba(0,0,0,0.18)'}
+        linkColor={() => 'rgba(0,0,0,0.16)'}
         linkWidth={1}
         nodeCanvasObject={paintNode}
         nodePointerAreaPaint={(
@@ -378,12 +400,24 @@ export default function PitchWeb({
           globalScale: number
         ) => {
           const n = node as GraphNode
-          const isHub = n.kind === 'subgroup'
-          const size = isHub ? 18 / Math.sqrt(globalScale) : 10 / Math.sqrt(globalScale)
+          if (n.kind === 'subgroup') {
+            const fontPx = hubFontPx(n.postCount, globalScale)
+            const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
+            const h = fontPx * 1.4
+            ctx.fillStyle = color
+            ctx.fillRect((n.x || 0) - w / 2, (n.y || 0) - h / 2, w, h)
+            return
+          }
+          const size = 10 / Math.sqrt(globalScale)
           ctx.fillStyle = color
           ctx.fillRect((n.x || 0) - size, (n.y || 0) - size, size * 2, size * 2)
         }}
-        onNodeHover={(node: any) => setHoverId(node?.id ?? null)}
+        onNodeHover={(node: any) => {
+          setHoverId(node?.id ?? null)
+          if (containerRef.current) {
+            containerRef.current.style.cursor = node ? 'pointer' : 'grab'
+          }
+        }}
         onNodeClick={handleClick}
         onBackgroundClick={handleBackgroundClick}
         onNodeDrag={(node: any) => {
@@ -391,7 +425,6 @@ export default function PitchWeb({
           node.fy = node.y
         }}
         onNodeDragEnd={(node: any) => {
-          // Release pin so the web keeps drifting instead of freezing.
           node.fx = undefined
           node.fy = undefined
           persistPositions()

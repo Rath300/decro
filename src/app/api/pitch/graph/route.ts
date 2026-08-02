@@ -21,6 +21,7 @@ export type PitchGraphNode = {
   description?: string | null
   username?: string | null
   pending?: boolean
+  postCount?: number | null
   /** Stable client id so layout can survive optimistic → real id swaps */
   clientKey?: string
 }
@@ -109,6 +110,7 @@ export async function GET(request: Request) {
       label: g.name,
       slug: g.slug,
       subgroupId: g.id,
+      postCount: typeof g.post_count === 'number' ? g.post_count : Number(g.post_count) || 0,
     })
   }
 
