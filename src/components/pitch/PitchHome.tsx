@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
-import { PITCH_BODY, PITCH_ENTER_CTA } from '@/lib/pitch-copy'
+import {
+  PITCH_DISCORD,
+  PITCH_EMAIL,
+  PITCH_ENTER_CTA,
+  PITCH_PARAGRAPHS,
+} from '@/lib/pitch-copy'
 import PitchWeb from '@/components/pitch/PitchWeb'
 import PitchUploadSheet from '@/components/pitch/PitchUploadSheet'
 
@@ -136,19 +141,39 @@ export default function PitchHome() {
       )}
 
       {!entered && (
-        <div className="fixed inset-0 z-[70] bg-white/92 flex items-center justify-center px-6">
-          <div className="max-w-xl w-full">
+        <div className="fixed inset-0 z-[70] bg-white flex items-center justify-center px-5 sm:px-8 py-20 overflow-y-auto">
+          <div className="max-w-lg w-full my-auto">
             <Image
               src="/decky.png"
               alt="Decro"
-              width={112}
-              height={112}
-              className="w-24 h-24 sm:w-28 sm:h-28"
+              width={96}
+              height={96}
+              className="w-20 h-20 sm:w-24 sm:h-24"
               priority
             />
-            <p className="mt-6 text-sm sm:text-base font-['Space_Mono'] text-black/80 leading-relaxed max-w-md">
-              {PITCH_BODY}
-            </p>
+            <div className="mt-6 space-y-4 text-sm sm:text-[15px] font-['Space_Mono'] text-black leading-relaxed">
+              {PITCH_PARAGRAPHS.map((paragraph) => {
+                if (!paragraph.includes(PITCH_EMAIL)) {
+                  return <p key={paragraph.slice(0, 24)}>{paragraph}</p>
+                }
+                const [before, after] = paragraph.split(PITCH_EMAIL)
+                const [mid, end] = (after || '').split(PITCH_DISCORD)
+                return (
+                  <p key="contact">
+                    {before}
+                    <a
+                      href={`mailto:${PITCH_EMAIL}`}
+                      className="underline underline-offset-2"
+                    >
+                      {PITCH_EMAIL}
+                    </a>
+                    {mid}
+                    <span className="underline underline-offset-2">{PITCH_DISCORD}</span>
+                    {end}
+                  </p>
+                )
+              })}
+            </div>
             <button
               type="button"
               onClick={enter}
