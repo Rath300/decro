@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import ClientProviders from '@/components/ClientProviders'
 import { PostProvider } from '@/context/post-context'
@@ -115,6 +116,7 @@ export default function RootLayout({
             </ProfileInitializer>
           </ClientProviders>
         </ErrorBoundary>
+        <Analytics />
         <script
           dangerouslySetInnerHTML={{
             __html: `
