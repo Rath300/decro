@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "db:apply": "node scripts/db-apply.mjs",
     "db:password": "node scripts/set-db-password.mjs",
-    "seed:genres": "node scripts/seed-pitch-genres.mjs"
+    "seed:genres": "node scripts/seed-pitch-genres.mjs",
+    "seed:public-domain": "node scripts/seed-public-domain.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",

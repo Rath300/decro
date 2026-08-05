@@ -19,6 +19,7 @@
 # misc
 .DS_Store
 *.pem
+scripts/.seed-public-domain-state.json
 
 # debug
 npm-debug.log*
