@@ -67,9 +67,10 @@ export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
   const stepNum =
     stage === 'click-main' ? 2 : stage === 'click-niche' ? 3 : 4
 
+  // Top on mobile (clears zoom controls on the right); bottom on desktop
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[65] flex justify-center px-3 pb-16 sm:pb-20">
-      <div className="pointer-events-auto max-w-md w-full border border-black bg-white p-4 sm:p-5 shadow-none">
+    <div className="pointer-events-none fixed inset-x-0 top-16 sm:top-auto sm:bottom-0 z-[65] flex justify-center px-3 pt-0 sm:pt-0 sm:pb-6">
+      <div className="pointer-events-auto max-w-md w-full border border-black bg-white p-4 sm:p-5 mr-14 sm:mr-0">
         <p className="text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/45">
           Tour · {stepNum} / 4
         </p>
@@ -86,19 +87,13 @@ export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
           </p>
         )}
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          {isGuest ? (
-            <button
-              type="button"
-              onClick={onNext}
-              className="border border-black bg-black text-white px-4 py-2 text-xs font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
-            >
-              {copy.cta || 'Done'}
-            </button>
-          ) : (
-            <p className="text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/40">
-              Waiting for your click on the graph…
-            </p>
-          )}
+          <button
+            type="button"
+            onClick={onNext}
+            className="border border-black bg-black text-white px-4 py-2 text-xs font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
+          >
+            {copy.cta || 'Next'}
+          </button>
           <button
             type="button"
             onClick={onSkip}

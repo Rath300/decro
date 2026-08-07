@@ -59,7 +59,6 @@ export const PITCH_HUBS: PitchHub[] = [
     depth: 2,
     parents: ['visual-art', 'design'],
     genreName: 'Illustration',
-    startVisible: true,
   },
   { id: 'street-art', label: 'Street Art', depth: 2, parents: ['visual-art'], genreName: 'Street Art' },
   { id: 'glitch', label: 'Glitch', depth: 2, parents: ['visual-art'], genreName: 'Glitch' },
@@ -88,7 +87,6 @@ export const PITCH_HUBS: PitchHub[] = [
     depth: 2,
     parents: ['writing', 'design'],
     genreName: 'Zine',
-    startVisible: true,
   },
 
   { id: 'typography', label: 'Typography', depth: 2, parents: ['design'], genreName: 'Typography' },
@@ -133,7 +131,6 @@ export const PITCH_HUBS: PitchHub[] = [
     depth: 2,
     parents: ['music', 'design'],
     genreName: 'Poster Design',
-    startVisible: true,
   },
   {
     id: 'music-video',
@@ -141,7 +138,6 @@ export const PITCH_HUBS: PitchHub[] = [
     depth: 2,
     parents: ['music', 'film'],
     genreName: 'Motion Graphics',
-    startVisible: true,
   },
   {
     id: 'photo-essay',
@@ -199,10 +195,9 @@ export function parseHubNodeId(nodeId: string): string | null {
   return nodeId.slice('hub:'.length) || null
 }
 
+/** Clean start: center + main groups only (no niches / bridges). */
 export function startVisibleHubs(): PitchHub[] {
-  return PITCH_HUBS.filter(
-    (h) => h.startVisible || h.depth <= 1 || h.parents.length === 0
-  )
+  return PITCH_HUBS.filter((h) => h.depth <= 1)
 }
 
 export function allParentChildLinks(): { parent: string; child: string }[] {

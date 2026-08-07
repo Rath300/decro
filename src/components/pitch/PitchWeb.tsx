@@ -28,6 +28,10 @@ type Props = {
   links: PitchGraphLink[]
   startHubIds: string[]
   revealedIds: Set<string>
+  /** Hub just expanded — camera zooms into its local cluster */
+  focusHubId?: string | null
+  /** Bump to re-zoom the same hub (e.g. Zoom in pressed again) */
+  focusKey?: number
   highlightPostId?: string | null
   tourStage?: PitchTourStage | null
   tourParentId?: string | null
@@ -49,11 +53,13 @@ function hashSeed(id: string): number {
   return h >>> 0
 }
 
-function hubFontPx(n: PitchGraphNode, globalScale: number) {
+function hubFontPx(n: PitchGraphNode, globalScale: number, focused: boolean) {
   const depth = n.depth ?? 1
   const bridge = n.isBridge ? 1.5 : 0
-  const base = depth === 0 ? 18 : depth === 1 ? 14 : 11 + bridge
-  return Math.max(base / globalScale, 4)
+  let base = depth === 0 ? 20 : depth === 1 ? 15 : 12 + bridge
+  if (focused) base += 3
+  // Keep labels readable when zoomed out
+  return Math.max(base / Math.sqrt(Math.max(globalScale, 0.35)), 7)
 }
 
 export default function PitchWeb({
@@ -61,6 +67,8 @@ export default function PitchWeb({
   links,
   startHubIds,
   revealedIds,
+  focusHubId = null,
+  focusKey = 0,
   highlightPostId,
   tourStage = null,
   tourParentId = null,
@@ -81,13 +89,14 @@ export default function PitchWeb({
   const hoverIdRef = useRef<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [pulse, setPulse] = useState(0)
+  const [viewZoom, setViewZoom] = useState(1)
   const posCache = useRef(
     new Map<string, { x: number; y: number; vx?: number; vy?: number }>()
   )
   const lastClickRef = useRef<{ id: string; at: number } | null>(null)
   const fittedRef = useRef(false)
   const cameraLockUntil = useRef(0)
-  const lastRevealCount = useRef(0)
+  const lastFocusRef = useRef<string | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -172,7 +181,7 @@ export default function PitchWeb({
         }
         const cx = count ? ax / count : px
         const cy = count ? ay / count : py
-        const radius = n.isBridge ? 70 + (seed % 40) : 55 + (seed % 50)
+        const radius = n.isBridge ? 100 + (seed % 50) : 90 + (seed % 70)
         return {
           ...n,
           x: cx + Math.cos(angle) * radius,
@@ -181,7 +190,7 @@ export default function PitchWeb({
       }
 
       const depth = n.depth ?? 1
-      const radius = 40 + depth * 55 + (seed % 30)
+      const radius = 70 + depth * 70 + (seed % 40)
       return {
         ...n,
         x: Math.cos(angle) * radius,
@@ -214,21 +223,21 @@ export default function PitchWeb({
     if (!fg) return
 
     fg.d3Force?.('charge')?.strength((node: GraphNode) => {
-      if (node.depth === 0) return -60
-      if (node.depth === 1) return -90
-      if (node.isBridge) return -70
-      return -55
+      if (node.depth === 0) return -120
+      if (node.depth === 1) return -180
+      if (node.isBridge) return -140
+      return -110
     })
-    fg.d3Force?.('charge')?.distanceMax?.(360)
+    fg.d3Force?.('charge')?.distanceMax?.(520)
     fg.d3Force?.('link')?.distance((link: any) => {
       const s = typeof link.source === 'object' ? link.source : null
       const t = typeof link.target === 'object' ? link.target : null
-      if (s?.depth === 0 || t?.depth === 0) return 88
-      if (s?.isBridge || t?.isBridge) return 72
-      return 58
+      if (s?.depth === 0 || t?.depth === 0) return 120
+      if (s?.isBridge || t?.isBridge) return 100
+      return 88
     })
-    fg.d3Force?.('link')?.strength?.(0.45)
-    fg.d3Force?.('center')?.strength?.(0.05)
+    fg.d3Force?.('link')?.strength?.(0.35)
+    fg.d3Force?.('center')?.strength?.(0.035)
     try {
       fg.d3ReheatSimulation?.()
     } catch {
@@ -244,15 +253,19 @@ export default function PitchWeb({
     return fg
   }, [])
 
-  const fitView = useCallback(
+  const fitMains = useCallback(
     (ms = 500) => {
       const fg = getFg()
       if (!fg) return
       cameraLockUntil.current = Date.now() + ms + 40
-      const hubs = graphData.nodes.filter((n) => n.kind === 'hub')
+      // Start / reset: only frame the center + mains (readable).
+      const hubs = graphData.nodes.filter(
+        (n) => n.kind === 'hub' && (n.depth ?? 0) <= 1
+      )
       if (!hubs.length) {
         fg.centerAt(0, 0, ms)
-        fg.zoom(1, ms)
+        fg.zoom(1.1, ms)
+        setViewZoom(1.1)
         return
       }
       const xs = hubs.map((h) => h.x ?? 0)
@@ -263,27 +276,67 @@ export default function PitchWeb({
       const maxY = Math.max(...ys)
       const cx = (minX + maxX) / 2
       const cy = (minY + maxY) / 2
-      const span = Math.max(maxX - minX, maxY - minY, 200)
-      const zoom = Math.min(
-        1.4,
-        Math.max(0.55, (Math.min(dims.w, dims.h) * 0.7) / span)
-      )
+      const span = Math.max(maxX - minX, maxY - minY, 220)
+      const short = Math.min(dims.w, dims.h)
+      const zoom = Math.min(1.55, Math.max(0.85, (short * 0.62) / span))
       fg.centerAt(cx, cy, ms)
       fg.zoom(zoom, ms)
+      setViewZoom(zoom)
+    },
+    [getFg, graphData.nodes, dims.w, dims.h]
+  )
+
+  const zoomToCluster = useCallback(
+    (hubId: string, ms = 750) => {
+      const fg = getFg()
+      if (!fg) return
+      const parent = graphData.nodes.find(
+        (n) => n.kind === 'hub' && n.hubId === hubId
+      )
+      if (!parent || parent.x == null || parent.y == null) return
+      const kids = graphData.nodes.filter(
+        (n) =>
+          n.kind === 'hub' &&
+          n.hubId !== hubId &&
+          (n.parentIds || []).includes(hubId) &&
+          n.x != null &&
+          n.y != null
+      )
+      const xs = [parent.x, ...kids.map((k) => k.x!)]
+      const ys = [parent.y, ...kids.map((k) => k.y!)]
+      const minX = Math.min(...xs)
+      const maxX = Math.max(...xs)
+      const minY = Math.min(...ys)
+      const maxY = Math.max(...ys)
+      const cx = (minX + maxX) / 2
+      const cy = (minY + maxY) / 2
+      const span = Math.max(maxX - minX, maxY - minY, 140)
+      const short = Math.min(dims.w, dims.h)
+      const zoom = Math.min(2.8, Math.max(1.35, (short * 0.7) / span))
+      cameraLockUntil.current = Date.now() + ms + 80
+      fg.centerAt(cx, cy, ms)
+      fg.zoom(zoom, ms)
+      setViewZoom(zoom)
     },
     [getFg, graphData.nodes, dims.w, dims.h]
   )
 
   const nudgeToNode = useCallback(
-    (node: GraphNode, ms = 550) => {
+    (node: GraphNode, ms = 650) => {
+      const hid = node.hubId
+      if (hid) {
+        zoomToCluster(hid, ms)
+        return
+      }
       const fg = getFg()
       if (!fg || node.x == null || node.y == null) return
       cameraLockUntil.current = Date.now() + ms + 40
       fg.centerAt(node.x, node.y, ms)
-      const k = fg.zoom() || 1
-      fg.zoom(Math.min(2.1, Math.max(k, 1.05)), ms)
+      const zoom = Math.min(2.4, Math.max(1.4, (fg.zoom() || 1) * 1.35))
+      fg.zoom(zoom, ms)
+      setViewZoom(zoom)
     },
-    [getFg]
+    [getFg, zoomToCluster]
   )
 
   const panByScreen = useCallback(
@@ -304,7 +357,9 @@ export default function PitchWeb({
       if (Date.now() < cameraLockUntil.current && ms === 0) return
       const fg = getFg()
       if (!fg) return
-      fg.zoom(Math.min(4, Math.max(0.4, next)), ms)
+      const z = Math.min(4, Math.max(0.4, next))
+      fg.zoom(z, ms)
+      setViewZoom(z)
     },
     [getFg]
   )
@@ -390,27 +445,32 @@ export default function PitchWeb({
     }
   }, [graphReady, getFg, panByScreen, setZoomLevel])
 
-  // Initial fit
+  // Initial fit — mains only, readable
   useEffect(() => {
     if (!graphReady || fittedRef.current) return
     if (graphData.nodes.length < 2) return
     fittedRef.current = true
-    const t = window.setTimeout(() => fitView(0), 80)
+    const t = window.setTimeout(() => fitMains(0), 80)
     return () => window.clearTimeout(t)
-  }, [graphReady, graphData.nodes.length, fitView])
+  }, [graphReady, graphData.nodes.length, fitMains])
 
-  // Soft nudge when new hubs revealed
+  // Zoom INTO the cluster when a hub is expanded (not fit-all).
+  // Re-run when node count changes so we frame after children spawn.
   useEffect(() => {
     if (!graphReady) return
-    const count = revealedIds.size
-    if (count <= lastRevealCount.current) {
-      lastRevealCount.current = count
+    if (!focusHubId) {
+      lastFocusRef.current = null
       return
     }
-    lastRevealCount.current = count
-    const t = window.setTimeout(() => fitView(450), 60)
-    return () => window.clearTimeout(t)
-  }, [revealedIds, graphReady, fitView])
+    lastFocusRef.current = focusHubId
+    const id = focusHubId
+    const t1 = window.setTimeout(() => zoomToCluster(id, 700), 60)
+    const t2 = window.setTimeout(() => zoomToCluster(id, 420), 420)
+    return () => {
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+    }
+  }, [focusHubId, focusKey, graphReady, zoomToCluster, graphData.nodes.length])
 
   useEffect(() => {
     if (!graphReady || !highlightPostId) return
@@ -428,25 +488,34 @@ export default function PitchWeb({
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const n = node as GraphNode
       if (n.kind !== 'hub') return
+      const depth = n.depth ?? 1
+      // LOD: when zoomed out, hide deep labels so mains stay readable
+      if (globalScale < 0.85 && depth >= 2) return
+      if (globalScale < 1.15 && depth >= 3) return
+
       const active = n.id === hoverId || n.id === selectedId
+      const focused = Boolean(focusHubId && n.hubId === focusHubId)
       const x = n.x || 0
       const y = n.y || 0
       const hid = n.hubId
       const tourPulse =
         (tourStage === 'click-main' &&
-          n.depth === 1 &&
+          depth === 1 &&
           (!tourParentId || hid === tourParentId)) ||
-        (tourStage === 'click-niche' && (n.depth ?? 0) >= 2)
+        (tourStage === 'click-niche' && depth >= 2)
 
-      const fontPx = hubFontPx(n, globalScale)
+      const fontPx = hubFontPx(n, globalScale, focused || active)
       ctx.save()
+      if (!focused && focusHubId && depth >= 2 && !active) {
+        ctx.globalAlpha = 0.55
+      }
       ctx.font = `400 ${fontPx}px "Space Mono", monospace`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       const label = (n.label || '').toUpperCase()
       const metrics = ctx.measureText(label)
-      const padX = 6 / globalScale
-      const padY = 4 / globalScale
+      const padX = 7 / globalScale
+      const padY = 5 / globalScale
       const tw = metrics.width + padX * 2
       const th = fontPx + padY * 2
 
@@ -463,13 +532,22 @@ export default function PitchWeb({
       }
 
       if (n.isBridge && !active) {
-        // Small double tick for multi-parent bridges
         ctx.fillStyle = '#000'
-        ctx.fillRect(x - tw / 2 - 3 / globalScale, y - 2 / globalScale, 2 / globalScale, 4 / globalScale)
-        ctx.fillRect(x - tw / 2 - 6 / globalScale, y - 2 / globalScale, 2 / globalScale, 4 / globalScale)
+        ctx.fillRect(
+          x - tw / 2 - 3 / globalScale,
+          y - 2 / globalScale,
+          2 / globalScale,
+          4 / globalScale
+        )
+        ctx.fillRect(
+          x - tw / 2 - 6 / globalScale,
+          y - 2 / globalScale,
+          2 / globalScale,
+          4 / globalScale
+        )
       }
 
-      if (active || (tourPulse && pulse > 0.55)) {
+      if (active || focused || (tourPulse && pulse > 0.55)) {
         ctx.fillStyle = '#000'
         ctx.fillRect(x - tw / 2, y - th / 2, tw, th)
         ctx.fillStyle = '#fff'
@@ -479,7 +557,7 @@ export default function PitchWeb({
       ctx.fillText(label, x, y)
       ctx.restore()
     },
-    [hoverId, selectedId, tourStage, tourParentId, pulse]
+    [hoverId, selectedId, tourStage, tourParentId, pulse, focusHubId]
   )
 
   const handleClick = useCallback(
@@ -599,7 +677,10 @@ export default function PitchWeb({
           ) => {
             const n = node as GraphNode
             if (n.kind !== 'hub') return
-            const fontPx = hubFontPx(n, globalScale)
+            const depth = n.depth ?? 1
+            if (globalScale < 0.85 && depth >= 2) return
+            if (globalScale < 1.15 && depth >= 3) return
+            const fontPx = hubFontPx(n, globalScale, false)
             const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
             const h = fontPx * 1.4
             ctx.fillStyle = color
@@ -646,28 +727,33 @@ export default function PitchWeb({
       )}
 
       {canReset && onResetView ? (
-        <div className="absolute top-4 left-4 z-10 font-['Space_Mono']">
+        <div className="absolute top-3 left-3 z-20 font-['Space_Mono']">
           <button
             type="button"
-            onClick={onResetView}
-            className="border border-black bg-white px-3 py-1.5 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
+            onClick={() => {
+              onResetView()
+              lastFocusRef.current = null
+              window.setTimeout(() => fitMains(450), 100)
+            }}
+            className="border border-black bg-white px-3 py-2 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
           >
             ← Reset view
           </button>
         </div>
       ) : null}
 
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
-        <div className="flex border border-black bg-white">
+      {/* Zoom controls — top-right so they stay clear of tour cards */}
+      <div className="absolute top-3 right-3 flex flex-col items-end gap-2 z-20">
+        <div className="flex border border-black bg-white shadow-none">
           <button
             type="button"
             aria-label="Zoom out"
             onClick={() => {
               const fg = getFg()
               if (!fg) return
-              setZoomLevel((fg.zoom() || 1) / 1.25, 180)
+              setZoomLevel((fg.zoom() || 1) / 1.3, 180)
             }}
-            className="w-9 h-9 text-lg font-['Space_Mono'] leading-none hover:bg-black hover:text-white border-r border-black"
+            className="w-11 h-11 sm:w-12 sm:h-12 text-2xl font-['Space_Mono'] leading-none hover:bg-black hover:text-white border-r border-black"
           >
             −
           </button>
@@ -677,24 +763,35 @@ export default function PitchWeb({
             onClick={() => {
               const fg = getFg()
               if (!fg) return
-              setZoomLevel((fg.zoom() || 1) * 1.25, 180)
+              setZoomLevel((fg.zoom() || 1) * 1.3, 180)
             }}
-            className="w-9 h-9 text-lg font-['Space_Mono'] leading-none hover:bg-black hover:text-white"
+            className="w-11 h-11 sm:w-12 sm:h-12 text-2xl font-['Space_Mono'] leading-none hover:bg-black hover:text-white border-r border-black"
           >
             +
           </button>
+          <button
+            type="button"
+            aria-label="Fit mains"
+            onClick={() => fitMains(400)}
+            className="px-3 h-11 sm:h-12 text-[10px] sm:text-xs font-['Space_Mono'] uppercase tracking-wide hover:bg-black hover:text-white"
+          >
+            Fit
+          </button>
         </div>
+        <p className="hidden sm:block text-[10px] font-['Space_Mono'] text-black/40 uppercase tracking-wide">
+          {viewZoom.toFixed(1)}× · pinch or ⌘scroll
+        </p>
         <button
           type="button"
           onClick={onUploadClick}
-          className="sm:hidden border border-black bg-black text-white px-4 py-2 text-xs font-['Space_Mono'] uppercase"
+          className="sm:hidden border border-black bg-black text-white px-4 py-2.5 text-xs font-['Space_Mono'] uppercase"
         >
           Upload
         </button>
       </div>
 
       {showHint && (
-        <p className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-['Space_Mono'] text-black/50 tracking-wide px-3 text-center max-w-[90vw]">
+        <p className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-['Space_Mono'] text-black/50 tracking-wide px-3 text-center max-w-[min(90vw,28rem)]">
           {PITCH_HINT}
         </p>
       )}

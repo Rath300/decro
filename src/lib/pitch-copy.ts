@@ -20,32 +20,34 @@ export const PITCH_TOUR_COPY: Record<
   { title: string; body: string; cta?: string }
 > = {
   welcome: {
-    title: 'Welcome to Decro',
-    body: 'A connected web of creative communities. Click a group to expand its niches — or enter it to post and interact.',
-    cta: 'Start tour',
+    title: 'This is Decro',
+    body: 'Creative groups linked together. We’ll show you two moves: zoom into a group, or open it.',
+    cta: 'Show me',
   },
   'click-main': {
-    title: 'Expand a group',
-    body: 'Click any main label near the center. Linked niches bloom around it — including bridges that belong to two crafts.',
+    title: '1 · Zoom into a group',
+    body: 'Tap Photography, Music, Games… The camera zooms in and related niches appear around it.',
+    cta: 'Next',
   },
   'click-niche': {
-    title: 'Go deeper or go inside',
-    body: 'Click again to zoom into more linked subgroups (like Video Games → Indie / Triple-A). Double-click or hit Enter group to open the page and post.',
+    title: '2 · Open a group',
+    body: 'Use Enter group (or double-tap a niche) to go inside — that’s where you post and comment.',
+    cta: 'Next',
   },
   guest: {
-    title: 'No account required',
-    body: 'Upload and comment as a guest anytime. Log in is optional if you want a saved name later.',
-    cta: 'Open the group',
+    title: 'No login needed',
+    body: 'You can upload and comment as a guest. Login is optional.',
+    cta: 'Start exploring',
   },
 }
 
 export const PITCH_ENTER_CTA = 'Enter the groups'
 
 export const PITCH_HINT =
-  'click to expand · double-click or Enter to go inside · bridges link two crafts · scroll to pan'
+  'tap a group to zoom in · Enter / double-tap to open · +/− to zoom · scroll to pan'
 
 export const PITCH_EMAIL = 'helpdecro.net@gmail.com'
 export const PITCH_DISCORD_HANDLES = ['rath6053', 'existsneel'] as const
 
 /** Suggested first main group for the tour highlight. */
-export const PITCH_TOUR_PARENT_ID = 'games'
+export const PITCH_TOUR_PARENT_ID = 'photography'

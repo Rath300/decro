@@ -12,7 +12,7 @@ import type {
   UploadCommit,
 } from '@/components/pitch/PitchUploadSheet'
 
-const ENTERED_KEY = 'decro_pitch_onboarded_v4'
+const ENTERED_KEY = 'decro_pitch_onboarded_v5'
 
 function displayUsername(raw?: string | null) {
   if (!raw || /^anonymous(_|$)/i.test(raw)) return 'anonymous'
@@ -27,6 +27,8 @@ export default function PitchHome() {
   const [links, setLinks] = useState<PitchGraphLink[]>([])
   const [startHubIds, setStartHubIds] = useState<string[]>([])
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set())
+  const [focusHubId, setFocusHubId] = useState<string | null>(null)
+  const [focusKey, setFocusKey] = useState(0)
   const [highlightPostId, setHighlightPostId] = useState<string | null>(null)
   const [selected, setSelected] = useState<PitchGraphNode | null>(null)
   const [loadError, setLoadError] = useState('')
@@ -92,10 +94,12 @@ export default function PitchHome() {
   useEffect(() => {
     const onOverlay = () => {
       setSelected(null)
+      setFocusHubId(null)
       setRevealedIds(new Set(startHubIds))
       setTourStage('welcome')
       try {
         sessionStorage.removeItem(ENTERED_KEY)
+        sessionStorage.removeItem('decro_pitch_onboarded_v4')
         sessionStorage.removeItem('decro_pitch_onboarded_v3')
         sessionStorage.removeItem('decro_pitch_onboarded_v2')
       } catch {}
@@ -110,15 +114,24 @@ export default function PitchHome() {
     return () => window.clearTimeout(t)
   }, [toast])
 
-  const onRevealChildren = useCallback((hubId: string) => {
-    const kids = childrenOf(hubId)
-    setRevealedIds((prev) => {
-      const next = new Set(prev)
-      next.add(hubId)
-      for (const k of kids) next.add(k.id)
-      return next
-    })
+  const focusCluster = useCallback((hubId: string) => {
+    setFocusHubId(hubId)
+    setFocusKey((k) => k + 1)
   }, [])
+
+  const onRevealChildren = useCallback(
+    (hubId: string) => {
+      const kids = childrenOf(hubId)
+      setRevealedIds((prev) => {
+        const next = new Set(prev)
+        next.add(hubId)
+        for (const k of kids) next.add(k.id)
+        return next
+      })
+      focusCluster(hubId)
+    },
+    [focusCluster]
+  )
 
   const onEnterHub = useCallback(
     (slug: string) => {
@@ -129,12 +142,23 @@ export default function PitchHome() {
 
   const onResetView = useCallback(() => {
     setSelected(null)
+    setFocusHubId(null)
     setRevealedIds(new Set(startHubIds))
   }, [startHubIds])
 
   const onTourNext = () => {
     if (tourStage === 'welcome') {
       setTourStage('click-main')
+      return
+    }
+    if (tourStage === 'click-main') {
+      // Demo zoom so Next never traps the user waiting for a graph click
+      onRevealChildren(PITCH_TOUR_PARENT_ID)
+      setTourStage('click-niche')
+      return
+    }
+    if (tourStage === 'click-niche') {
+      setTourStage('guest')
       return
     }
     if (tourStage === 'guest') {
@@ -266,6 +290,8 @@ export default function PitchHome() {
         links={links}
         startHubIds={startHubIds}
         revealedIds={revealedIds}
+        focusHubId={focusHubId}
+        focusKey={focusKey}
         highlightPostId={highlightPostId}
         tourStage={tourStage}
         tourParentId={PITCH_TOUR_PARENT_ID}
@@ -329,6 +355,14 @@ export default function PitchHome() {
                 type="button"
                 className="text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
                 onClick={() => onRevealChildren(selected.hubId!)}
+              >
+                Zoom in
+              </button>
+            ) : selected.hubId && (selected.childIds || []).length > 0 ? (
+              <button
+                type="button"
+                className="text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
+                onClick={() => focusCluster(selected.hubId!)}
               >
                 Zoom in
               </button>
