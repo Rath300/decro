@@ -811,20 +811,14 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
     const server = comments || [];
     const optimistic = optimisticComments || [];
     
-    // Filter out problematic comments (anonymous, null usernames, old dates)
+    // Drop empty / garbage rows; keep guest and anonymous display names.
     const filterValidComments = (commentsList: RealtimeComment[]) => {
       return commentsList.filter(comment => {
-        // Skip if no username or anonymous-like usernames
-        if (!comment.username || 
-            comment.username === 'anonymous' || 
-            comment.username === 'Anonymous' ||
-            comment.username.trim() === '' ||
-            comment.created_at < '2020-01-01') {
-          return false;
-        }
-        return true;
-      });
-    };
+        if (!comment.username?.trim()) return false
+        if (comment.created_at < '2020-01-01') return false
+        return true
+      })
+    }
     
     const validServerComments = filterValidComments(server);
     const validOptimisticComments = filterValidComments(optimistic);

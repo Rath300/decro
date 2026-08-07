@@ -221,27 +221,25 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const handleComment = async () => {
     if (commentText.trim() && selectedCard && user?.id) {
       const commentContent = commentText.trim()
-      
+
       // Clear comment immediately for good UX
       setCommentText('')
-      
+
       try {
         // Add retry logic for new users
       let retries = 0
-      let error = null
-      
+      let error: { message: string } | null = null
+
       while (retries < 3) {
-        const result = await supabase
-          .rpc('add_comment_ext', {
-            post_id_param: selectedCard.id,
-            external_id_param: user.id,
-            content_param: commentContent
-          })
-        
+        const result = await callRpc('add_comment_ext', {
+          post_id_param: selectedCard.id,
+          content_param: commentContent,
+        })
+
         error = result.error
-        
+
         if (!error) break
-        
+
         // If profile not found, wait and retry
         if (error.message?.includes('profile') || error.message?.includes('user')) {
           console.log(`Profile not ready for comment, retry ${retries + 1}/3...`)

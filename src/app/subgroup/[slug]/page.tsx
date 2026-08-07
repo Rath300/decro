@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useUserHistory } from '@/hooks/use-user-history'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function SubgroupDetail() {
   const params = useParams() as { slug: string }
@@ -21,6 +22,7 @@ export default function SubgroupDetail() {
   const { user } = useAuth()
   const toast = useToast()
   const { trackAction } = useUserHistory()
+  const pitchMode = isPitchMode()
   const [subgroupId, setSubgroupId] = useState<string | null>(null)
   const [subgroupData, setSubgroupData] = useState<any>(null)
   const [isFollowing, setIsFollowing] = useState(false)
@@ -220,8 +222,8 @@ export default function SubgroupDetail() {
       <div className="min-h-screen bg-white font-['Space_Mono'] flex items-center justify-center">
         <div className="text-center">
           <div className="text-gray-500 mb-4">Subgroup not found</div>
-          <Link href="/subgroup" className="text-black hover:underline">
-            ← Browse Subgroups
+          <Link href={pitchMode ? '/' : '/subgroup'} className="text-black hover:underline">
+            {pitchMode ? '← Back to groups' : '← Browse Subgroups'}
           </Link>
         </div>
       </div>
@@ -233,6 +235,14 @@ export default function SubgroupDetail() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
+          {pitchMode && (
+            <Link
+              href="/"
+              className="inline-block text-xs uppercase tracking-wide text-black/60 hover:text-black mb-4"
+            >
+              ← All groups
+            </Link>
+          )}
           {/* Subgroup Banner */}
           <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden mb-4">
             {subgroupData.cover_image_url ? (
@@ -248,22 +258,31 @@ export default function SubgroupDetail() {
             <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold">d/{subgroupData.slug}</h1>
+                  <h1 className="text-3xl font-bold">
+                    {pitchMode ? subgroupData.name : `d/${subgroupData.slug}`}
+                  </h1>
                   {subgroupData.description && (
                     <p className="text-sm text-gray-300 mt-2">{subgroupData.description}</p>
                   )}
+                  {pitchMode && (
+                    <p className="text-xs text-gray-300 mt-2">
+                      {subgroupData.post_count ?? cards.length} posts · leave work or a comment
+                    </p>
+                  )}
                 </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-300">
-                    {followerCount} members
+                {!pitchMode && (
+                  <div className="text-right">
+                    <div className="text-sm text-gray-300">
+                      {followerCount} members
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {subgroupData.creator_username && (
+                        <div className="mb-1">Created by u/{subgroupData.creator_username}</div>
+                      )}
+                      Created {getTimeAgo(subgroupData.created_at)}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-400">
-                    {subgroupData.creator_username && (
-                      <div className="mb-1">Created by u/{subgroupData.creator_username}</div>
-                    )}
-                    Created {getTimeAgo(subgroupData.created_at)}
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -271,24 +290,48 @@ export default function SubgroupDetail() {
           {/* Action Buttons */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <Link
-                href={`/create?subgroup=${encodeURIComponent(subgroupData.id)}`}
-                className="px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm font-medium"
-              >
-                Create Post
-              </Link>
-              <button
-                onClick={handleFollow}
-                disabled={followLoading || !user}
-                className={`px-6 py-2 border-2 transition-colors text-sm font-medium ${
-                  isFollowing
-                    ? 'border-gray-300 text-black hover:border-red-500 hover:text-red-500'
-                    : 'border-black bg-black text-white hover:bg-gray-800'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {followLoading ? '...' : isFollowing ? 'Joined' : 'Join'}
-              </button>
-              {isModerator && (
+              {pitchMode ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent('pitch:open-upload', {
+                        detail: {
+                          group: {
+                            id: subgroupData.id,
+                            name: subgroupData.name,
+                            slug: subgroupData.slug,
+                          },
+                        },
+                      })
+                    )
+                  }
+                  className="px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  Upload
+                </button>
+              ) : (
+                <Link
+                  href={`/create?subgroup=${encodeURIComponent(subgroupData.id)}`}
+                  className="px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  Create Post
+                </Link>
+              )}
+              {!pitchMode && (
+                <button
+                  onClick={handleFollow}
+                  disabled={followLoading || !user}
+                  className={`px-6 py-2 border-2 transition-colors text-sm font-medium ${
+                    isFollowing
+                      ? 'border-gray-300 text-black hover:border-red-500 hover:text-red-500'
+                      : 'border-black bg-black text-white hover:bg-gray-800'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {followLoading ? '...' : isFollowing ? 'Joined' : 'Join'}
+                </button>
+              )}
+              {!pitchMode && isModerator && (
                 <Link
                   href={`/subgroup/${params.slug}/mod`}
                   className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
@@ -326,12 +369,34 @@ export default function SubgroupDetail() {
               <h3 className="text-lg font-medium mb-2">No posts yet</h3>
               <p className="text-sm">Be the first to share something in this subgroup!</p>
             </div>
-            <Link
-              href={`/create?subgroup=${encodeURIComponent(subgroupId || '')}`}
-              className="inline-block px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm"
-            >
-              Create Post
-            </Link>
+            {pitchMode ? (
+              <button
+                type="button"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent('pitch:open-upload', {
+                      detail: {
+                        group: {
+                          id: subgroupData.id,
+                          name: subgroupData.name,
+                          slug: subgroupData.slug,
+                        },
+                      },
+                    })
+                  )
+                }
+                className="inline-block px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm"
+              >
+                Upload
+              </button>
+            ) : (
+              <Link
+                href={`/create?subgroup=${encodeURIComponent(subgroupId || '')}`}
+                className="inline-block px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm"
+              >
+                Create Post
+              </Link>
+            )}
           </div>
         ) : (
           <div className="space-y-4">

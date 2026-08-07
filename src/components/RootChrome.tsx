@@ -5,6 +5,7 @@ import { useAuth } from '@/context/auth-context'
 import AppHeader from '@/components/AppHeader'
 import VersionIndicator from '@/components/VersionIndicator'
 import PitchChrome from '@/components/pitch/PitchChrome'
+import PitchUploadHost from '@/components/pitch/PitchUploadHost'
 import { isPitchMode } from '@/lib/pitch-mode'
 import dynamic from 'next/dynamic'
 
@@ -34,6 +35,7 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
           }}
         />
         <div className="pt-14">{children}</div>
+        <PitchUploadHost />
       </>
     )
   }

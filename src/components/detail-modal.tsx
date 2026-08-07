@@ -10,6 +10,7 @@ import { PostStats } from '@/components/post-stats'
 import supabase from '@/lib/supabase-client'
 import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 interface DetailModalProps {
   refetchPosts?: (sortBy?: 'created_at' | 'likes' | 'comments') => Promise<void>
@@ -32,9 +33,12 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
   const effectiveRefetchPosts = customRefetchPosts || refetchPosts
   const { isAuthenticated, user } = useAuth()
   const router = useRouter()
+  const pitchMode = isPitchMode()
+  const canComment = isAuthenticated || pitchMode
 
   const [commentsRefreshSignal, setCommentsRefreshSignal] = useState(0)
   const [optimisticComments, setOptimisticComments] = useState<RealtimeComment[]>([])
+  const [guestUsername, setGuestUsername] = useState('')
 
   const handlePortfolioClick = useCallback(async (creatorId: string) => {
     try {
@@ -47,25 +51,60 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
     } catch {}
   }, [router])
 
-  const handleCommentSubmit = useCallback(() => {
-    if (!isAuthenticated) return
+  const handleCommentSubmit = useCallback(async () => {
+    if (!canComment) return
     const content = commentText.trim()
-    handleComment()
-    if (selectedCard && content) {
-      const optimistic: RealtimeComment = {
-        id: `local-${Date.now()}`,
-        content,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_id: user?.id || 'anon',
-        username: user?.name || user?.email || 'You',
-        full_name: user?.name || null,
-        avatar_url: null,
-      }
-      setOptimisticComments((prev) => [optimistic, ...prev])
-      setCommentsRefreshSignal((n) => n + 1)
+    if (!selectedCard || !content) return
+
+    const displayName =
+      isAuthenticated
+        ? user?.name || user?.email || 'You'
+        : guestUsername.trim() || 'anonymous'
+
+    const optimistic: RealtimeComment = {
+      id: `local-${Date.now()}`,
+      content,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user_id: user?.id || 'guest',
+      username: displayName,
+      full_name: user?.name || null,
+      avatar_url: null,
     }
-  }, [isAuthenticated, commentText, handleComment, selectedCard, user?.id, user?.name, user?.email])
+    setOptimisticComments((prev) => [optimistic, ...prev])
+    setCommentsRefreshSignal((n) => n + 1)
+
+    if (isAuthenticated) {
+      // Context handler clears commentText and posts via /api/rpc.
+      handleComment()
+      return
+    }
+
+    setCommentText('')
+    // Pitch guest path — cookie resolved server-side in /api/rpc.
+    const args: Record<string, unknown> = {
+      post_id_param: selectedCard.id,
+      content_param: content,
+    }
+    if (guestUsername.trim()) args.pitch_username = guestUsername.trim()
+    const { error } = await callRpc('add_comment_ext', args)
+    if (error) {
+      setOptimisticComments((prev) => prev.filter((c) => c.id !== optimistic.id))
+      alert('Failed to add comment: ' + (error.message || 'Please try again'))
+      setCommentText(content)
+    }
+  }, [
+    canComment,
+    isAuthenticated,
+    commentText,
+    handleComment,
+    selectedCard,
+    user?.id,
+    user?.name,
+    user?.email,
+    guestUsername,
+    setCommentText,
+  ])
 
   const handleCloseModal = useCallback(() => {
     setShowDetailModal(false)
@@ -184,29 +223,39 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
           </h2>
 
           {/* Comment Input */}
-          {isAuthenticated ? (
+          {canComment ? (
             <div className="mb-6">
+              {pitchMode && !isAuthenticated && (
+                <input
+                  type="text"
+                  value={guestUsername}
+                  onChange={(e) => setGuestUsername(e.target.value)}
+                  placeholder="username (optional)"
+                  className="w-full mb-2 p-3 border border-gray-300 rounded-lg text-black bg-white font-['Space_Mono'] text-sm"
+                  maxLength={24}
+                />
+              )}
               <textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Add a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
                 className="w-full p-3 border border-gray-300 rounded-lg resize-none text-black bg-white"
                 rows={3}
-                  />
+              />
               <div className="flex justify-end mt-2">
-                  <button
-                    onClick={handleCommentSubmit}
-                    disabled={!commentText.trim()}
+                <button
+                  onClick={handleCommentSubmit}
+                  disabled={!commentText.trim()}
                   className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                >
                   Comment
-                  </button>
+                </button>
               </div>
             </div>
           ) : (
             <div className="mb-6 p-4 border border-gray-200 rounded-lg text-center text-gray-500">
               Please sign in to comment
-          </div>
+            </div>
           )}
 
           {/* Comments List */}

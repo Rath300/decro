@@ -7,9 +7,10 @@ export function isPitchMode(): boolean {
   return process.env.NEXT_PUBLIC_PITCH_MODE === 'true'
 }
 
-// Intentionally leave /feed and /subgroup open so Web view ↔ Standard view
-// and “Open group” can reach the real product surfaces during pitch mode.
+// Park the full product surface. /subgroup and /post stay open so genre hubs
+// and work detail remain reachable from the community-first web.
 export const PITCH_PARKED_PREFIXES = [
+  '/feed',
   '/spotlight',
   '/trending',
   '/profile',

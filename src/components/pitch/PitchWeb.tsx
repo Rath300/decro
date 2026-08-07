@@ -10,6 +10,7 @@ import {
 } from 'react'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import { PITCH_HINT } from '@/lib/pitch-copy'
+import { parseParentNodeId } from '@/lib/pitch-taxonomy'
 
 type ForceGraphComponent = ComponentType<any>
 
@@ -27,9 +28,13 @@ type GraphNode = PitchGraphNode & {
 type Props = {
   nodes: PitchGraphNode[]
   links: PitchGraphLink[]
+  expandedParent: string | null
   highlightPostId?: string | null
   onUploadClick: () => void
   onNodeSelect?: (node: PitchGraphNode | null) => void
+  onParentExpand?: (parentId: string) => void
+  onGenreOpen?: (slug: string) => void
+  onCollapse?: () => void
 }
 
 function hashSeed(id: string): number {
@@ -53,18 +58,31 @@ function layoutKey(n: Pick<PitchGraphNode, 'id' | 'clientKey'>) {
   return n.clientKey || n.id
 }
 
-function hubFontPx(postCount: number | null | undefined, globalScale: number) {
+function hubFontPx(
+  kind: PitchGraphNode['kind'],
+  postCount: number | null | undefined,
+  globalScale: number,
+  expanded: boolean
+) {
   const n = Math.max(0, postCount ?? 0)
-  const base = 11 + Math.min(11, Math.sqrt(n) * 1.8)
+  if (kind === 'parent') {
+    const base = expanded ? 18 : 16 + Math.min(6, n * 0.15)
+    return Math.max(base / globalScale, 6)
+  }
+  const base = (expanded ? 13 : 11) + Math.min(10, Math.sqrt(n) * 1.6)
   return Math.max(base / globalScale, 4)
 }
 
 export default function PitchWeb({
   nodes,
   links,
+  expandedParent,
   highlightPostId,
   onUploadClick,
   onNodeSelect,
+  onParentExpand,
+  onGenreOpen,
+  onCollapse,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const fgRef = useRef<any>(null)
@@ -77,8 +95,9 @@ export default function PitchWeb({
   const posCache = useRef(
     new Map<string, { x: number; y: number; vx?: number; vy?: number }>()
   )
+  const lastExpandRef = useRef<string | null>(null)
+  const lastClickRef = useRef<{ id: string; at: number } | null>(null)
 
-  // Load after mount so the imperative ref (zoom/centerAt) actually attaches.
   useEffect(() => {
     let alive = true
     import('./PitchForceGraph').then((mod) => {
@@ -102,13 +121,41 @@ export default function PitchWeb({
   }, [])
 
   const graphData = useMemo(() => {
+    const parentNode = expandedParent
+      ? nodes.find((n) => n.kind === 'parent' && n.parentId === expandedParent)
+      : null
+    const parentPos = parentNode
+      ? posCache.current.get(layoutKey(parentNode))
+      : null
+    const px = parentPos?.x ?? 0
+    const py = parentPos?.y ?? 0
+
     const gNodes: GraphNode[] = nodes.map((n) => {
       const key = layoutKey(n)
       const cached = posCache.current.get(key)
       if (cached) return { ...n, ...cached }
+
+      // New children bloom near the focused parent.
+      if (
+        expandedParent &&
+        parentNode &&
+        (n.kind === 'subgroup' || n.kind === 'post') &&
+        n.parentId === expandedParent
+      ) {
+        const seed = hashSeed(key)
+        const angle = ((seed % 360) / 360) * Math.PI * 2
+        const radius =
+          n.kind === 'subgroup' ? 40 + (seed % 140) : 16 + (seed % 70)
+        return {
+          ...n,
+          x: px + Math.cos(angle) * radius,
+          y: py + Math.sin(angle) * radius,
+        }
+      }
+
       const seed = hashSeed(key)
       const angle = ((seed % 360) / 360) * Math.PI * 2
-      const radius = 120 + (seed % 520)
+      const radius = n.kind === 'parent' ? 80 + (seed % 280) : 120 + (seed % 520)
       return {
         ...n,
         x: Math.cos(angle) * radius,
@@ -116,7 +163,7 @@ export default function PitchWeb({
       }
     })
     return { nodes: gNodes, links: links.map((l) => ({ ...l })) }
-  }, [nodes, links])
+  }, [nodes, links, expandedParent])
 
   useEffect(() => {
     if (!graphReady) return
@@ -124,23 +171,29 @@ export default function PitchWeb({
     if (!fg) return
 
     fg.d3Force?.('charge')?.strength((node: GraphNode) => {
-      if (node.kind !== 'subgroup') return -28
-      const weight = Math.min(40, Math.sqrt(node.postCount ?? 0) * 4)
-      return -100 - weight
+      if (node.kind === 'parent') return expandedParent ? -220 : -280
+      if (node.kind === 'subgroup') {
+        const weight = Math.min(36, Math.sqrt(node.postCount ?? 0) * 3.5)
+        return -90 - weight
+      }
+      return -22
     })
-    fg.d3Force?.('charge')?.distanceMax?.(480)
+    fg.d3Force?.('charge')?.distanceMax?.(expandedParent ? 560 : 420)
     fg.d3Force?.('link')?.distance((link: any) => {
       const t = typeof link.target === 'object' ? link.target : null
-      return t?.kind === 'subgroup' ? 72 : 48
+      const s = typeof link.source === 'object' ? link.source : null
+      if (t?.kind === 'parent' || s?.kind === 'parent') return 96
+      if (t?.kind === 'subgroup' || s?.kind === 'subgroup') return 64
+      return 42
     })
-    fg.d3Force?.('link')?.strength?.(0.2)
-    fg.d3Force?.('center')?.strength?.(0.03)
+    fg.d3Force?.('link')?.strength?.(0.22)
+    fg.d3Force?.('center')?.strength?.(expandedParent ? 0.02 : 0.04)
     try {
       fg.d3ReheatSimulation?.()
     } catch {
       /* ignore */
     }
-  }, [graphData, graphReady])
+  }, [graphData, graphReady, expandedParent])
 
   const getFg = useCallback(() => {
     const fg = fgRef.current
@@ -171,7 +224,6 @@ export default function PitchWeb({
     [getFg]
   )
 
-  // Two-finger scroll → pan; pinch/ctrl+scroll → zoom.
   useEffect(() => {
     if (!graphReady) return
     const el = containerRef.current
@@ -207,7 +259,6 @@ export default function PitchWeb({
       }
       target = canvas
       target.addEventListener('wheel', onWheel, { passive: false, capture: true })
-      // Also on the wrapper — some browsers target the parent.
       el.addEventListener('wheel', onWheel, { passive: false, capture: true })
     }
     bind()
@@ -230,6 +281,74 @@ export default function PitchWeb({
     [getFg, setZoomLevel]
   )
 
+  // Camera morph when entering / leaving a parent cluster.
+  useEffect(() => {
+    if (!graphReady) return
+    const fg = getFg()
+    if (!fg) return
+
+    if (expandedParent && lastExpandRef.current !== expandedParent) {
+      lastExpandRef.current = expandedParent
+      const run = () => {
+        const parent = graphData.nodes.find(
+          (n) => n.kind === 'parent' && n.parentId === expandedParent
+        )
+        if (!parent || parent.x == null || parent.y == null) return
+        const children = graphData.nodes.filter(
+          (n) =>
+            n.parentId === expandedParent &&
+            n.kind !== 'parent' &&
+            n.x != null &&
+            n.y != null
+        )
+        const xs = [parent.x, ...children.map((c) => c.x!)]
+        const ys = [parent.y, ...children.map((c) => c.y!)]
+        const minX = Math.min(...xs)
+        const maxX = Math.max(...xs)
+        const minY = Math.min(...ys)
+        const maxY = Math.max(...ys)
+        const cx = (minX + maxX) / 2
+        const cy = (minY + maxY) / 2
+        const span = Math.max(maxX - minX, maxY - minY, 120)
+        const zoom = Math.min(
+          2.6,
+          Math.max(1.15, (Math.min(dims.w, dims.h) * 0.62) / span)
+        )
+        fg.centerAt(cx, cy, 1100)
+        fg.zoom(zoom, 1100)
+        try {
+          fg.d3ReheatSimulation?.()
+        } catch {
+          /* ignore */
+        }
+      }
+      // Wait a tick so newly injected nodes have positions.
+      const t = window.setTimeout(run, 40)
+      return () => window.clearTimeout(t)
+    }
+
+    if (!expandedParent && lastExpandRef.current) {
+      lastExpandRef.current = null
+      const mains = graphData.nodes.filter((n) => n.kind === 'parent')
+      if (mains.length) {
+        const xs = mains.map((m) => m.x ?? 0)
+        const ys = mains.map((m) => m.y ?? 0)
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2
+        const cy = (Math.min(...ys) + Math.max(...ys)) / 2
+        fg.centerAt(cx, cy, 900)
+        fg.zoom(1, 900)
+      } else {
+        fg.centerAt(0, 0, 900)
+        fg.zoom(1, 900)
+      }
+      try {
+        fg.d3ReheatSimulation?.()
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [expandedParent, graphData.nodes, graphReady, getFg, dims.w, dims.h])
+
   useEffect(() => {
     if (!graphReady || !highlightPostId) return
     const fg = getFg()
@@ -246,21 +365,27 @@ export default function PitchWeb({
   const paintNode = useCallback(
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const n = node as GraphNode
-      const isHub = n.kind === 'subgroup'
+      const isLabel = n.kind === 'parent' || n.kind === 'subgroup'
       const active = n.id === hoverId || n.id === selectedId
       const x = n.x || 0
       const y = n.y || 0
+      const dimOtherParent =
+        Boolean(expandedParent) &&
+        n.kind === 'parent' &&
+        n.parentId !== expandedParent
 
       ctx.save()
       if (n.pending) ctx.globalAlpha = 0.55
+      else if (dimOtherParent) ctx.globalAlpha = 0.18
 
-      if (isHub) {
-        const fontPx = hubFontPx(n.postCount, globalScale)
-        ctx.font = `400 ${fontPx}px "Space Mono", monospace`
+      if (isLabel) {
+        const fontPx = hubFontPx(n.kind, n.postCount, globalScale, Boolean(expandedParent))
+        const weight = n.kind === 'parent' ? '600' : '400'
+        ctx.font = `${weight} ${fontPx}px "Space Mono", monospace`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         const label = (n.label || '').toUpperCase()
-        if (active) {
+        if (active && !dimOtherParent) {
           const metrics = ctx.measureText(label)
           const padX = 6 / globalScale
           const padY = 4 / globalScale
@@ -274,8 +399,8 @@ export default function PitchWeb({
         }
         ctx.fillText(label, x, y)
       } else {
-        const size = 7 / Math.sqrt(globalScale)
-        const s = size * 1.6
+        const size = 6.5 / Math.sqrt(globalScale)
+        const s = size * 1.55
         ctx.lineWidth = active ? 2.5 / globalScale : 1 / globalScale
         ctx.strokeStyle = '#000'
         ctx.fillStyle = active ? '#000' : '#fff'
@@ -328,34 +453,7 @@ export default function PitchWeb({
       }
       ctx.restore()
     },
-    [hoverId, selectedId]
-  )
-
-  const lastClickRef = useRef<{ id: string; at: number } | null>(null)
-
-  const zoomToHubCluster = useCallback(
-    (n: GraphNode) => {
-      const fg = getFg()
-      if (!fg || n.x == null || n.y == null) return
-      const hubId = n.subgroupId
-      const members = graphData.nodes.filter(
-        (m) =>
-          m.kind === 'post' && m.subgroupId === hubId && m.x != null && m.y != null
-      )
-      const xs = [n.x, ...members.map((m) => m.x!)]
-      const ys = [n.y, ...members.map((m) => m.y!)]
-      const minX = Math.min(...xs)
-      const maxX = Math.max(...xs)
-      const minY = Math.min(...ys)
-      const maxY = Math.max(...ys)
-      const cx = (minX + maxX) / 2
-      const cy = (minY + maxY) / 2
-      const span = Math.max(maxX - minX, maxY - minY, 80)
-      const zoom = Math.min(2.8, Math.max(1.1, (Math.min(dims.w, dims.h) * 0.55) / span))
-      fg.centerAt(cx, cy, 1000)
-      fg.zoom(zoom, 1000)
-    },
-    [graphData.nodes, dims.w, dims.h, getFg]
+    [hoverId, selectedId, expandedParent]
   )
 
   const handleClick = useCallback(
@@ -363,17 +461,25 @@ export default function PitchWeb({
       const n = node as GraphNode
       const now = Date.now()
       const prev = lastClickRef.current
-      const isDouble = prev && prev.id === n.id && now - prev.at < 350
+      const isDouble = Boolean(prev && prev.id === n.id && now - prev.at < 350)
       lastClickRef.current = { id: n.id, at: now }
 
       setSelectedId(n.id)
       onNodeSelect?.(n)
 
-      if (n.kind === 'subgroup' && isDouble) {
-        zoomToHubCluster(n)
+      if (n.kind === 'parent') {
+        const pid = n.parentId || parseParentNodeId(n.id)
+        if (pid && pid !== expandedParent) {
+          onParentExpand?.(pid)
+        }
+        return
+      }
+
+      if (n.kind === 'subgroup' && n.slug && isDouble) {
+        onGenreOpen?.(n.slug)
       }
     },
-    [onNodeSelect, zoomToHubCluster]
+    [onNodeSelect, onParentExpand, onGenreOpen, expandedParent]
   )
 
   const handleBackgroundClick = useCallback(() => {
@@ -415,7 +521,9 @@ export default function PitchWeb({
           linkSource="source"
           linkTarget="target"
           backgroundColor="#ffffff"
-          linkColor={() => 'rgba(0,0,0,0.16)'}
+          linkColor={() =>
+            expandedParent ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.12)'
+          }
           linkWidth={1}
           nodeCanvasObject={paintNode}
           nodePointerAreaPaint={(
@@ -425,8 +533,13 @@ export default function PitchWeb({
             globalScale: number
           ) => {
             const n = node as GraphNode
-            if (n.kind === 'subgroup') {
-              const fontPx = hubFontPx(n.postCount, globalScale)
+            if (n.kind === 'parent' || n.kind === 'subgroup') {
+              const fontPx = hubFontPx(
+                n.kind,
+                n.postCount,
+                globalScale,
+                Boolean(expandedParent)
+              )
               const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
               const h = fontPx * 1.4
               ctx.fillStyle = color
@@ -469,6 +582,18 @@ export default function PitchWeb({
         </div>
       )}
 
+      {expandedParent && onCollapse ? (
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 font-['Space_Mono']">
+          <button
+            type="button"
+            onClick={onCollapse}
+            className="border border-black bg-white px-3 py-1.5 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
+          >
+            ← All groups
+          </button>
+        </div>
+      ) : null}
+
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
         <div className="flex border border-black bg-white">
           <button
@@ -497,7 +622,7 @@ export default function PitchWeb({
         </button>
       </div>
 
-      <p className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-['Space_Mono'] text-black/50 tracking-wide">
+      <p className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-['Space_Mono'] text-black/50 tracking-wide px-3 text-center max-w-[90vw]">
         {PITCH_HINT}
       </p>
     </div>

@@ -9,6 +9,7 @@ import supabase from '@/lib/supabase-client'
 import { callRpc } from '@/lib/rpc'
 import { useUserHistory } from '@/hooks/use-user-history'
 import AddToSpotlightButton from '@/components/add-to-spotlight-button'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 interface PostData {
   id: string
@@ -36,8 +37,11 @@ export default function PostDetailPage() {
   const [commentsRefreshSignal, setCommentsRefreshSignal] = useState(0)
   const [optimisticComments, setOptimisticComments] = useState<RealtimeComment[]>([])
   const [newComment, setNewComment] = useState('')
+  const [guestUsername, setGuestUsername] = useState('')
   const [isOwner, setIsOwner] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const pitchMode = isPitchMode()
+  const canComment = isAuthenticated || pitchMode
 
   useEffect(() => {
     loadPost()
@@ -137,7 +141,8 @@ export default function PostDetailPage() {
   }
 
   const handleCommentSubmit = async () => {
-    if (!isAuthenticated || !user?.id || !newComment.trim() || !post) return
+    if (!canComment || !newComment.trim() || !post) return
+    if (!pitchMode && !user?.id) return
 
     const content = newComment.trim()
     
@@ -145,10 +150,14 @@ export default function PostDetailPage() {
     setNewComment('')
 
     try {
-      const { error } = await callRpc('add_comment_ext', {
+      const args: Record<string, unknown> = {
         post_id_param: post.id,
-        content_param: content
-      })
+        content_param: content,
+      }
+      if (pitchMode && !isAuthenticated && guestUsername.trim()) {
+        args.pitch_username = guestUsername.trim()
+      }
+      const { error } = await callRpc('add_comment_ext', args)
       
       if (error) {
         console.error('Failed to add comment:', error)
@@ -335,8 +344,18 @@ export default function PostDetailPage() {
         </h2>
 
         {/* Comment Input */}
-        {isAuthenticated ? (
+        {canComment ? (
           <div className="mb-6">
+            {pitchMode && !isAuthenticated && (
+              <input
+                type="text"
+                value={guestUsername}
+                onChange={(e) => setGuestUsername(e.target.value)}
+                placeholder="username (optional)"
+                className="w-full mb-2 p-3 border border-gray-300 rounded-lg text-black bg-white font-['Space_Mono'] text-sm"
+                maxLength={24}
+              />
+            )}
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
@@ -422,20 +441,14 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
     const server = comments || []
     const optimistic = optimisticComments || []
     
-    // Filter out problematic comments (anonymous, null usernames, old dates)
+    // Drop empty / garbage rows; keep guest and anonymous display names.
     const filterValidComments = (commentsList: RealtimeComment[]) => {
       return commentsList.filter(comment => {
-        // Skip if no username or anonymous-like usernames
-        if (!comment.username || 
-            comment.username === 'anonymous' || 
-            comment.username === 'Anonymous' ||
-            comment.username.trim() === '' ||
-            comment.created_at < '2020-01-01') {
-          return false;
-        }
-        return true;
-      });
-    };
+        if (!comment.username?.trim()) return false
+        if (comment.created_at < '2020-01-01') return false
+        return true
+      })
+    }
     
     const validServerComments = filterValidComments(server);
     const validOptimisticComments = filterValidComments(optimistic);

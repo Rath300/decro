@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import {
   PITCH_DISCORD_HANDLES,
@@ -10,10 +11,11 @@ import {
   PITCH_ENTER_CTA,
   PITCH_PARAGRAPHS,
 } from '@/lib/pitch-copy'
+import { getPitchParent } from '@/lib/pitch-taxonomy'
 import PitchWeb from '@/components/pitch/PitchWeb'
-import PitchUploadSheet, {
-  type OptimisticUpload,
-  type UploadCommit,
+import type {
+  OptimisticUpload,
+  UploadCommit,
 } from '@/components/pitch/PitchUploadSheet'
 
 const ENTERED_KEY = 'decro_pitch_entered'
@@ -24,11 +26,12 @@ function displayUsername(raw?: string | null) {
 }
 
 export default function PitchHome() {
+  const router = useRouter()
   const [entered, setEntered] = useState(false)
   const [ready, setReady] = useState(false)
   const [nodes, setNodes] = useState<PitchGraphNode[]>([])
   const [links, setLinks] = useState<PitchGraphLink[]>([])
-  const [uploadOpen, setUploadOpen] = useState(false)
+  const [expandedParent, setExpandedParent] = useState<string | null>(null)
   const [highlightPostId, setHighlightPostId] = useState<string | null>(null)
   const [selected, setSelected] = useState<PitchGraphNode | null>(null)
   const [loadError, setLoadError] = useState('')
@@ -43,9 +46,10 @@ export default function PitchHome() {
     setReady(true)
   }, [])
 
-  const loadGraph = useCallback(async () => {
+  const loadGraph = useCallback(async (parentId: string | null) => {
     try {
-      const res = await fetch('/api/pitch/graph', { cache: 'no-store' })
+      const qs = parentId ? `?parent=${encodeURIComponent(parentId)}` : ''
+      const res = await fetch(`/api/pitch/graph${qs}`, { cache: 'no-store' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load graph')
       setNodes((prev) => {
@@ -70,18 +74,13 @@ export default function PitchHome() {
   }, [])
 
   useEffect(() => {
-    loadGraph()
-  }, [loadGraph])
+    void loadGraph(expandedParent)
+  }, [loadGraph, expandedParent])
 
   useEffect(() => {
-    const onOpen = () => setUploadOpen(true)
     const onOverlay = () => setEntered(false)
-    window.addEventListener('pitch:open-upload', onOpen)
     window.addEventListener('pitch:show-overlay', onOverlay)
-    return () => {
-      window.removeEventListener('pitch:open-upload', onOpen)
-      window.removeEventListener('pitch:show-overlay', onOverlay)
-    }
+    return () => window.removeEventListener('pitch:show-overlay', onOverlay)
   }, [])
 
   useEffect(() => {
@@ -97,84 +96,138 @@ export default function PitchHome() {
     setEntered(true)
   }
 
-  const onOptimistic = (upload: OptimisticUpload) => {
+  const onParentExpand = (parentId: string) => {
+    setSelected(null)
+    setExpandedParent(parentId)
+  }
+
+  const onCollapse = () => {
+    setSelected(null)
+    setExpandedParent(null)
+  }
+
+  const onGenreOpen = (slug: string) => {
+    router.push(`/subgroup/${slug}`)
+  }
+
+  const openUpload = useCallback((group?: { id: string; name: string; slug: string } | null) => {
+    window.dispatchEvent(
+      new CustomEvent('pitch:open-upload', {
+        detail: group ? { group } : undefined,
+      })
+    )
+  }, [])
+
+  const applyOptimistic = useCallback((upload: OptimisticUpload) => {
     setNodes((prev) => [...prev, ...upload.nodes])
     setLinks((prev) => [...prev, ...upload.links])
     setHighlightPostId(upload.tempPostId)
     const post = upload.nodes.find((n) => n.kind === 'post')
     if (post) setSelected(post)
-  }
+  }, [])
 
-  const onCommit = (commit: UploadCommit) => {
-    const realPostId = `p:${commit.postId}`
-    const realHubId = `g:${commit.subgroupId}`
-    const tempPostId = `p:${commit.tempPostId}`
-    const tempHubId = commit.tempHubId ? `g:${commit.tempHubId}` : null
+  const applyCommit = useCallback(
+    (commit: UploadCommit) => {
+      const realPostId = `p:${commit.postId}`
+      const realHubId = `g:${commit.subgroupId}`
+      const tempPostId = `p:${commit.tempPostId}`
+      const tempHubId = commit.tempHubId ? `g:${commit.tempHubId}` : null
 
-    setNodes((prev) =>
-      prev.map((n) => {
-        if (n.id === tempPostId) {
-          return {
-            ...n,
-            id: realPostId,
-            subgroupId: commit.subgroupId,
-            username: displayUsername(commit.username),
-            imageUrl: commit.imageUrl ?? n.imageUrl,
-            audioUrl: commit.audioUrl ?? n.audioUrl,
-            videoUrl: commit.videoUrl ?? n.videoUrl,
-            pending: false,
-            clientKey: commit.tempPostId,
+      setNodes((prev) =>
+        prev.map((n) => {
+          if (n.id === tempPostId) {
+            return {
+              ...n,
+              id: realPostId,
+              subgroupId: commit.subgroupId,
+              username: displayUsername(commit.username),
+              imageUrl: commit.imageUrl ?? n.imageUrl,
+              audioUrl: commit.audioUrl ?? n.audioUrl,
+              videoUrl: commit.videoUrl ?? n.videoUrl,
+              pending: false,
+              clientKey: commit.tempPostId,
+            }
           }
-        }
-        if (tempHubId && n.id === tempHubId) {
-          return {
-            ...n,
-            id: realHubId,
-            subgroupId: commit.subgroupId,
-            pending: false,
+          if (tempHubId && n.id === tempHubId) {
+            return {
+              ...n,
+              id: realHubId,
+              subgroupId: commit.subgroupId,
+              pending: false,
+            }
           }
+          return n
+        })
+      )
+      setLinks((prev) =>
+        prev.map((l) => {
+          let source = String(l.source)
+          let target = String(l.target)
+          if (source === tempPostId) source = realPostId
+          if (target === tempHubId) target = realHubId
+          if (target === `g:${commit.tempHubId}`) target = realHubId
+          return { source, target }
+        })
+      )
+      setHighlightPostId(commit.postId)
+      setSelected((prev) => {
+        if (!prev || prev.id !== tempPostId) return prev
+        return {
+          ...prev,
+          id: realPostId,
+          subgroupId: commit.subgroupId,
+          username: displayUsername(commit.username),
+          imageUrl: commit.imageUrl ?? prev.imageUrl,
+          audioUrl: commit.audioUrl ?? prev.audioUrl,
+          videoUrl: commit.videoUrl ?? prev.videoUrl,
+          pending: false,
         }
-        return n
       })
-    )
-    setLinks((prev) =>
-      prev.map((l) => {
-        let source = String(l.source)
-        let target = String(l.target)
-        if (source === tempPostId) source = realPostId
-        if (target === tempHubId) target = realHubId
-        if (target === `g:${commit.tempHubId}`) target = realHubId
-        return { source, target }
-      })
-    )
-    setHighlightPostId(commit.postId)
-    setSelected((prev) => {
-      if (!prev || prev.id !== tempPostId) return prev
-      return {
-        ...prev,
-        id: realPostId,
-        subgroupId: commit.subgroupId,
-        username: displayUsername(commit.username),
-        imageUrl: commit.imageUrl ?? prev.imageUrl,
-        audioUrl: commit.audioUrl ?? prev.audioUrl,
-        videoUrl: commit.videoUrl ?? prev.videoUrl,
-        pending: false,
+      void loadGraph(expandedParent)
+    },
+    [expandedParent, loadGraph]
+  )
+
+  const applyFail = useCallback(
+    (tempPostId: string, tempHubId: string | undefined, message: string) => {
+      const postId = `p:${tempPostId}`
+      const hubId = tempHubId ? `g:${tempHubId}` : null
+      setNodes((prev) => prev.filter((n) => n.id !== postId && n.id !== hubId))
+      setLinks((prev) =>
+        prev.filter((l) => String(l.source) !== postId && String(l.target) !== hubId)
+      )
+      setSelected((prev) => (prev?.id === postId ? null : prev))
+      setToast(message || 'Upload failed — try again')
+    },
+    []
+  )
+
+  useEffect(() => {
+    const onOptimisticEvt = (e: Event) => {
+      const upload = (e as CustomEvent).detail as OptimisticUpload
+      if (upload) applyOptimistic(upload)
+    }
+    const onCommitEvt = (e: Event) => {
+      const commit = (e as CustomEvent).detail as UploadCommit
+      if (commit) applyCommit(commit)
+    }
+    const onFailEvt = (e: Event) => {
+      const d = (e as CustomEvent).detail as {
+        tempPostId: string
+        tempHubId?: string
+        message: string
       }
-    })
-    // Soft reconcile with server once upload lands.
-    void loadGraph()
-  }
-
-  const onFail = (tempPostId: string, tempHubId: string | undefined, message: string) => {
-    const postId = `p:${tempPostId}`
-    const hubId = tempHubId ? `g:${tempHubId}` : null
-    setNodes((prev) => prev.filter((n) => n.id !== postId && n.id !== hubId))
-    setLinks((prev) =>
-      prev.filter((l) => String(l.source) !== postId && String(l.target) !== hubId)
-    )
-    setSelected((prev) => (prev?.id === postId ? null : prev))
-    setToast(message || 'Upload failed — try again')
-  }
+      if (d) applyFail(d.tempPostId, d.tempHubId, d.message)
+    }
+    window.addEventListener('pitch:upload-optimistic', onOptimisticEvt)
+    window.addEventListener('pitch:upload-commit', onCommitEvt)
+    window.addEventListener('pitch:upload-fail', onFailEvt)
+    return () => {
+      window.removeEventListener('pitch:upload-optimistic', onOptimisticEvt)
+      window.removeEventListener('pitch:upload-commit', onCommitEvt)
+      window.removeEventListener('pitch:upload-fail', onFailEvt)
+    }
+  }, [applyOptimistic, applyCommit, applyFail])
 
   if (!ready) {
     return <div className="min-h-[100dvh] bg-white" />
@@ -182,16 +235,27 @@ export default function PitchHome() {
 
   const isTextPost = selected?.contentType === 'text'
   const bodyLabel = isTextPost ? 'Text' : 'Description'
+  const parentMeta = expandedParent ? getPitchParent(expandedParent) : null
 
   return (
     <div className="relative bg-white">
       <PitchWeb
         nodes={nodes}
         links={links}
+        expandedParent={expandedParent}
         highlightPostId={highlightPostId}
-        onUploadClick={() => setUploadOpen(true)}
+        onUploadClick={() => openUpload()}
         onNodeSelect={setSelected}
+        onParentExpand={onParentExpand}
+        onGenreOpen={onGenreOpen}
+        onCollapse={onCollapse}
       />
+
+      {expandedParent && parentMeta ? (
+        <div className="absolute top-4 left-36 sm:left-40 z-10 font-['Space_Mono'] text-xs uppercase tracking-wide text-black/60 pointer-events-none">
+          {parentMeta.label}
+        </div>
+      ) : null}
 
       {loadError && (
         <div className="absolute top-20 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm border border-black bg-white px-3 py-2 text-xs font-['Space_Mono'] z-20">
@@ -269,7 +333,7 @@ export default function PitchHome() {
 
       {selected?.kind === 'subgroup' && (
         <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 border border-black bg-white z-20 p-5 font-['Space_Mono']">
-          <p className="text-xs uppercase text-black/50">Group</p>
+          <p className="text-xs uppercase text-black/50">Niche</p>
           <h3 className="text-base sm:text-lg font-normal uppercase mt-2">
             {selected.label}
           </h3>
@@ -282,21 +346,31 @@ export default function PitchHome() {
             <p className="text-xs uppercase text-black/40 mt-2">Saving…</p>
           )}
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="text-sm border border-black bg-black text-white px-4 py-2 uppercase hover:bg-white hover:text-black"
-              onClick={() => setUploadOpen(true)}
-            >
-              Upload
-            </button>
             {selected.slug && !selected.pending ? (
               <Link
                 href={`/subgroup/${selected.slug}`}
-                className="text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
+                className="text-sm border border-black bg-black text-white px-4 py-2 uppercase hover:bg-white hover:text-black"
               >
                 Open group
               </Link>
             ) : null}
+            <button
+              type="button"
+              className="text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
+              onClick={() =>
+                openUpload(
+                  selected.subgroupId
+                    ? {
+                        id: selected.subgroupId,
+                        name: selected.label,
+                        slug: selected.slug || '',
+                      }
+                    : null
+                )
+              }
+            >
+              Upload
+            </button>
             <button
               type="button"
               className="text-sm underline px-1"
@@ -305,6 +379,18 @@ export default function PitchHome() {
               Close
             </button>
           </div>
+        </div>
+      )}
+
+      {selected?.kind === 'parent' && !expandedParent && (
+        <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 border border-black bg-white z-20 p-5 font-['Space_Mono']">
+          <p className="text-xs uppercase text-black/50">Main group</p>
+          <h3 className="text-base sm:text-lg font-normal uppercase mt-2">
+            {selected.label}
+          </h3>
+          <p className="text-xs text-black/50 mt-2">
+            Opening niches…
+          </p>
         </div>
       )}
 
@@ -357,22 +443,6 @@ export default function PitchHome() {
         </div>
       )}
 
-      <PitchUploadSheet
-        open={uploadOpen}
-        onClose={() => setUploadOpen(false)}
-        onOptimistic={onOptimistic}
-        onCommit={onCommit}
-        onFail={onFail}
-        preferredGroup={
-          selected?.kind === 'subgroup' && selected.subgroupId && !selected.pending
-            ? {
-                id: selected.subgroupId,
-                name: selected.label,
-                slug: selected.slug || '',
-              }
-            : null
-        }
-      />
     </div>
   )
 }

@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { isPitchMode } from '@/lib/pitch-mode'
+import {
+  attachPitchGuestCookie,
+  createPitchGuestId,
+  pitchExternalId,
+  readPitchGuestId,
+  sanitizePitchUsername,
+} from '@/lib/pitch-guest'
+
+/** RPCs that pitch-mode guests may call with the pitch_guest_id cookie. */
+const PITCH_GUEST_FNS = new Set(['add_comment_ext', 'add_reply_ext'])
 
 // Server-authoritative RPC proxy.
 //
@@ -152,10 +163,47 @@ export async function POST(request: Request) {
       : {}
 
   const session = await getServerSession(authOptions)
-  const externalId = session?.user?.id ?? null
+  let externalId = session?.user?.id ?? null
+  let pitchGuestId: string | null = null
+
+  // Optional display name for pitch guests (stripped before the Postgres call).
+  const pitchUsernameRaw = args.pitch_username
+  delete args.pitch_username
 
   if (spec.requiresAuth !== false && !externalId) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    if (isPitchMode() && PITCH_GUEST_FNS.has(fn)) {
+      pitchGuestId = readPitchGuestId() || createPitchGuestId()
+      externalId = pitchExternalId(pitchGuestId)
+    } else {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+  }
+
+  let admin
+  try {
+    admin = getSupabaseAdmin()
+  } catch (error: any) {
+    console.error('[api/rpc] admin client unavailable:', error?.message)
+    return NextResponse.json(
+      { error: 'Server is not configured for database writes' },
+      { status: 500 }
+    )
+  }
+
+  if (pitchGuestId && externalId) {
+    const username = sanitizePitchUsername(pitchUsernameRaw, pitchGuestId)
+    const { error: profileError } = await admin.rpc('upsert_profile_from_external', {
+      external_id_param: externalId,
+      username_param: username,
+      full_name_param: username,
+    })
+    if (profileError) {
+      console.error('[api/rpc] pitch guest profile failed:', profileError.message)
+      return NextResponse.json(
+        { error: 'Could not create guest profile' },
+        { status: 500 }
+      )
+    }
   }
 
   if (spec.identityParam) {
@@ -175,25 +223,18 @@ export async function POST(request: Request) {
     }
   }
 
-  let admin
-  try {
-    admin = getSupabaseAdmin()
-  } catch (error: any) {
-    console.error('[api/rpc] admin client unavailable:', error?.message)
-    return NextResponse.json(
-      { error: 'Server is not configured for database writes' },
-      { status: 500 }
-    )
-  }
-
   const { data, error } = await admin.rpc(fn, args)
 
   if (error) {
     console.error(`[api/rpc] ${fn} failed:`, error.message)
     // Postgres RAISE messages are written for end users ("Username is already
     // taken"), so they are safe to surface.
-    return NextResponse.json({ error: error.message }, { status: 400 })
+    const res = NextResponse.json({ error: error.message }, { status: 400 })
+    if (pitchGuestId) attachPitchGuestCookie(res, pitchGuestId)
+    return res
   }
 
-  return NextResponse.json({ data })
+  const res = NextResponse.json({ data })
+  if (pitchGuestId) attachPitchGuestCookie(res, pitchGuestId)
+  return res
 }
