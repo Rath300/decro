@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import VersionIndicator from '@/components/VersionIndicator'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
@@ -32,9 +33,8 @@ export default function LoginForm() {
       const result = await signIn(email, password)
       
       if (result.success) {
-        // Redirect to feed after successful sign in
-        router.push('/feed')
-        router.refresh() // Force refresh to update auth state
+        router.push(isPitchMode() ? '/' : '/feed')
+        router.refresh()
       } else {
         setError(result.error || 'Sign in failed')
       }
@@ -51,6 +51,10 @@ export default function LoginForm() {
 
   const handleSignUpClick = () => {
     router.push('/signup')
+  }
+
+  const handleBackHome = () => {
+    if (isPitchMode()) router.push('/')
   }
 
   const handleForgotPasswordClick = () => {
@@ -160,12 +164,24 @@ export default function LoginForm() {
             <button 
               type="button"
               onClick={handleSignUpClick}
-              className="font-bold text-black hover:underline transition-colors cursor-pointer"
+              className="font-normal text-black hover:underline transition-colors cursor-pointer"
             >
               Sign Up
             </button>
           </p>
         </div>
+
+        {isPitchMode() && (
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={handleBackHome}
+              className="text-sm font-normal text-black/60 font-space-grotesk hover:text-black hover:underline"
+            >
+              ← Back to groups
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -10,6 +10,7 @@ import { isPitchMode, isPitchParkedPath } from '@/lib/pitch-mode'
 // signed-out visitor bounced to the landing page.
 const PUBLIC_EXACT = new Set([
   '/',
+  '/login',
   '/signup',
   '/forgot-password',
   '/search',

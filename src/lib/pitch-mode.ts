@@ -9,6 +9,7 @@ export function isPitchMode(): boolean {
 
 // Park the full product surface. /subgroup and /post stay open so genre hubs
 // and work detail remain reachable from the community-first web.
+// Login/signup stay open — optional identity; guests can still use the product.
 export const PITCH_PARKED_PREFIXES = [
   '/feed',
   '/spotlight',
@@ -16,8 +17,6 @@ export const PITCH_PARKED_PREFIXES = [
   '/profile',
   '/messages',
   '/settings',
-  '/signup',
-  '/forgot-password',
   '/search',
   '/algorithm',
   '/tags',

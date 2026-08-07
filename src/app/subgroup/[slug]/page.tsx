@@ -258,7 +258,7 @@ export default function SubgroupDetail() {
             <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold">
+                  <h1 className="text-3xl font-normal">
                     {pitchMode ? subgroupData.name : `d/${subgroupData.slug}`}
                   </h1>
                   {subgroupData.description && (
@@ -306,14 +306,14 @@ export default function SubgroupDetail() {
                       })
                     )
                   }
-                  className="px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm font-medium"
+                  className="px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm font-normal"
                 >
                   Upload
                 </button>
               ) : (
                 <Link
                   href={`/create?subgroup=${encodeURIComponent(subgroupData.id)}`}
-                  className="px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm font-medium"
+                  className="px-6 py-2 bg-black text-white hover:bg-gray-800 transition-colors text-sm font-normal"
                 >
                   Create Post
                 </Link>
@@ -322,7 +322,7 @@ export default function SubgroupDetail() {
                 <button
                   onClick={handleFollow}
                   disabled={followLoading || !user}
-                  className={`px-6 py-2 border-2 transition-colors text-sm font-medium ${
+                  className={`px-6 py-2 border-2 transition-colors text-sm font-normal ${
                     isFollowing
                       ? 'border-gray-300 text-black hover:border-red-500 hover:text-red-500'
                       : 'border-black bg-black text-white hover:bg-gray-800'
@@ -366,7 +366,7 @@ export default function SubgroupDetail() {
           <div className="text-center py-24 border border-dashed border-gray-300 rounded-lg">
             <div className="text-gray-500 mb-4">
               <div className="text-4xl mb-4">📭</div>
-              <h3 className="text-lg font-medium mb-2">No posts yet</h3>
+              <h3 className="text-lg font-normal mb-2">No posts yet</h3>
               <p className="text-sm">Be the first to share something in this subgroup!</p>
             </div>
             {pitchMode ? (

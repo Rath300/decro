@@ -336,7 +336,7 @@ export default function PitchUploadSheet({
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-['Space_Grotesk'] font-bold text-2xl tracking-tight">
+              <h2 className="font-['Space_Grotesk'] font-normal text-2xl tracking-tight">
                 Upload
               </h2>
               <p className="text-xs text-black/60 mt-1">

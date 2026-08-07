@@ -97,6 +97,7 @@ export default function PitchWeb({
   )
   const lastExpandRef = useRef<string | null>(null)
   const lastClickRef = useRef<{ id: string; at: number } | null>(null)
+  const fittedMainsRef = useRef(false)
 
   useEffect(() => {
     let alive = true
@@ -130,9 +131,31 @@ export default function PitchWeb({
     const px = parentPos?.x ?? 0
     const py = parentPos?.y ?? 0
 
+    // Even ring so all mains start on-screen together.
+    const mainParents = nodes.filter((n) => n.kind === 'parent')
+    const mainIndex = new Map(mainParents.map((n, i) => [n.id, i]))
+    const mainCount = Math.max(mainParents.length, 1)
+    const mainRadius = 210
+
     const gNodes: GraphNode[] = nodes.map((n) => {
       const key = layoutKey(n)
       const cached = posCache.current.get(key)
+
+      if (n.kind === 'parent') {
+        const idx = mainIndex.get(n.id) ?? 0
+        const angle = (idx / mainCount) * Math.PI * 2 - Math.PI / 2
+        const ring = {
+          x: Math.cos(angle) * mainRadius,
+          y: Math.sin(angle) * mainRadius,
+        }
+        // Top level: pin to a ring so all seven stay visible.
+        if (!expandedParent) {
+          return { ...n, ...ring, fx: ring.x, fy: ring.y }
+        }
+        if (cached) return { ...n, ...cached, fx: undefined, fy: undefined }
+        return { ...n, ...ring, fx: undefined, fy: undefined }
+      }
+
       if (cached) return { ...n, ...cached }
 
       // New children bloom near the focused parent.
@@ -155,7 +178,7 @@ export default function PitchWeb({
 
       const seed = hashSeed(key)
       const angle = ((seed % 360) / 360) * Math.PI * 2
-      const radius = n.kind === 'parent' ? 80 + (seed % 280) : 120 + (seed % 520)
+      const radius = 120 + (seed % 520)
       return {
         ...n,
         x: Math.cos(angle) * radius,
@@ -202,6 +225,31 @@ export default function PitchWeb({
     }
     return fg
   }, [])
+
+  const fitMains = useCallback(
+    (ms = 700) => {
+      const fg = getFg()
+      if (!fg) return
+      const mains = graphData.nodes.filter((n) => n.kind === 'parent')
+      if (!mains.length) return
+      const xs = mains.map((m) => m.x ?? 0)
+      const ys = mains.map((m) => m.y ?? 0)
+      const minX = Math.min(...xs)
+      const maxX = Math.max(...xs)
+      const minY = Math.min(...ys)
+      const maxY = Math.max(...ys)
+      const cx = (minX + maxX) / 2
+      const cy = (minY + maxY) / 2
+      const span = Math.max(maxX - minX, maxY - minY, 280)
+      const zoom = Math.min(
+        1.35,
+        Math.max(0.55, (Math.min(dims.w, dims.h) * 0.72) / span)
+      )
+      fg.centerAt(cx, cy, ms)
+      fg.zoom(zoom, ms)
+    },
+    [getFg, graphData.nodes, dims.w, dims.h]
+  )
 
   const panByScreen = useCallback(
     (dx: number, dy: number) => {
@@ -281,6 +329,18 @@ export default function PitchWeb({
     [getFg, setZoomLevel]
   )
 
+  // Fit all mains on first ready / after collapse.
+  useEffect(() => {
+    if (!graphReady || expandedParent) return
+    const mains = graphData.nodes.filter((n) => n.kind === 'parent')
+    if (mains.length < 2) return
+    if (!fittedMainsRef.current) {
+      fittedMainsRef.current = true
+      const t = window.setTimeout(() => fitMains(0), 80)
+      return () => window.clearTimeout(t)
+    }
+  }, [graphReady, expandedParent, graphData.nodes, fitMains])
+
   // Camera morph when entering / leaving a parent cluster.
   useEffect(() => {
     if (!graphReady) return
@@ -322,32 +382,20 @@ export default function PitchWeb({
           /* ignore */
         }
       }
-      // Wait a tick so newly injected nodes have positions.
       const t = window.setTimeout(run, 40)
       return () => window.clearTimeout(t)
     }
 
     if (!expandedParent && lastExpandRef.current) {
       lastExpandRef.current = null
-      const mains = graphData.nodes.filter((n) => n.kind === 'parent')
-      if (mains.length) {
-        const xs = mains.map((m) => m.x ?? 0)
-        const ys = mains.map((m) => m.y ?? 0)
-        const cx = (Math.min(...xs) + Math.max(...xs)) / 2
-        const cy = (Math.min(...ys) + Math.max(...ys)) / 2
-        fg.centerAt(cx, cy, 900)
-        fg.zoom(1, 900)
-      } else {
-        fg.centerAt(0, 0, 900)
-        fg.zoom(1, 900)
-      }
+      fitMains(900)
       try {
         fg.d3ReheatSimulation?.()
       } catch {
         /* ignore */
       }
     }
-  }, [expandedParent, graphData.nodes, graphReady, getFg, dims.w, dims.h])
+  }, [expandedParent, graphData.nodes, graphReady, getFg, dims.w, dims.h, fitMains])
 
   useEffect(() => {
     if (!graphReady || !highlightPostId) return
@@ -380,8 +428,7 @@ export default function PitchWeb({
 
       if (isLabel) {
         const fontPx = hubFontPx(n.kind, n.postCount, globalScale, Boolean(expandedParent))
-        const weight = n.kind === 'parent' ? '600' : '400'
-        ctx.font = `${weight} ${fontPx}px "Space Mono", monospace`
+        ctx.font = `400 ${fontPx}px "Space Mono", monospace`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         const label = (n.label || '').toUpperCase()

@@ -7,6 +7,26 @@ export const PITCH_PARAGRAPHS = [
   'You can email me at helpdecro.net@gmail.com or send a message on discord at rath6053 or existsneel. Thanks so much.',
 ]
 
+export type PitchOnboardingStep = {
+  title: string
+  body: string
+}
+
+export const PITCH_ONBOARDING_STEPS: PitchOnboardingStep[] = [
+  {
+    title: 'Welcome to Decro',
+    body: 'A small web of creative communities — not another algorithm feed. Find people through shared niches and collaborate.',
+  },
+  {
+    title: 'How the groups work',
+    body: 'You\'ll see a few main groups first. Click one to zoom into its niches. Click a niche to open the art in that community.',
+  },
+  {
+    title: 'Everything works without an account',
+    body: 'Upload and comment as a guest. Login is optional if you want a saved identity later — nothing here requires it.',
+  },
+]
+
 export const PITCH_ENTER_CTA = 'Enter the groups'
 
 export const PITCH_HINT =

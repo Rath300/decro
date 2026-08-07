@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import VersionIndicator from '@/components/VersionIndicator'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function SignupForm() {
   const [email, setEmail] = useState('')
@@ -45,9 +46,8 @@ export default function SignupForm() {
       const result = await signUp(email, password, username)
       
       if (result.success) {
-        // Redirect to feed after successful sign up
-        router.push('/feed')
-        router.refresh() // Force refresh to update auth state
+        router.push(isPitchMode() ? '/' : '/feed')
+        router.refresh()
       } else {
         setError(result.error || 'Sign up failed')
       }
@@ -67,7 +67,7 @@ export default function SignupForm() {
   }
 
   const handleSignInClick = () => {
-    router.push('/')
+    router.push(isPitchMode() ? '/login' : '/')
   }
 
   return (
@@ -213,7 +213,7 @@ export default function SignupForm() {
             Already have an Account?{' '}
             <button 
               onClick={handleSignInClick}
-              className="font-bold text-black hover:underline transition-colors cursor-pointer"
+              className="font-normal text-black hover:underline transition-colors cursor-pointer"
             >
               Sign in
             </button>

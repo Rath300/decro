@@ -123,12 +123,12 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
               <a 
                 href={`/profile/${card.creator}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-xs text-blue-600 font-medium hover:text-blue-800 transition-colors"
+                className="text-xs text-blue-600 font-normal hover:text-blue-800 transition-colors"
               >
                 by {card.creator}
               </a>
               {card.subgroupName && (
-                <p className="text-[10px] text-gray-500 font-medium">
+                <p className="text-[10px] text-gray-500 font-normal">
                   in {card.subgroupName}
                 </p>
               )}

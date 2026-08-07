@@ -1,6 +1,8 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
+import { useAuth } from '@/context/auth-context'
 
 type Props = {
   onUpload: () => void
@@ -8,6 +10,8 @@ type Props = {
 }
 
 export default function PitchChrome({ onUpload, onPitch }: Props) {
+  const { isAuthenticated, signOut, loading } = useAuth()
+
   return (
     <header className="fixed top-0 inset-x-0 z-[60] h-14 border-b border-black bg-white flex items-center justify-between px-3 sm:px-6 gap-3">
       <div className="flex items-center gap-3 min-w-0">
@@ -28,7 +32,7 @@ export default function PitchChrome({ onUpload, onPitch }: Props) {
         </button>
       </div>
 
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button
           type="button"
           onClick={onPitch}
@@ -36,6 +40,23 @@ export default function PitchChrome({ onUpload, onPitch }: Props) {
         >
           Pitch
         </button>
+        {!loading &&
+          (isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
+            >
+              Log out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
+            >
+              Log in
+            </Link>
+          ))}
         <button
           type="button"
           onClick={onUpload}

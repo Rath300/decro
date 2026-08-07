@@ -253,7 +253,7 @@ export default function PostDetailPage() {
         
         {/* Post Header - Reddit Style */}
         <div className="border border-gray-200 rounded-lg p-6">
-          <h1 className="text-2xl font-['Space_Mono'] font-bold text-black mb-4">
+          <h1 className="text-2xl font-['Space_Mono'] font-normal text-black mb-4">
             {post.title}
           </h1>
           
@@ -339,7 +339,7 @@ export default function PostDetailPage() {
 
       {/* Comments Section */}
       <div className="border border-gray-200 rounded-lg p-6">
-        <h2 className="text-lg font-['Space_Mono'] font-bold text-black mb-4">
+        <h2 className="text-lg font-['Space_Mono'] font-normal text-black mb-4">
           Comments
         </h2>
 
@@ -641,12 +641,12 @@ function RedditComment({
   return (
     <div className={`${depth > 0 ? 'ml-6 border-l-2 border-gray-100 pl-4' : ''}`}>
       <div className="flex gap-3">
-        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-normal text-gray-600 flex-shrink-0">
           {comment.username?.[0]?.toUpperCase() || '?'}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-['Space_Mono'] font-bold text-sm text-black">
+            <span className="font-['Space_Mono'] font-normal text-sm text-black">
               {comment.username || 'anonymous'}
             </span>
             {(comment as any).replying_to_username && (

@@ -29,6 +29,7 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
           }}
           onPitch={() => {
             try {
+              sessionStorage.removeItem('decro_pitch_onboarded_v2')
               sessionStorage.removeItem('decro_pitch_entered')
             } catch {}
             window.dispatchEvent(new Event('pitch:show-overlay'))

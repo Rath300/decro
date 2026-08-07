@@ -143,7 +143,7 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
           <div className="lg:w-2/3 space-y-6">
             {/* Post Header */}
             <div className="border border-gray-200 rounded-lg p-6">
-              <h1 className="text-2xl font-['Space_Mono'] font-bold text-black mb-4">
+              <h1 className="text-2xl font-['Space_Mono'] font-normal text-black mb-4">
                 {selectedCard.title}
               </h1>
               
@@ -218,7 +218,7 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
           {/* RIGHT: Comments Only */}
           <div className="lg:w-1/3">
             <div className="border border-gray-200 rounded-lg p-6 lg:sticky lg:top-6">
-          <h2 className="text-lg font-['Space_Mono'] font-bold text-black mb-4">
+          <h2 className="text-lg font-['Space_Mono'] font-normal text-black mb-4">
             Comments
           </h2>
 
@@ -672,12 +672,12 @@ function RedditComment({
   return (
     <div className={`${depth > 0 ? 'ml-6 border-l-2 border-gray-100 pl-4' : ''}`}>
       <div className="flex gap-3">
-          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-normal text-gray-600 flex-shrink-0">
             {comment.username?.[0]?.toUpperCase() || '?'}
           </div>
           <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-['Space_Mono'] font-bold text-sm text-black">
+            <span className="font-['Space_Mono'] font-normal text-sm text-black">
               {comment.username || 'anonymous'}
             </span>
             {(comment as any).replying_to_username && (
@@ -914,12 +914,12 @@ function RedditComment({
                     {(replies[commentId] || []).map(r => (
                       <div key={r.id} className="ml-6 border-l-2 border-gray-100 pl-4">
                         <div className="flex gap-3">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-normal text-gray-600 flex-shrink-0">
                             {r.username?.[0]?.toUpperCase() || '?'}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-baseline gap-2 mb-1">
-                              <span className="font-['Space_Mono'] font-bold text-sm text-black">
+                              <span className="font-['Space_Mono'] font-normal text-sm text-black">
                                 {r.username || 'anonymous'}
                               </span>
                               {(r as any).replying_to_username && (
