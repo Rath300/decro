@@ -1,111 +1,111 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
 import {
   PITCH_DISCORD_HANDLES,
   PITCH_EMAIL,
-  PITCH_ENTER_CTA,
-  PITCH_ONBOARDING_STEPS,
+  PITCH_TOUR_COPY,
+  type PitchTourStage,
 } from '@/lib/pitch-copy'
 
 type Props = {
-  onComplete: () => void
+  stage: PitchTourStage
+  onNext: () => void
+  onSkip: () => void
 }
 
-export default function PitchOnboarding({ onComplete }: Props) {
-  const [step, setStep] = useState(0)
-  const total = PITCH_ONBOARDING_STEPS.length + 1 // + contact / enter
-  const isLast = step >= PITCH_ONBOARDING_STEPS.length
-  const current = !isLast ? PITCH_ONBOARDING_STEPS[step] : null
+export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
+  if (stage === 'done') return null
+
+  const copy = PITCH_TOUR_COPY[stage]
+  const isWelcome = stage === 'welcome'
+  const isGuest = stage === 'guest'
+
+  // Welcome is a full-screen start card; later steps float over the live graph.
+  if (isWelcome) {
+    return (
+      <div className="fixed inset-0 z-[70] bg-white/95 flex items-center justify-center px-5 sm:px-8 py-20">
+        <div className="max-w-md w-full border border-black bg-white p-6 sm:p-8">
+          <Image
+            src="/decky.png"
+            alt="Decro"
+            width={72}
+            height={72}
+            className="w-16 h-16 sm:w-[72px] sm:h-[72px]"
+            priority
+          />
+          <p className="mt-5 text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/45">
+            Tour · 1 / 4
+          </p>
+          <h1 className="mt-2 text-xl sm:text-2xl font-['Space_Mono'] font-normal">
+            {copy.title}
+          </h1>
+          <p className="mt-3 text-sm font-['Space_Mono'] leading-relaxed text-black/80">
+            {copy.body}
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={onNext}
+              className="border border-black bg-black text-white px-5 py-2.5 text-sm font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
+            >
+              {copy.cta || 'Next'}
+            </button>
+            <button
+              type="button"
+              onClick={onSkip}
+              className="text-xs font-['Space_Mono'] uppercase underline underline-offset-4 text-black/45 hover:text-black"
+            >
+              Skip tour
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const stepNum =
+    stage === 'click-main' ? 2 : stage === 'click-niche' ? 3 : 4
 
   return (
-    <div className="fixed inset-0 z-[70] bg-white flex items-center justify-center px-5 sm:px-8 py-20 overflow-y-auto">
-      <div className="max-w-lg w-full my-auto">
-        <Image
-          src="/decky.png"
-          alt="Decro"
-          width={96}
-          height={96}
-          className="w-20 h-20 sm:w-24 sm:h-24"
-          priority
-        />
-
-        <p className="mt-6 text-[10px] sm:text-xs font-['Space_Mono'] uppercase tracking-wide text-black/45">
-          {step + 1} / {total}
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[65] flex justify-center px-3 pb-16 sm:pb-20">
+      <div className="pointer-events-auto max-w-md w-full border border-black bg-white p-4 sm:p-5 shadow-none">
+        <p className="text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/45">
+          Tour · {stepNum} / 4
         </p>
-
-        {current ? (
-          <div className="mt-3 space-y-3 font-['Space_Mono'] text-black">
-            <h1 className="text-xl sm:text-2xl font-normal tracking-tight">
-              {current.title}
-            </h1>
-            <p className="text-sm sm:text-[15px] leading-relaxed text-black/80">
-              {current.body}
-            </p>
-          </div>
-        ) : (
-          <div className="mt-3 space-y-3 font-['Space_Mono'] text-black">
-            <h1 className="text-xl sm:text-2xl font-normal tracking-tight">
-              Say hello
-            </h1>
-            <p className="text-sm sm:text-[15px] leading-relaxed text-black/80">
-              Feedback helps a lot. Email{' '}
-              <a
-                href={`mailto:${PITCH_EMAIL}`}
-                className="underline underline-offset-2"
-              >
-                {PITCH_EMAIL}
-              </a>{' '}
-              or Discord{' '}
-              <span className="underline underline-offset-2">
-                {PITCH_DISCORD_HANDLES[0]}
-              </span>{' '}
-              /{' '}
-              <span className="underline underline-offset-2">
-                {PITCH_DISCORD_HANDLES[1]}
-              </span>
-              .
-            </p>
-          </div>
+        <h2 className="mt-1 text-base sm:text-lg font-['Space_Mono'] font-normal">
+          {copy.title}
+        </h2>
+        <p className="mt-2 text-sm font-['Space_Mono'] leading-relaxed text-black/75">
+          {copy.body}
+        </p>
+        {isGuest && (
+          <p className="mt-2 text-xs font-['Space_Mono'] text-black/50">
+            Feedback: {PITCH_EMAIL} · Discord {PITCH_DISCORD_HANDLES[0]} /{' '}
+            {PITCH_DISCORD_HANDLES[1]}
+          </p>
         )}
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          {step > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {isGuest ? (
             <button
               type="button"
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
-              className="border border-black bg-white text-black px-5 py-3 text-sm font-['Space_Mono'] uppercase tracking-wide hover:bg-black hover:text-white"
+              onClick={onNext}
+              className="border border-black bg-black text-white px-4 py-2 text-xs font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
             >
-              Back
-            </button>
-          )}
-          {!isLast ? (
-            <button
-              type="button"
-              onClick={() => setStep((s) => s + 1)}
-              className="border border-black bg-black text-white px-6 py-3 text-sm font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
-            >
-              Next
+              {copy.cta || 'Done'}
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={onComplete}
-              className="border border-black bg-black text-white px-6 py-3 text-sm font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
-            >
-              {PITCH_ENTER_CTA}
-            </button>
+            <p className="text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/40">
+              Waiting for your click on the graph…
+            </p>
           )}
-          {!isLast && (
-            <button
-              type="button"
-              onClick={onComplete}
-              className="text-xs font-['Space_Mono'] uppercase underline underline-offset-4 text-black/50 hover:text-black"
-            >
-              Skip
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-[10px] font-['Space_Mono'] uppercase underline underline-offset-4 text-black/40 hover:text-black"
+          >
+            Skip
+          </button>
         </div>
       </div>
     </div>

@@ -7,30 +7,45 @@ export const PITCH_PARAGRAPHS = [
   'You can email me at helpdecro.net@gmail.com or send a message on discord at rath6053 or existsneel. Thanks so much.',
 ]
 
-export type PitchOnboardingStep = {
-  title: string
-  body: string
-}
+/** Interactive tour stages — driven by real graph actions. */
+export type PitchTourStage =
+  | 'welcome'
+  | 'click-main'
+  | 'click-niche'
+  | 'guest'
+  | 'done'
 
-export const PITCH_ONBOARDING_STEPS: PitchOnboardingStep[] = [
-  {
+export const PITCH_TOUR_COPY: Record<
+  Exclude<PitchTourStage, 'done'>,
+  { title: string; body: string; cta?: string }
+> = {
+  welcome: {
     title: 'Welcome to Decro',
-    body: 'A small web of creative communities — not another algorithm feed. Find people through shared niches and collaborate.',
+    body: 'A connected web of creative communities. Click a group to expand its niches — or enter it to post and interact.',
+    cta: 'Start tour',
   },
-  {
-    title: 'How the groups work',
-    body: 'You\'ll see a few main groups first. Click one to zoom into its niches. Click a niche to open the art in that community.',
+  'click-main': {
+    title: 'Expand a group',
+    body: 'Click any main label near the center. Linked niches bloom around it — including bridges that belong to two crafts.',
   },
-  {
-    title: 'Everything works without an account',
-    body: 'Upload and comment as a guest. Login is optional if you want a saved identity later — nothing here requires it.',
+  'click-niche': {
+    title: 'Go deeper or go inside',
+    body: 'Click again to zoom into more linked subgroups (like Video Games → Indie / Triple-A). Double-click or hit Enter group to open the page and post.',
   },
-]
+  guest: {
+    title: 'No account required',
+    body: 'Upload and comment as a guest anytime. Log in is optional if you want a saved name later.',
+    cta: 'Open the group',
+  },
+}
 
 export const PITCH_ENTER_CTA = 'Enter the groups'
 
 export const PITCH_HINT =
-  'click a main group to open its niches · click a niche for the art · two-finger scroll to pan · pinch or +/− to zoom'
+  'click to expand · double-click or Enter to go inside · bridges link two crafts · scroll to pan'
 
 export const PITCH_EMAIL = 'helpdecro.net@gmail.com'
 export const PITCH_DISCORD_HANDLES = ['rath6053', 'existsneel'] as const
+
+/** Suggested first main group for the tour highlight. */
+export const PITCH_TOUR_PARENT_ID = 'games'

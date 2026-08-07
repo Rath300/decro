@@ -29,6 +29,8 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
           }}
           onPitch={() => {
             try {
+              sessionStorage.removeItem('decro_pitch_onboarded_v4')
+              sessionStorage.removeItem('decro_pitch_onboarded_v3')
               sessionStorage.removeItem('decro_pitch_onboarded_v2')
               sessionStorage.removeItem('decro_pitch_entered')
             } catch {}

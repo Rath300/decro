@@ -198,11 +198,12 @@ export default function PitchUploadSheet({
     if (creatingGroup && tempHubId) {
       optimisticNodes.push({
         id: `g:${tempHubId}`,
-        kind: 'subgroup',
+        kind: 'hub',
         label: hubLabel,
         slug: '',
         subgroupId: tempHubId,
         pending: true,
+        depth: 2,
       })
     }
     optimisticNodes.push({

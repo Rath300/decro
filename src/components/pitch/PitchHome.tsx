@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
-import { getPitchParent } from '@/lib/pitch-taxonomy'
+import { PITCH_TOUR_PARENT_ID, type PitchTourStage } from '@/lib/pitch-copy'
+import { childrenOf, getPitchHub } from '@/lib/pitch-taxonomy'
 import PitchWeb from '@/components/pitch/PitchWeb'
 import PitchOnboarding from '@/components/pitch/PitchOnboarding'
 import type {
@@ -12,7 +12,7 @@ import type {
   UploadCommit,
 } from '@/components/pitch/PitchUploadSheet'
 
-const ENTERED_KEY = 'decro_pitch_onboarded_v2'
+const ENTERED_KEY = 'decro_pitch_onboarded_v4'
 
 function displayUsername(raw?: string | null) {
   if (!raw || /^anonymous(_|$)/i.test(raw)) return 'anonymous'
@@ -21,35 +21,46 @@ function displayUsername(raw?: string | null) {
 
 export default function PitchHome() {
   const router = useRouter()
-  const [entered, setEntered] = useState(false)
+  const [tourStage, setTourStage] = useState<PitchTourStage | null>(null)
   const [ready, setReady] = useState(false)
   const [nodes, setNodes] = useState<PitchGraphNode[]>([])
   const [links, setLinks] = useState<PitchGraphLink[]>([])
-  const [expandedParent, setExpandedParent] = useState<string | null>(null)
+  const [startHubIds, setStartHubIds] = useState<string[]>([])
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set())
   const [highlightPostId, setHighlightPostId] = useState<string | null>(null)
   const [selected, setSelected] = useState<PitchGraphNode | null>(null)
   const [loadError, setLoadError] = useState('')
   const [toast, setToast] = useState('')
+  const [pendingNicheSlug, setPendingNicheSlug] = useState<string | null>(null)
 
   useEffect(() => {
     try {
-      setEntered(sessionStorage.getItem(ENTERED_KEY) === '1')
+      const done = sessionStorage.getItem(ENTERED_KEY) === '1'
+      setTourStage(done ? 'done' : 'welcome')
     } catch {
-      setEntered(false)
+      setTourStage('welcome')
     }
     setReady(true)
   }, [])
 
-  const loadGraph = useCallback(async (parentId: string | null) => {
+  const finishTour = useCallback(() => {
     try {
-      const qs = parentId ? `?parent=${encodeURIComponent(parentId)}` : ''
-      const res = await fetch(`/api/pitch/graph${qs}`, { cache: 'no-store' })
+      sessionStorage.setItem(ENTERED_KEY, '1')
+    } catch {}
+    setTourStage('done')
+  }, [])
+
+  const loadGraph = useCallback(async () => {
+    try {
+      const res = await fetch('/api/pitch/graph', { cache: 'no-store' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load graph')
+      const remote = (data.nodes || []) as PitchGraphNode[]
+      const remoteLinks = (data.links || []) as PitchGraphLink[]
+      const start = (data.startHubIds || []) as string[]
       setNodes((prev) => {
         const pending = prev.filter((n) => n.pending)
         const pendingIds = new Set(pending.map((n) => n.id))
-        const remote = (data.nodes || []) as PitchGraphNode[]
         return [...remote.filter((n) => !pendingIds.has(n.id)), ...pending]
       })
       setLinks((prev) => {
@@ -58,8 +69,15 @@ export default function PitchHome() {
             String(l.source).startsWith('p:temp-') ||
             String(l.target).startsWith('g:temp-')
         )
-        const remote = (data.links || []) as PitchGraphLink[]
-        return [...remote, ...pendingLinks]
+        return [...remoteLinks, ...pendingLinks]
+      })
+      setStartHubIds(start)
+      setRevealedIds((prev) => {
+        if (prev.size === 0) return new Set(start)
+        // Keep user reveals; ensure start hubs always present
+        const next = new Set(prev)
+        for (const id of start) next.add(id)
+        return next
       })
       setLoadError('')
     } catch (e: any) {
@@ -68,14 +86,23 @@ export default function PitchHome() {
   }, [])
 
   useEffect(() => {
-    void loadGraph(expandedParent)
-  }, [loadGraph, expandedParent])
+    void loadGraph()
+  }, [loadGraph])
 
   useEffect(() => {
-    const onOverlay = () => setEntered(false)
+    const onOverlay = () => {
+      setSelected(null)
+      setRevealedIds(new Set(startHubIds))
+      setTourStage('welcome')
+      try {
+        sessionStorage.removeItem(ENTERED_KEY)
+        sessionStorage.removeItem('decro_pitch_onboarded_v3')
+        sessionStorage.removeItem('decro_pitch_onboarded_v2')
+      } catch {}
+    }
     window.addEventListener('pitch:show-overlay', onOverlay)
     return () => window.removeEventListener('pitch:show-overlay', onOverlay)
-  }, [])
+  }, [startHubIds])
 
   useEffect(() => {
     if (!toast) return
@@ -83,25 +110,55 @@ export default function PitchHome() {
     return () => window.clearTimeout(t)
   }, [toast])
 
-  const enter = () => {
-    try {
-      sessionStorage.setItem(ENTERED_KEY, '1')
-    } catch {}
-    setEntered(true)
-  }
+  const onRevealChildren = useCallback((hubId: string) => {
+    const kids = childrenOf(hubId)
+    setRevealedIds((prev) => {
+      const next = new Set(prev)
+      next.add(hubId)
+      for (const k of kids) next.add(k.id)
+      return next
+    })
+  }, [])
 
-  const onParentExpand = (parentId: string) => {
+  const onEnterHub = useCallback(
+    (slug: string) => {
+      router.push(`/subgroup/${slug}`)
+    },
+    [router]
+  )
+
+  const onResetView = useCallback(() => {
     setSelected(null)
-    setExpandedParent(parentId)
+    setRevealedIds(new Set(startHubIds))
+  }, [startHubIds])
+
+  const onTourNext = () => {
+    if (tourStage === 'welcome') {
+      setTourStage('click-main')
+      return
+    }
+    if (tourStage === 'guest') {
+      const slug = pendingNicheSlug
+      setPendingNicheSlug(null)
+      finishTour()
+      if (slug) router.push(`/subgroup/${slug}`)
+    }
   }
 
-  const onCollapse = () => {
-    setSelected(null)
-    setExpandedParent(null)
+  const onTourMainOpened = (hubId: string) => {
+    if (tourStage === 'click-main') {
+      onRevealChildren(hubId)
+      setTourStage('click-niche')
+    }
   }
 
-  const onGenreOpen = (slug: string) => {
-    router.push(`/subgroup/${slug}`)
+  const onTourNicheOpened = (slug: string) => {
+    if (tourStage === 'click-niche') {
+      setPendingNicheSlug(slug)
+      setTourStage('guest')
+      return
+    }
+    onEnterHub(slug)
   }
 
   const openUpload = useCallback((group?: { id: string; name: string; slug: string } | null) => {
@@ -123,10 +180,7 @@ export default function PitchHome() {
   const applyCommit = useCallback(
     (commit: UploadCommit) => {
       const realPostId = `p:${commit.postId}`
-      const realHubId = `g:${commit.subgroupId}`
       const tempPostId = `p:${commit.tempPostId}`
-      const tempHubId = commit.tempHubId ? `g:${commit.tempHubId}` : null
-
       setNodes((prev) =>
         prev.map((n) => {
           if (n.id === tempPostId) {
@@ -142,54 +196,20 @@ export default function PitchHome() {
               clientKey: commit.tempPostId,
             }
           }
-          if (tempHubId && n.id === tempHubId) {
-            return {
-              ...n,
-              id: realHubId,
-              subgroupId: commit.subgroupId,
-              pending: false,
-            }
-          }
           return n
         })
       )
-      setLinks((prev) =>
-        prev.map((l) => {
-          let source = String(l.source)
-          let target = String(l.target)
-          if (source === tempPostId) source = realPostId
-          if (target === tempHubId) target = realHubId
-          if (target === `g:${commit.tempHubId}`) target = realHubId
-          return { source, target }
-        })
-      )
       setHighlightPostId(commit.postId)
-      setSelected((prev) => {
-        if (!prev || prev.id !== tempPostId) return prev
-        return {
-          ...prev,
-          id: realPostId,
-          subgroupId: commit.subgroupId,
-          username: displayUsername(commit.username),
-          imageUrl: commit.imageUrl ?? prev.imageUrl,
-          audioUrl: commit.audioUrl ?? prev.audioUrl,
-          videoUrl: commit.videoUrl ?? prev.videoUrl,
-          pending: false,
-        }
-      })
-      void loadGraph(expandedParent)
+      void loadGraph()
     },
-    [expandedParent, loadGraph]
+    [loadGraph]
   )
 
   const applyFail = useCallback(
-    (tempPostId: string, tempHubId: string | undefined, message: string) => {
+    (tempPostId: string, _tempHubId: string | undefined, message: string) => {
       const postId = `p:${tempPostId}`
-      const hubId = tempHubId ? `g:${tempHubId}` : null
-      setNodes((prev) => prev.filter((n) => n.id !== postId && n.id !== hubId))
-      setLinks((prev) =>
-        prev.filter((l) => String(l.source) !== postId && String(l.target) !== hubId)
-      )
+      setNodes((prev) => prev.filter((n) => n.id !== postId))
+      setLinks((prev) => prev.filter((l) => String(l.source) !== postId))
       setSelected((prev) => (prev?.id === postId ? null : prev))
       setToast(message || 'Upload failed — try again')
     },
@@ -223,33 +243,40 @@ export default function PitchHome() {
     }
   }, [applyOptimistic, applyCommit, applyFail])
 
-  if (!ready) {
+  const selectedMeta = useMemo(() => {
+    if (!selected || selected.kind !== 'hub') return null
+    const hub = selected.hubId ? getPitchHub(selected.hubId) : null
+    const parentLabels = (selected.parentIds || [])
+      .map((id) => getPitchHub(id)?.label)
+      .filter(Boolean) as string[]
+    const unrevealed = (selected.childIds || []).filter((id) => !revealedIds.has(id))
+    return { hub, parentLabels, unrevealed }
+  }, [selected, revealedIds])
+
+  if (!ready || tourStage === null) {
     return <div className="min-h-[100dvh] bg-white" />
   }
 
-  const isTextPost = selected?.contentType === 'text'
-  const bodyLabel = isTextPost ? 'Text' : 'Description'
-  const parentMeta = expandedParent ? getPitchParent(expandedParent) : null
+  const hidePanels = tourStage === 'click-main' || tourStage === 'click-niche'
 
   return (
     <div className="relative bg-white">
       <PitchWeb
         nodes={nodes}
         links={links}
-        expandedParent={expandedParent}
+        startHubIds={startHubIds}
+        revealedIds={revealedIds}
         highlightPostId={highlightPostId}
+        tourStage={tourStage}
+        tourParentId={PITCH_TOUR_PARENT_ID}
         onUploadClick={() => openUpload()}
-        onNodeSelect={setSelected}
-        onParentExpand={onParentExpand}
-        onGenreOpen={onGenreOpen}
-        onCollapse={onCollapse}
+        onNodeSelect={hidePanels ? undefined : setSelected}
+        onRevealChildren={onRevealChildren}
+        onEnterHub={onEnterHub}
+        onResetView={onResetView}
+        onTourMainOpened={onTourMainOpened}
+        onTourNicheOpened={onTourNicheOpened}
       />
-
-      {expandedParent && parentMeta ? (
-        <div className="absolute top-4 left-36 sm:left-40 z-10 font-['Space_Mono'] text-xs uppercase tracking-wide text-black/60 pointer-events-none">
-          {parentMeta.label}
-        </div>
-      ) : null}
 
       {loadError && (
         <div className="absolute top-20 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm border border-black bg-white px-3 py-2 text-xs font-['Space_Mono'] z-20">
@@ -263,108 +290,64 @@ export default function PitchHome() {
         </div>
       )}
 
-      {selected?.kind === 'post' && (
-        <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-[26rem] md:w-[30rem] border border-black bg-white z-20 font-['Space_Mono'] max-h-[78vh] overflow-y-auto shadow-none">
-          {(selected.contentType === 'video' || selected.contentType === 'film') &&
-          selected.videoUrl ? (
-            <video
-              key={selected.videoUrl}
-              src={selected.videoUrl}
-              controls
-              playsInline
-              className="w-full max-h-80 bg-black border-b border-black"
-            />
-          ) : selected.contentType === 'music' && selected.audioUrl ? (
-            <div className="border-b border-black px-5 py-6 bg-white">
-              <audio
-                key={selected.audioUrl}
-                src={selected.audioUrl}
-                controls
-                className="w-full"
-              />
-            </div>
-          ) : selected.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={selected.imageUrl}
-              alt=""
-              className="w-full max-h-80 object-cover border-b border-black"
-            />
-          ) : null}
-          <div className="p-5 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs uppercase text-black/50">
-                {selected.contentType || 'post'}
-              </p>
-              {selected.pending && (
-                <p className="text-xs uppercase text-black/40">Saving…</p>
-              )}
-            </div>
-            <h3 className="text-base sm:text-lg font-normal leading-snug">
-              {selected.label}
-            </h3>
-            <p className="text-sm text-black/60">
-              by {displayUsername(selected.username)}
-            </p>
-            {selected.description ? (
-              <div className="pt-1">
-                <p className="text-xs uppercase text-black/40 mb-2">{bodyLabel}</p>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {selected.description}
-                </p>
-              </div>
-            ) : null}
-            <button
-              type="button"
-              className="text-sm underline pt-1"
-              onClick={() => setSelected(null)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {selected?.kind === 'subgroup' && (
+      {!hidePanels && selected?.kind === 'hub' && selectedMeta && (
         <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 border border-black bg-white z-20 p-5 font-['Space_Mono']">
-          <p className="text-xs uppercase text-black/50">Niche</p>
+          <p className="text-xs uppercase text-black/50">
+            {selected.isBridge
+              ? 'Bridge · two parents'
+              : selected.depth === 0
+                ? 'Center'
+                : selected.depth === 1
+                  ? 'Main group'
+                  : 'Niche'}
+          </p>
           <h3 className="text-base sm:text-lg font-normal uppercase mt-2">
             {selected.label}
           </h3>
-          {typeof selected.postCount === 'number' && (
+          {selectedMeta.parentLabels.length > 0 && (
+            <p className="text-xs text-black/50 mt-2">
+              Linked from {selectedMeta.parentLabels.join(' + ')}
+            </p>
+          )}
+          {typeof selected.postCount === 'number' && selected.enterable && (
             <p className="text-xs text-black/50 mt-1">
               {selected.postCount} post{selected.postCount === 1 ? '' : 's'}
             </p>
           )}
-          {selected.pending && (
-            <p className="text-xs uppercase text-black/40 mt-2">Saving…</p>
-          )}
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            {selected.slug && !selected.pending ? (
-              <Link
-                href={`/subgroup/${selected.slug}`}
+            {selected.enterable && selected.slug ? (
+              <button
+                type="button"
                 className="text-sm border border-black bg-black text-white px-4 py-2 uppercase hover:bg-white hover:text-black"
+                onClick={() => onEnterHub(selected.slug!)}
               >
-                Open group
-              </Link>
+                Enter group
+              </button>
             ) : null}
-            <button
-              type="button"
-              className="text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
-              onClick={() =>
-                openUpload(
-                  selected.subgroupId
-                    ? {
-                        id: selected.subgroupId,
-                        name: selected.label,
-                        slug: selected.slug || '',
-                      }
-                    : null
-                )
-              }
-            >
-              Upload
-            </button>
+            {selectedMeta.unrevealed.length > 0 && selected.hubId ? (
+              <button
+                type="button"
+                className="text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
+                onClick={() => onRevealChildren(selected.hubId!)}
+              >
+                Zoom in
+              </button>
+            ) : null}
+            {selected.enterable && selected.subgroupId ? (
+              <button
+                type="button"
+                className="text-sm border border-black px-4 py-2 uppercase hover:bg-black hover:text-white"
+                onClick={() =>
+                  openUpload({
+                    id: selected.subgroupId!,
+                    name: selected.label,
+                    slug: selected.slug || '',
+                  })
+                }
+              >
+                Upload
+              </button>
+            ) : null}
             <button
               type="button"
               className="text-sm underline px-1"
@@ -376,19 +359,39 @@ export default function PitchHome() {
         </div>
       )}
 
-      {selected?.kind === 'parent' && !expandedParent && (
-        <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 border border-black bg-white z-20 p-5 font-['Space_Mono']">
-          <p className="text-xs uppercase text-black/50">Main group</p>
-          <h3 className="text-base sm:text-lg font-normal uppercase mt-2">
-            {selected.label}
-          </h3>
-          <p className="text-xs text-black/50 mt-2">
-            Opening niches…
-          </p>
+      {!hidePanels && selected?.kind === 'post' && (
+        <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-[26rem] border border-black bg-white z-20 font-['Space_Mono'] max-h-[78vh] overflow-y-auto">
+          {selected.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={selected.imageUrl}
+              alt=""
+              className="w-full max-h-80 object-cover border-b border-black"
+            />
+          ) : null}
+          <div className="p-5 space-y-3">
+            <h3 className="text-base font-normal">{selected.label}</h3>
+            <p className="text-sm text-black/60">
+              by {displayUsername(selected.username)}
+            </p>
+            <button
+              type="button"
+              className="text-sm underline"
+              onClick={() => setSelected(null)}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
 
-      {!entered && <PitchOnboarding onComplete={enter} />}
+      {tourStage !== 'done' && (
+        <PitchOnboarding
+          stage={tourStage}
+          onNext={onTourNext}
+          onSkip={finishTour}
+        />
+      )}
     </div>
   )
 }

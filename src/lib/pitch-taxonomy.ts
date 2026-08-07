@@ -1,14 +1,19 @@
 /**
- * Curated parent hubs for the pitch-mode community web.
- * Maps to existing genre subgroup slugs from scripts/seed-pitch-genres.mjs
- * (no DB parent_id hierarchy yet).
+ * Nested multi-parent hub DAG for the pitch-mode creative web.
+ * Leaves / enterable hubs map to seeded subgroup genre names when possible.
  */
 
-export type PitchParent = {
+export type PitchHub = {
   id: string
   label: string
-  /** Genre names as seeded; slugs are derived the same way as the seed script. */
-  genres: string[]
+  /** 0 = center, 1 = main, 2+ = nested */
+  depth: number
+  /** 0–2 parent hub ids */
+  parents: string[]
+  /** Seeded genre name → slugify for DB subgroup lookup */
+  genreName?: string
+  /** Show at start (center, mains, key bridges) */
+  startVisible?: boolean
 }
 
 function slugify(name: string): string {
@@ -20,168 +25,214 @@ function slugify(name: string): string {
     .slice(0, 48)
 }
 
-export const PITCH_PARENTS: PitchParent[] = [
+export function hubSlug(hub: PitchHub): string | null {
+  if (hub.genreName) return slugify(hub.genreName)
+  return null
+}
+
+/** Full curated DAG */
+export const PITCH_HUBS: PitchHub[] = [
+  { id: 'decro', label: 'Decro', depth: 0, parents: [], startVisible: true },
+
+  { id: 'visual-art', label: 'Visual Art', depth: 1, parents: ['decro'], startVisible: true },
+  { id: 'photography', label: 'Photography', depth: 1, parents: ['decro'], startVisible: true },
+  { id: 'music', label: 'Music', depth: 1, parents: ['decro'], startVisible: true },
+  { id: 'film', label: 'Film', depth: 1, parents: ['decro'], startVisible: true },
+  { id: 'writing', label: 'Writing', depth: 1, parents: ['decro'], startVisible: true },
+  { id: 'design', label: 'Design', depth: 1, parents: ['decro'], startVisible: true },
+  { id: 'craft', label: 'Craft', depth: 1, parents: ['decro'], startVisible: true },
+  { id: 'games', label: 'Games', depth: 1, parents: ['decro'], startVisible: true },
+
+  { id: 'street-photo', label: 'Street Photo', depth: 2, parents: ['photography'], genreName: 'Street Photo' },
+  { id: 'portraiture', label: 'Portraiture', depth: 2, parents: ['photography'], genreName: 'Portraiture' },
+  { id: 'analog-film', label: 'Analog Film', depth: 2, parents: ['photography'], genreName: 'Analog Film' },
+  { id: 'documentary-photo', label: 'Documentary Photo', depth: 2, parents: ['photography'], genreName: 'Documentary Photo' },
+  { id: 'night-photography', label: 'Night Photography', depth: 2, parents: ['photography'], genreName: 'Night Photography' },
+  { id: 'night-street', label: 'Night Street', depth: 3, parents: ['street-photo', 'night-photography'] },
+
+  { id: 'oil-painting', label: 'Oil Painting', depth: 2, parents: ['visual-art'], genreName: 'Oil Painting' },
+  { id: 'watercolor', label: 'Watercolor', depth: 2, parents: ['visual-art'], genreName: 'Watercolor' },
+  { id: 'collage', label: 'Collage', depth: 2, parents: ['visual-art'], genreName: 'Collage' },
   {
-    id: 'visual-art',
-    label: 'Visual Art',
-    genres: [
-      'Collage',
-      'Assemblage',
-      'Oil Painting',
-      'Acrylic',
-      'Watercolor',
-      'Ink Drawing',
-      'Charcoal',
-      'Graphite',
-      'Pastel',
-      'Printmaking',
-      'Linocut',
-      'Screen Print',
-      'Risograph',
-      'Illustration',
-      'Character Design',
-      'Concept Art',
-      'Street Art',
-      'Graffiti',
-      'Mural',
-      'Installation',
-      'Performance Art',
-      'Glitch',
-      'Generative',
-      'Code Art',
-      'Photogram',
-      'Scanography',
-    ],
+    id: 'illustration',
+    label: 'Illustration',
+    depth: 2,
+    parents: ['visual-art', 'design'],
+    genreName: 'Illustration',
+    startVisible: true,
+  },
+  { id: 'street-art', label: 'Street Art', depth: 2, parents: ['visual-art'], genreName: 'Street Art' },
+  { id: 'glitch', label: 'Glitch', depth: 2, parents: ['visual-art'], genreName: 'Glitch' },
+  { id: 'generative', label: 'Generative', depth: 2, parents: ['visual-art', 'design'], genreName: 'Generative' },
+
+  { id: 'electronic', label: 'Electronic', depth: 2, parents: ['music'], genreName: 'Electronic' },
+  { id: 'hip-hop', label: 'Hip Hop', depth: 2, parents: ['music'], genreName: 'Hip Hop' },
+  { id: 'ambient', label: 'Ambient', depth: 2, parents: ['music'], genreName: 'Ambient' },
+  { id: 'jazz', label: 'Jazz', depth: 2, parents: ['music'], genreName: 'Jazz' },
+  { id: 'score', label: 'Score', depth: 2, parents: ['music'], genreName: 'Score' },
+  { id: 'sound-design', label: 'Sound Design', depth: 2, parents: ['music'], genreName: 'Sound Design' },
+
+  { id: 'short-film', label: 'Short Film', depth: 2, parents: ['film'], genreName: 'Short Film' },
+  { id: 'experimental-film', label: 'Experimental Film', depth: 2, parents: ['film'], genreName: 'Experimental Film' },
+  { id: 'animation', label: 'Animation', depth: 2, parents: ['film'], genreName: 'Animation' },
+  { id: 'video-art', label: 'Video Art', depth: 2, parents: ['film', 'visual-art'], genreName: 'Video Art' },
+  { id: 'documentary-film', label: 'Documentary Film', depth: 2, parents: ['film'], genreName: 'Documentary Film' },
+
+  { id: 'poetry', label: 'Poetry', depth: 2, parents: ['writing'], genreName: 'Poetry' },
+  { id: 'fiction', label: 'Fiction', depth: 2, parents: ['writing'], genreName: 'Fiction' },
+  { id: 'essay', label: 'Essay', depth: 2, parents: ['writing'], genreName: 'Essay' },
+  { id: 'comics', label: 'Comics', depth: 2, parents: ['writing', 'visual-art'], genreName: 'Comics' },
+  {
+    id: 'zine',
+    label: 'Zine',
+    depth: 2,
+    parents: ['writing', 'design'],
+    genreName: 'Zine',
+    startVisible: true,
+  },
+
+  { id: 'typography', label: 'Typography', depth: 2, parents: ['design'], genreName: 'Typography' },
+  { id: 'poster-design', label: 'Poster Design', depth: 2, parents: ['design'], genreName: 'Poster Design' },
+  { id: 'brutalist-web', label: 'Brutalist Web', depth: 2, parents: ['design'], genreName: 'Brutalist Web' },
+  { id: 'ui-specimens', label: 'UI Specimens', depth: 2, parents: ['design'], genreName: 'UI Specimens' },
+  { id: '3d-render', label: '3D Render', depth: 2, parents: ['design'], genreName: '3D Render' },
+
+  { id: 'ceramics', label: 'Ceramics', depth: 2, parents: ['craft'], genreName: 'Ceramics' },
+  { id: 'textile-art', label: 'Textile Art', depth: 2, parents: ['craft'], genreName: 'Textile Art' },
+  { id: 'sculpture', label: 'Sculpture', depth: 2, parents: ['craft'], genreName: 'Sculpture' },
+  { id: 'woodworking', label: 'Woodworking', depth: 2, parents: ['craft'], genreName: 'Woodworking' },
+
+  { id: 'video-games', label: 'Video Games', depth: 2, parents: ['games'], genreName: 'Game Art' },
+  { id: 'indie-games', label: 'Indie Games', depth: 3, parents: ['video-games'] },
+  { id: 'triple-a', label: 'Triple-A', depth: 3, parents: ['video-games'] },
+  {
+    id: 'game-art',
+    label: 'Game Art',
+    depth: 3,
+    parents: ['video-games', 'design'],
+    genreName: 'Game Art',
   },
   {
-    id: 'photography',
-    label: 'Photography',
-    genres: [
-      'Street Photo',
-      'Portraiture',
-      'Analog Film',
-      'Cyanotype',
-      'Darkroom Prints',
-      'Documentary Photo',
-      'Architectural Photo',
-      'Landscape',
-      'Still Life Photo',
-      'Fashion Editorial',
-      'Night Photography',
-      'Polaroid',
-      'Macro',
-      'Aerial',
-      'Astrophotography',
-      'Product Shot',
-      'Food Photo',
-      'Archival',
-    ],
+    id: 'pixel-art',
+    label: 'Pixel Art',
+    depth: 3,
+    parents: ['indie-games', 'visual-art'],
+    genreName: 'Pixel Art',
   },
   {
-    id: 'music',
-    label: 'Music',
-    genres: [
-      'Sound Design',
-      'Field Recording',
-      'Ambient',
-      'Electronic',
-      'Modular Synth',
-      'Jazz',
-      'Hip Hop',
-      'Punk',
-      'Folk',
-      'Classical',
-      'Choir',
-      'Score',
-      'Live Set',
-      'DJ Mix',
-    ],
+    id: 'character-design',
+    label: 'Character Design',
+    depth: 3,
+    parents: ['game-art', 'illustration'],
+    genreName: 'Character Design',
+  },
+
+  {
+    id: 'album-cover',
+    label: 'Album Cover',
+    depth: 2,
+    parents: ['music', 'design'],
+    genreName: 'Poster Design',
+    startVisible: true,
   },
   {
-    id: 'film',
-    label: 'Film & Moving Image',
-    genres: [
-      'Video Art',
-      'Experimental Film',
-      'Short Film',
-      'Documentary Film',
-      'Animation',
-      'Stop Motion',
-      'Motion Graphics',
-      'Found Footage',
-      'Dance',
-      'Choreography',
-      'Theater',
-      'Puppetry',
-      'VR Experience',
-    ],
+    id: 'music-video',
+    label: 'Music Video',
+    depth: 2,
+    parents: ['music', 'film'],
+    genreName: 'Motion Graphics',
+    startVisible: true,
   },
   {
-    id: 'writing',
-    label: 'Writing',
-    genres: [
-      'Spoken Word',
-      'Poetry',
-      'Essay',
-      'Fiction',
-      'Comics',
-      'Graphic Novel',
-      'Zine',
-      'Book Arts',
-    ],
+    id: 'photo-essay',
+    label: 'Photo Essay',
+    depth: 2,
+    parents: ['photography', 'writing'],
+    genreName: 'Documentary Photo',
   },
   {
-    id: 'design',
-    label: 'Design',
-    genres: [
-      'Typography',
-      'Poster Design',
-      'Letterpress',
-      'Fashion Design',
-      'Costume',
-      'Jewelry',
-      'UI Specimens',
-      'Brutalist Web',
-      'Packaging',
-      'Data Viz',
-      '3D Render',
-      'CGI',
-      'Game Art',
-      'Pixel Art',
-      'Calligraphy',
-      'Hand Lettering',
-    ],
+    id: 'fashion-film',
+    label: 'Fashion Film',
+    depth: 2,
+    parents: ['film', 'design'],
+    genreName: 'Fashion Editorial',
   },
   {
-    id: 'craft',
-    label: 'Craft',
-    genres: [
-      'Sculpture',
-      'Ceramics',
-      'Glass',
-      'Metalwork',
-      'Woodworking',
-      'Textile Art',
-      'Weaving',
-      'Embroidery',
-      'Quilt',
-    ],
+    id: 'sound-sculpture',
+    label: 'Sound Sculpture',
+    depth: 2,
+    parents: ['music', 'craft'],
+    genreName: 'Sound Design',
+  },
+  {
+    id: 'game-soundtrack',
+    label: 'Game Soundtrack',
+    depth: 3,
+    parents: ['video-games', 'music'],
+    genreName: 'Score',
+  },
+  {
+    id: 'graphic-novel',
+    label: 'Graphic Novel',
+    depth: 2,
+    parents: ['writing', 'visual-art'],
+    genreName: 'Graphic Novel',
   },
 ]
 
-export function getPitchParent(id: string): PitchParent | undefined {
-  return PITCH_PARENTS.find((p) => p.id === id)
+const hubById = new Map(PITCH_HUBS.map((h) => [h.id, h]))
+
+export function getPitchHub(id: string): PitchHub | undefined {
+  return hubById.get(id)
 }
 
-export function parentGenreSlugs(parent: PitchParent): string[] {
-  return parent.genres.map(slugify)
+export function childrenOf(id: string): PitchHub[] {
+  return PITCH_HUBS.filter((h) => h.parents.includes(id))
+}
+
+export function hubNodeId(id: string): string {
+  return `hub:${id}`
+}
+
+export function parseHubNodeId(nodeId: string): string | null {
+  if (!nodeId.startsWith('hub:')) return null
+  return nodeId.slice('hub:'.length) || null
+}
+
+export function startVisibleHubs(): PitchHub[] {
+  return PITCH_HUBS.filter(
+    (h) => h.startVisible || h.depth <= 1 || h.parents.length === 0
+  )
+}
+
+export function allParentChildLinks(): { parent: string; child: string }[] {
+  const links: { parent: string; child: string }[] = []
+  for (const h of PITCH_HUBS) {
+    for (const p of h.parents) {
+      links.push({ parent: p, child: h.id })
+    }
+  }
+  return links
+}
+
+/** @deprecated use getPitchHub — kept for any lingering imports */
+export function getPitchParent(id: string) {
+  const h = getPitchHub(id)
+  if (!h) return undefined
+  return {
+    id: h.id,
+    label: h.label,
+    genres: childrenOf(h.id).map((c) => c.genreName || c.label),
+  }
 }
 
 export function parentNodeId(parentId: string): string {
-  return `parent:${parentId}`
+  return hubNodeId(parentId)
 }
 
 export function parseParentNodeId(nodeId: string): string | null {
-  if (!nodeId.startsWith('parent:')) return null
-  return nodeId.slice('parent:'.length) || null
+  return (
+    parseHubNodeId(nodeId) ||
+    (nodeId.startsWith('parent:') ? nodeId.slice(7) || null : null)
+  )
 }

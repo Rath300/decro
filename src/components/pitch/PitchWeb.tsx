@@ -9,8 +9,8 @@ import {
   type ComponentType,
 } from 'react'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
-import { PITCH_HINT } from '@/lib/pitch-copy'
-import { parseParentNodeId } from '@/lib/pitch-taxonomy'
+import { PITCH_HINT, type PitchTourStage } from '@/lib/pitch-copy'
+import { parseHubNodeId } from '@/lib/pitch-taxonomy'
 
 type ForceGraphComponent = ComponentType<any>
 
@@ -19,22 +19,25 @@ type GraphNode = PitchGraphNode & {
   y?: number
   vx?: number
   vy?: number
-  fx?: number
-  fy?: number
-  __img?: HTMLImageElement | null
-  __imgFailed?: boolean
+  fx?: number | null
+  fy?: number | null
 }
 
 type Props = {
   nodes: PitchGraphNode[]
   links: PitchGraphLink[]
-  expandedParent: string | null
+  startHubIds: string[]
+  revealedIds: Set<string>
   highlightPostId?: string | null
+  tourStage?: PitchTourStage | null
+  tourParentId?: string | null
   onUploadClick: () => void
   onNodeSelect?: (node: PitchGraphNode | null) => void
-  onParentExpand?: (parentId: string) => void
-  onGenreOpen?: (slug: string) => void
-  onCollapse?: () => void
+  onRevealChildren?: (hubId: string) => void
+  onEnterHub?: (slug: string) => void
+  onResetView?: () => void
+  onTourMainOpened?: (hubId: string) => void
+  onTourNicheOpened?: (slug: string) => void
 }
 
 function hashSeed(id: string): number {
@@ -46,43 +49,28 @@ function hashSeed(id: string): number {
   return h >>> 0
 }
 
-function typeMark(contentType?: string | null): string {
-  if (!contentType) return '·'
-  if (contentType === 'music') return '♪'
-  if (contentType === 'video' || contentType === 'film') return '▶'
-  if (contentType === 'text') return 'T'
-  return '·'
-}
-
-function layoutKey(n: Pick<PitchGraphNode, 'id' | 'clientKey'>) {
-  return n.clientKey || n.id
-}
-
-function hubFontPx(
-  kind: PitchGraphNode['kind'],
-  postCount: number | null | undefined,
-  globalScale: number,
-  expanded: boolean
-) {
-  const n = Math.max(0, postCount ?? 0)
-  if (kind === 'parent') {
-    const base = expanded ? 18 : 16 + Math.min(6, n * 0.15)
-    return Math.max(base / globalScale, 6)
-  }
-  const base = (expanded ? 13 : 11) + Math.min(10, Math.sqrt(n) * 1.6)
+function hubFontPx(n: PitchGraphNode, globalScale: number) {
+  const depth = n.depth ?? 1
+  const bridge = n.isBridge ? 1.5 : 0
+  const base = depth === 0 ? 18 : depth === 1 ? 14 : 11 + bridge
   return Math.max(base / globalScale, 4)
 }
 
 export default function PitchWeb({
   nodes,
   links,
-  expandedParent,
+  startHubIds,
+  revealedIds,
   highlightPostId,
+  tourStage = null,
+  tourParentId = null,
   onUploadClick,
   onNodeSelect,
-  onParentExpand,
-  onGenreOpen,
-  onCollapse,
+  onRevealChildren,
+  onEnterHub,
+  onResetView,
+  onTourMainOpened,
+  onTourNicheOpened,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const fgRef = useRef<any>(null)
@@ -90,14 +78,16 @@ export default function PitchWeb({
   const [graphReady, setGraphReady] = useState(false)
   const [dims, setDims] = useState({ w: 800, h: 600 })
   const [hoverId, setHoverId] = useState<string | null>(null)
+  const hoverIdRef = useRef<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const imageCache = useRef(new Map<string, HTMLImageElement | null>())
+  const [pulse, setPulse] = useState(0)
   const posCache = useRef(
     new Map<string, { x: number; y: number; vx?: number; vy?: number }>()
   )
-  const lastExpandRef = useRef<string | null>(null)
   const lastClickRef = useRef<{ id: string; at: number } | null>(null)
-  const fittedMainsRef = useRef(false)
+  const fittedRef = useRef(false)
+  const cameraLockUntil = useRef(0)
+  const lastRevealCount = useRef(0)
 
   useEffect(() => {
     let alive = true
@@ -121,72 +111,102 @@ export default function PitchWeb({
     return () => ro.disconnect()
   }, [])
 
+  useEffect(() => {
+    if (tourStage !== 'click-main' && tourStage !== 'click-niche') return
+    let raf = 0
+    const start = performance.now()
+    const tick = (t: number) => {
+      setPulse((Math.sin((t - start) / 280) + 1) / 2)
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [tourStage])
+
   const graphData = useMemo(() => {
-    const parentNode = expandedParent
-      ? nodes.find((n) => n.kind === 'parent' && n.parentId === expandedParent)
-      : null
-    const parentPos = parentNode
-      ? posCache.current.get(layoutKey(parentNode))
-      : null
-    const px = parentPos?.x ?? 0
-    const py = parentPos?.y ?? 0
+    const visible = nodes.filter((n) => {
+      if (n.kind === 'post') return true
+      const hid = n.hubId || parseHubNodeId(n.id)
+      return hid ? revealedIds.has(hid) : false
+    })
 
-    // Even ring so all mains start on-screen together.
-    const mainParents = nodes.filter((n) => n.kind === 'parent')
-    const mainIndex = new Map(mainParents.map((n, i) => [n.id, i]))
-    const mainCount = Math.max(mainParents.length, 1)
-    const mainRadius = 210
+    const byHub = new Map(
+      visible
+        .filter((n) => n.kind === 'hub' && n.hubId)
+        .map((n) => [n.hubId!, n])
+    )
 
-    const gNodes: GraphNode[] = nodes.map((n) => {
-      const key = layoutKey(n)
-      const cached = posCache.current.get(key)
-
-      if (n.kind === 'parent') {
-        const idx = mainIndex.get(n.id) ?? 0
-        const angle = (idx / mainCount) * Math.PI * 2 - Math.PI / 2
-        const ring = {
-          x: Math.cos(angle) * mainRadius,
-          y: Math.sin(angle) * mainRadius,
-        }
-        // Top level: pin to a ring so all seven stay visible.
-        if (!expandedParent) {
-          return { ...n, ...ring, fx: ring.x, fy: ring.y }
-        }
-        if (cached) return { ...n, ...cached, fx: undefined, fy: undefined }
-        return { ...n, ...ring, fx: undefined, fy: undefined }
-      }
-
+    const gNodes: GraphNode[] = visible.map((n) => {
+      const cached = posCache.current.get(n.id)
       if (cached) return { ...n, ...cached }
 
-      // New children bloom near the focused parent.
-      if (
-        expandedParent &&
-        parentNode &&
-        (n.kind === 'subgroup' || n.kind === 'post') &&
-        n.parentId === expandedParent
-      ) {
-        const seed = hashSeed(key)
-        const angle = ((seed % 360) / 360) * Math.PI * 2
-        const radius =
-          n.kind === 'subgroup' ? 40 + (seed % 140) : 16 + (seed % 70)
+      if (n.kind === 'hub' && n.depth === 0) {
+        return { ...n, x: 0, y: 0, fx: 0, fy: 0 }
+      }
+
+      // Seed near first revealed parent, else around center by depth.
+      const parents = (n.parentIds || [])
+        .map((pid) => byHub.get(pid))
+        .filter(Boolean) as PitchGraphNode[]
+      const seed = hashSeed(n.id)
+      const angle = ((seed % 360) / 360) * Math.PI * 2
+
+      if (parents.length) {
+        const px =
+          parents.reduce((s, p) => s + ((p as GraphNode).x || 0), 0) /
+          parents.length
+        const py =
+          parents.reduce((s, p) => s + ((p as GraphNode).y || 0), 0) /
+          parents.length
+        // Prefer cached parent positions from posCache
+        let ax = 0
+        let ay = 0
+        let count = 0
+        for (const p of parents) {
+          const c = posCache.current.get(p.id)
+          if (c) {
+            ax += c.x
+            ay += c.y
+            count++
+          }
+        }
+        const cx = count ? ax / count : px
+        const cy = count ? ay / count : py
+        const radius = n.isBridge ? 70 + (seed % 40) : 55 + (seed % 50)
         return {
           ...n,
-          x: px + Math.cos(angle) * radius,
-          y: py + Math.sin(angle) * radius,
+          x: cx + Math.cos(angle) * radius,
+          y: cy + Math.sin(angle) * radius,
         }
       }
 
-      const seed = hashSeed(key)
-      const angle = ((seed % 360) / 360) * Math.PI * 2
-      const radius = 120 + (seed % 520)
+      const depth = n.depth ?? 1
+      const radius = 40 + depth * 55 + (seed % 30)
       return {
         ...n,
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius,
+        ...(depth === 0 ? { fx: 0, fy: 0 } : {}),
       }
     })
-    return { nodes: gNodes, links: links.map((l) => ({ ...l })) }
-  }, [nodes, links, expandedParent])
+
+    // Ensure center stays pinned
+    for (const n of gNodes) {
+      if (n.depth === 0) {
+        n.x = 0
+        n.y = 0
+        n.fx = 0
+        n.fy = 0
+      }
+    }
+
+    const ids = new Set(gNodes.map((n) => n.id))
+    const gLinks = links
+      .filter((l) => ids.has(String(l.source)) && ids.has(String(l.target)))
+      .map((l) => ({ ...l }))
+
+    return { nodes: gNodes, links: gLinks }
+  }, [nodes, links, revealedIds])
 
   useEffect(() => {
     if (!graphReady) return
@@ -194,29 +214,27 @@ export default function PitchWeb({
     if (!fg) return
 
     fg.d3Force?.('charge')?.strength((node: GraphNode) => {
-      if (node.kind === 'parent') return expandedParent ? -220 : -280
-      if (node.kind === 'subgroup') {
-        const weight = Math.min(36, Math.sqrt(node.postCount ?? 0) * 3.5)
-        return -90 - weight
-      }
-      return -22
+      if (node.depth === 0) return -60
+      if (node.depth === 1) return -90
+      if (node.isBridge) return -70
+      return -55
     })
-    fg.d3Force?.('charge')?.distanceMax?.(expandedParent ? 560 : 420)
+    fg.d3Force?.('charge')?.distanceMax?.(360)
     fg.d3Force?.('link')?.distance((link: any) => {
-      const t = typeof link.target === 'object' ? link.target : null
       const s = typeof link.source === 'object' ? link.source : null
-      if (t?.kind === 'parent' || s?.kind === 'parent') return 96
-      if (t?.kind === 'subgroup' || s?.kind === 'subgroup') return 64
-      return 42
+      const t = typeof link.target === 'object' ? link.target : null
+      if (s?.depth === 0 || t?.depth === 0) return 88
+      if (s?.isBridge || t?.isBridge) return 72
+      return 58
     })
-    fg.d3Force?.('link')?.strength?.(0.22)
-    fg.d3Force?.('center')?.strength?.(expandedParent ? 0.02 : 0.04)
+    fg.d3Force?.('link')?.strength?.(0.45)
+    fg.d3Force?.('center')?.strength?.(0.05)
     try {
       fg.d3ReheatSimulation?.()
     } catch {
       /* ignore */
     }
-  }, [graphData, graphReady, expandedParent])
+  }, [graphData, graphReady])
 
   const getFg = useCallback(() => {
     const fg = fgRef.current
@@ -226,24 +244,29 @@ export default function PitchWeb({
     return fg
   }, [])
 
-  const fitMains = useCallback(
-    (ms = 700) => {
+  const fitView = useCallback(
+    (ms = 500) => {
       const fg = getFg()
       if (!fg) return
-      const mains = graphData.nodes.filter((n) => n.kind === 'parent')
-      if (!mains.length) return
-      const xs = mains.map((m) => m.x ?? 0)
-      const ys = mains.map((m) => m.y ?? 0)
+      cameraLockUntil.current = Date.now() + ms + 40
+      const hubs = graphData.nodes.filter((n) => n.kind === 'hub')
+      if (!hubs.length) {
+        fg.centerAt(0, 0, ms)
+        fg.zoom(1, ms)
+        return
+      }
+      const xs = hubs.map((h) => h.x ?? 0)
+      const ys = hubs.map((h) => h.y ?? 0)
       const minX = Math.min(...xs)
       const maxX = Math.max(...xs)
       const minY = Math.min(...ys)
       const maxY = Math.max(...ys)
       const cx = (minX + maxX) / 2
       const cy = (minY + maxY) / 2
-      const span = Math.max(maxX - minX, maxY - minY, 280)
+      const span = Math.max(maxX - minX, maxY - minY, 200)
       const zoom = Math.min(
-        1.35,
-        Math.max(0.55, (Math.min(dims.w, dims.h) * 0.72) / span)
+        1.4,
+        Math.max(0.55, (Math.min(dims.w, dims.h) * 0.7) / span)
       )
       fg.centerAt(cx, cy, ms)
       fg.zoom(zoom, ms)
@@ -251,23 +274,37 @@ export default function PitchWeb({
     [getFg, graphData.nodes, dims.w, dims.h]
   )
 
+  const nudgeToNode = useCallback(
+    (node: GraphNode, ms = 550) => {
+      const fg = getFg()
+      if (!fg || node.x == null || node.y == null) return
+      cameraLockUntil.current = Date.now() + ms + 40
+      fg.centerAt(node.x, node.y, ms)
+      const k = fg.zoom() || 1
+      fg.zoom(Math.min(2.1, Math.max(k, 1.05)), ms)
+    },
+    [getFg]
+  )
+
   const panByScreen = useCallback(
     (dx: number, dy: number) => {
+      if (Date.now() < cameraLockUntil.current) return
       const fg = getFg()
       if (!fg) return
       const c = fg.centerAt()
       const k = fg.zoom() || 1
       if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y)) return
-      fg.centerAt(c.x + dx / k, c.y + dy / k, 0)
+      fg.centerAt(c.x + (dx * 0.55) / k, c.y + (dy * 0.55) / k, 0)
     },
     [getFg]
   )
 
   const setZoomLevel = useCallback(
     (next: number, ms = 0) => {
+      if (Date.now() < cameraLockUntil.current && ms === 0) return
       const fg = getFg()
       if (!fg) return
-      fg.zoom(Math.min(6, Math.max(0.25, next)), ms)
+      fg.zoom(Math.min(4, Math.max(0.4, next)), ms)
     },
     [getFg]
   )
@@ -280,22 +317,48 @@ export default function PitchWeb({
     let target: HTMLElement | null = null
     let raf = 0
     let cancelled = false
+    let dragging = false
+    let lastX = 0
+    let lastY = 0
 
     const onWheel = (e: WheelEvent) => {
       const fg = getFg()
       if (!fg) return
-
       e.preventDefault()
       e.stopImmediatePropagation()
-
       if (e.ctrlKey || e.metaKey) {
         const k = fg.zoom() || 1
-        setZoomLevel(k * Math.exp(-e.deltaY * 0.01))
+        setZoomLevel(k * Math.exp(-e.deltaY * 0.008))
         return
       }
-
-      const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 24 : 1
+      const scale = e.deltaMode === 1 ? 10 : e.deltaMode === 2 ? 16 : 0.7
       panByScreen(e.deltaX * scale, e.deltaY * scale)
+    }
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return
+      if ((e.target as HTMLElement)?.tagName !== 'CANVAS') return
+      if (hoverIdRef.current) return
+      dragging = true
+      lastX = e.clientX
+      lastY = e.clientY
+      el.setPointerCapture?.(e.pointerId)
+    }
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragging) return
+      const dx = e.clientX - lastX
+      const dy = e.clientY - lastY
+      lastX = e.clientX
+      lastY = e.clientY
+      panByScreen(-dx, -dy)
+    }
+    const onPointerUp = (e: PointerEvent) => {
+      dragging = false
+      try {
+        el.releasePointerCapture?.(e.pointerId)
+      } catch {
+        /* ignore */
+      }
     }
 
     const bind = () => {
@@ -308,6 +371,10 @@ export default function PitchWeb({
       target = canvas
       target.addEventListener('wheel', onWheel, { passive: false, capture: true })
       el.addEventListener('wheel', onWheel, { passive: false, capture: true })
+      el.addEventListener('pointerdown', onPointerDown)
+      el.addEventListener('pointermove', onPointerMove)
+      el.addEventListener('pointerup', onPointerUp)
+      el.addEventListener('pointercancel', onPointerUp)
     }
     bind()
 
@@ -316,86 +383,34 @@ export default function PitchWeb({
       window.cancelAnimationFrame(raf)
       target?.removeEventListener('wheel', onWheel, true)
       el.removeEventListener('wheel', onWheel, true)
+      el.removeEventListener('pointerdown', onPointerDown)
+      el.removeEventListener('pointermove', onPointerMove)
+      el.removeEventListener('pointerup', onPointerUp)
+      el.removeEventListener('pointercancel', onPointerUp)
     }
   }, [graphReady, getFg, panByScreen, setZoomLevel])
 
-  const nudgeZoom = useCallback(
-    (factor: number) => {
-      const fg = getFg()
-      if (!fg) return
-      const k = fg.zoom() || 1
-      setZoomLevel(k * factor, 180)
-    },
-    [getFg, setZoomLevel]
-  )
-
-  // Fit all mains on first ready / after collapse.
+  // Initial fit
   useEffect(() => {
-    if (!graphReady || expandedParent) return
-    const mains = graphData.nodes.filter((n) => n.kind === 'parent')
-    if (mains.length < 2) return
-    if (!fittedMainsRef.current) {
-      fittedMainsRef.current = true
-      const t = window.setTimeout(() => fitMains(0), 80)
-      return () => window.clearTimeout(t)
-    }
-  }, [graphReady, expandedParent, graphData.nodes, fitMains])
+    if (!graphReady || fittedRef.current) return
+    if (graphData.nodes.length < 2) return
+    fittedRef.current = true
+    const t = window.setTimeout(() => fitView(0), 80)
+    return () => window.clearTimeout(t)
+  }, [graphReady, graphData.nodes.length, fitView])
 
-  // Camera morph when entering / leaving a parent cluster.
+  // Soft nudge when new hubs revealed
   useEffect(() => {
     if (!graphReady) return
-    const fg = getFg()
-    if (!fg) return
-
-    if (expandedParent && lastExpandRef.current !== expandedParent) {
-      lastExpandRef.current = expandedParent
-      const run = () => {
-        const parent = graphData.nodes.find(
-          (n) => n.kind === 'parent' && n.parentId === expandedParent
-        )
-        if (!parent || parent.x == null || parent.y == null) return
-        const children = graphData.nodes.filter(
-          (n) =>
-            n.parentId === expandedParent &&
-            n.kind !== 'parent' &&
-            n.x != null &&
-            n.y != null
-        )
-        const xs = [parent.x, ...children.map((c) => c.x!)]
-        const ys = [parent.y, ...children.map((c) => c.y!)]
-        const minX = Math.min(...xs)
-        const maxX = Math.max(...xs)
-        const minY = Math.min(...ys)
-        const maxY = Math.max(...ys)
-        const cx = (minX + maxX) / 2
-        const cy = (minY + maxY) / 2
-        const span = Math.max(maxX - minX, maxY - minY, 120)
-        const zoom = Math.min(
-          2.6,
-          Math.max(1.15, (Math.min(dims.w, dims.h) * 0.62) / span)
-        )
-        fg.centerAt(cx, cy, 1100)
-        fg.zoom(zoom, 1100)
-        try {
-          fg.d3ReheatSimulation?.()
-        } catch {
-          /* ignore */
-        }
-      }
-      const t = window.setTimeout(run, 40)
-      return () => window.clearTimeout(t)
+    const count = revealedIds.size
+    if (count <= lastRevealCount.current) {
+      lastRevealCount.current = count
+      return
     }
-
-    if (!expandedParent && lastExpandRef.current) {
-      lastExpandRef.current = null
-      fitMains(900)
-      try {
-        fg.d3ReheatSimulation?.()
-      } catch {
-        /* ignore */
-      }
-    }
-  }, [expandedParent, graphData.nodes, graphReady, getFg, dims.w, dims.h, fitMains])
+    lastRevealCount.current = count
+    const t = window.setTimeout(() => fitView(450), 60)
+    return () => window.clearTimeout(t)
+  }, [revealedIds, graphReady, fitView])
 
   useEffect(() => {
     if (!graphReady || !highlightPostId) return
@@ -405,107 +420,75 @@ export default function PitchWeb({
       (n) => n.id === highlightPostId || n.id === `p:${highlightPostId}`
     )
     if (!node || node.x == null || node.y == null) return
-    fg.centerAt(node.x, node.y, 900)
-    fg.zoom(2.0, 900)
+    nudgeToNode(node, 600)
     setSelectedId(node.id)
-  }, [highlightPostId, graphData.nodes, graphReady, getFg])
+  }, [highlightPostId, graphData.nodes, graphReady, getFg, nudgeToNode])
 
   const paintNode = useCallback(
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const n = node as GraphNode
-      const isLabel = n.kind === 'parent' || n.kind === 'subgroup'
+      if (n.kind !== 'hub') return
       const active = n.id === hoverId || n.id === selectedId
       const x = n.x || 0
       const y = n.y || 0
-      const dimOtherParent =
-        Boolean(expandedParent) &&
-        n.kind === 'parent' &&
-        n.parentId !== expandedParent
+      const hid = n.hubId
+      const tourPulse =
+        (tourStage === 'click-main' &&
+          n.depth === 1 &&
+          (!tourParentId || hid === tourParentId)) ||
+        (tourStage === 'click-niche' && (n.depth ?? 0) >= 2)
 
+      const fontPx = hubFontPx(n, globalScale)
       ctx.save()
-      if (n.pending) ctx.globalAlpha = 0.55
-      else if (dimOtherParent) ctx.globalAlpha = 0.18
+      ctx.font = `400 ${fontPx}px "Space Mono", monospace`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      const label = (n.label || '').toUpperCase()
+      const metrics = ctx.measureText(label)
+      const padX = 6 / globalScale
+      const padY = 4 / globalScale
+      const tw = metrics.width + padX * 2
+      const th = fontPx + padY * 2
 
-      if (isLabel) {
-        const fontPx = hubFontPx(n.kind, n.postCount, globalScale, Boolean(expandedParent))
-        ctx.font = `400 ${fontPx}px "Space Mono", monospace`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        const label = (n.label || '').toUpperCase()
-        if (active && !dimOtherParent) {
-          const metrics = ctx.measureText(label)
-          const padX = 6 / globalScale
-          const padY = 4 / globalScale
-          const tw = metrics.width + padX * 2
-          const th = fontPx + padY * 2
-          ctx.fillStyle = '#000'
-          ctx.fillRect(x - tw / 2, y - th / 2, tw, th)
-          ctx.fillStyle = '#fff'
-        } else {
-          ctx.fillStyle = '#000'
-        }
-        ctx.fillText(label, x, y)
-      } else {
-        const size = 6.5 / Math.sqrt(globalScale)
-        const s = size * 1.55
-        ctx.lineWidth = active ? 2.5 / globalScale : 1 / globalScale
-        ctx.strokeStyle = '#000'
-        ctx.fillStyle = active ? '#000' : '#fff'
-        if (n.pending) ctx.setLineDash([3 / globalScale, 3 / globalScale])
-        ctx.fillRect(x - s / 2, y - s / 2, s, s)
-        ctx.strokeRect(x - s / 2, y - s / 2, s, s)
-
-        if (n.imageUrl && globalScale > 0.55 && !n.__imgFailed) {
-          let img = imageCache.current.get(n.imageUrl)
-          if (img === undefined) {
-            img = null
-            imageCache.current.set(n.imageUrl, null)
-            const loaded = new Image()
-            loaded.crossOrigin = 'anonymous'
-            loaded.onload = () => {
-              imageCache.current.set(n.imageUrl!, loaded)
-            }
-            loaded.onerror = () => {
-              imageCache.current.set(n.imageUrl!, null)
-              n.__imgFailed = true
-            }
-            loaded.src = n.imageUrl
-          }
-          if (img) {
-            ctx.save()
-            ctx.beginPath()
-            ctx.rect(
-              x - s / 2 + 1 / globalScale,
-              y - s / 2 + 1 / globalScale,
-              s - 2 / globalScale,
-              s - 2 / globalScale
-            )
-            ctx.clip()
-            ctx.drawImage(img, x - s / 2, y - s / 2, s, s)
-            ctx.restore()
-          } else {
-            ctx.fillStyle = active ? '#fff' : '#000'
-            ctx.font = `400 ${Math.max(9 / globalScale, 4)}px "Space Mono", monospace`
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-            ctx.fillText(typeMark(n.contentType), x, y)
-          }
-        } else {
-          ctx.fillStyle = active ? '#fff' : '#000'
-          ctx.font = `400 ${Math.max(9 / globalScale, 4)}px "Space Mono", monospace`
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(typeMark(n.contentType), x, y)
-        }
+      if (tourPulse) {
+        const ring = 4 + pulse * 6
+        ctx.strokeStyle = `rgba(0,0,0,${0.25 + pulse * 0.45})`
+        ctx.lineWidth = 1.5 / globalScale
+        ctx.strokeRect(
+          x - tw / 2 - ring / globalScale,
+          y - th / 2 - ring / globalScale,
+          tw + (ring * 2) / globalScale,
+          th + (ring * 2) / globalScale
+        )
       }
+
+      if (n.isBridge && !active) {
+        // Small double tick for multi-parent bridges
+        ctx.fillStyle = '#000'
+        ctx.fillRect(x - tw / 2 - 3 / globalScale, y - 2 / globalScale, 2 / globalScale, 4 / globalScale)
+        ctx.fillRect(x - tw / 2 - 6 / globalScale, y - 2 / globalScale, 2 / globalScale, 4 / globalScale)
+      }
+
+      if (active || (tourPulse && pulse > 0.55)) {
+        ctx.fillStyle = '#000'
+        ctx.fillRect(x - tw / 2, y - th / 2, tw, th)
+        ctx.fillStyle = '#fff'
+      } else {
+        ctx.fillStyle = '#000'
+      }
+      ctx.fillText(label, x, y)
       ctx.restore()
     },
-    [hoverId, selectedId, expandedParent]
+    [hoverId, selectedId, tourStage, tourParentId, pulse]
   )
 
   const handleClick = useCallback(
     (node: any) => {
       const n = node as GraphNode
+      if (n.kind !== 'hub') return
+
+      if (tourStage === 'welcome' || tourStage === 'guest') return
+
       const now = Date.now()
       const prev = lastClickRef.current
       const isDouble = Boolean(prev && prev.id === n.id && now - prev.at < 350)
@@ -514,37 +497,74 @@ export default function PitchWeb({
       setSelectedId(n.id)
       onNodeSelect?.(n)
 
-      if (n.kind === 'parent') {
-        const pid = n.parentId || parseParentNodeId(n.id)
-        if (pid && pid !== expandedParent) {
-          onParentExpand?.(pid)
+      const hid = n.hubId || parseHubNodeId(n.id)
+      if (!hid) return
+
+      const hasKids = (n.childIds?.length || 0) > 0
+      const unrevealedKids = (n.childIds || []).some((cid) => !revealedIds.has(cid))
+
+      if (tourStage === 'click-main') {
+        if ((n.depth ?? 0) !== 1) return
+        onRevealChildren?.(hid)
+        onTourMainOpened?.(hid)
+        nudgeToNode(n)
+        return
+      }
+
+      if (tourStage === 'click-niche') {
+        if (isDouble && n.enterable && n.slug) {
+          onTourNicheOpened?.(n.slug)
+          return
+        }
+        if (unrevealedKids) {
+          onRevealChildren?.(hid)
+          nudgeToNode(n)
+          return
+        }
+        if (n.enterable && n.slug) {
+          onTourNicheOpened?.(n.slug)
         }
         return
       }
 
-      if (n.kind === 'subgroup' && n.slug && isDouble) {
-        onGenreOpen?.(n.slug)
+      // Normal: double-click enters; single-click expands + selects
+      if (isDouble && n.enterable && n.slug) {
+        onEnterHub?.(n.slug)
+        return
+      }
+      if (unrevealedKids || hasKids) {
+        onRevealChildren?.(hid)
+        nudgeToNode(n)
       }
     },
-    [onNodeSelect, onParentExpand, onGenreOpen, expandedParent]
+    [
+      tourStage,
+      onNodeSelect,
+      onRevealChildren,
+      onEnterHub,
+      onTourMainOpened,
+      onTourNicheOpened,
+      revealedIds,
+      nudgeToNode,
+    ]
   )
 
   const handleBackgroundClick = useCallback(() => {
+    if (tourStage && tourStage !== 'done' && tourStage !== 'guest') return
     setSelectedId(null)
     onNodeSelect?.(null)
-  }, [onNodeSelect])
+  }, [onNodeSelect, tourStage])
 
   const persistPositions = useCallback(() => {
     for (const n of graphData.nodes) {
       if (n.x == null || n.y == null) continue
-      posCache.current.set(layoutKey(n), {
-        x: n.x,
-        y: n.y,
-        vx: n.vx,
-        vy: n.vy,
-      })
+      if (n.depth === 0) continue
+      posCache.current.set(n.id, { x: n.x, y: n.y, vx: n.vx, vy: n.vy })
     }
   }, [graphData.nodes])
+
+  const showHint = !tourStage || tourStage === 'done'
+  const canReset = revealedIds.size > startHubIds.length
 
   return (
     <div
@@ -568,9 +588,7 @@ export default function PitchWeb({
           linkSource="source"
           linkTarget="target"
           backgroundColor="#ffffff"
-          linkColor={() =>
-            expandedParent ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.12)'
-          }
+          linkColor={() => 'rgba(0,0,0,0.18)'}
           linkWidth={1}
           nodeCanvasObject={paintNode}
           nodePointerAreaPaint={(
@@ -580,25 +598,17 @@ export default function PitchWeb({
             globalScale: number
           ) => {
             const n = node as GraphNode
-            if (n.kind === 'parent' || n.kind === 'subgroup') {
-              const fontPx = hubFontPx(
-                n.kind,
-                n.postCount,
-                globalScale,
-                Boolean(expandedParent)
-              )
-              const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
-              const h = fontPx * 1.4
-              ctx.fillStyle = color
-              ctx.fillRect((n.x || 0) - w / 2, (n.y || 0) - h / 2, w, h)
-              return
-            }
-            const size = 10 / Math.sqrt(globalScale)
+            if (n.kind !== 'hub') return
+            const fontPx = hubFontPx(n, globalScale)
+            const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
+            const h = fontPx * 1.4
             ctx.fillStyle = color
-            ctx.fillRect((n.x || 0) - size, (n.y || 0) - size, size * 2, size * 2)
+            ctx.fillRect((n.x || 0) - w / 2, (n.y || 0) - h / 2, w, h)
           }}
           onNodeHover={(node: any) => {
-            setHoverId(node?.id ?? null)
+            const id = node?.id ?? null
+            hoverIdRef.current = id
+            setHoverId(id)
             if (containerRef.current) {
               containerRef.current.style.cursor = node ? 'pointer' : 'grab'
             }
@@ -606,22 +616,28 @@ export default function PitchWeb({
           onNodeClick={handleClick}
           onBackgroundClick={handleBackgroundClick}
           onNodeDrag={(node: any) => {
+            if (node.depth === 0) return
             node.fx = node.x
             node.fy = node.y
           }}
           onNodeDragEnd={(node: any) => {
+            if (node.depth === 0) {
+              node.fx = 0
+              node.fy = 0
+              return
+            }
             node.fx = undefined
             node.fy = undefined
             persistPositions()
           }}
           onEngineTick={persistPositions}
-          cooldownTicks={Infinity}
-          d3AlphaDecay={0.014}
-          d3VelocityDecay={0.16}
-          warmupTicks={60}
-          enableNodeDrag={true}
+          cooldownTicks={160}
+          d3AlphaDecay={0.02}
+          d3VelocityDecay={0.28}
+          warmupTicks={50}
+          enableNodeDrag={tourStage !== 'welcome'}
           enableZoomInteraction={false}
-          enablePanInteraction={true}
+          enablePanInteraction={false}
         />
       ) : (
         <div className="h-full w-full flex items-center justify-center font-['Space_Mono'] text-xs text-black/40">
@@ -629,14 +645,14 @@ export default function PitchWeb({
         </div>
       )}
 
-      {expandedParent && onCollapse ? (
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 font-['Space_Mono']">
+      {canReset && onResetView ? (
+        <div className="absolute top-4 left-4 z-10 font-['Space_Mono']">
           <button
             type="button"
-            onClick={onCollapse}
+            onClick={onResetView}
             className="border border-black bg-white px-3 py-1.5 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
           >
-            ← All groups
+            ← Reset view
           </button>
         </div>
       ) : null}
@@ -646,7 +662,11 @@ export default function PitchWeb({
           <button
             type="button"
             aria-label="Zoom out"
-            onClick={() => nudgeZoom(1 / 1.25)}
+            onClick={() => {
+              const fg = getFg()
+              if (!fg) return
+              setZoomLevel((fg.zoom() || 1) / 1.25, 180)
+            }}
             className="w-9 h-9 text-lg font-['Space_Mono'] leading-none hover:bg-black hover:text-white border-r border-black"
           >
             −
@@ -654,7 +674,11 @@ export default function PitchWeb({
           <button
             type="button"
             aria-label="Zoom in"
-            onClick={() => nudgeZoom(1.25)}
+            onClick={() => {
+              const fg = getFg()
+              if (!fg) return
+              setZoomLevel((fg.zoom() || 1) * 1.25, 180)
+            }}
             className="w-9 h-9 text-lg font-['Space_Mono'] leading-none hover:bg-black hover:text-white"
           >
             +
@@ -669,9 +693,11 @@ export default function PitchWeb({
         </button>
       </div>
 
-      <p className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-['Space_Mono'] text-black/50 tracking-wide px-3 text-center max-w-[90vw]">
-        {PITCH_HINT}
-      </p>
+      {showHint && (
+        <p className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-['Space_Mono'] text-black/50 tracking-wide px-3 text-center max-w-[90vw]">
+          {PITCH_HINT}
+        </p>
+      )}
     </div>
   )
 }
