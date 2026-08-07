@@ -10,6 +10,7 @@ import {
   sanitizePitchUsername,
   slugifyName,
 } from '@/lib/pitch-guest'
+import { placeSubgroupOnWeb } from '@/lib/pitch-place'
 
 export const dynamic = 'force-dynamic'
 
@@ -140,7 +141,12 @@ export async function POST(request: Request) {
       console.error('[pitch/post] create subgroup failed:', createErr.message)
       return NextResponse.json({ error: 'Could not create group' }, { status: 500 })
     }
-    const result = created as { success?: boolean; error?: string; id?: string }
+    const result = created as {
+      success?: boolean
+      error?: string
+      id?: string
+      slug?: string
+    }
     if (!result?.success || !result.id) {
       return NextResponse.json(
         { error: result?.error || 'Could not create group' },
@@ -148,6 +154,16 @@ export async function POST(request: Request) {
       )
     }
     subgroupId = result.id
+    try {
+      await placeSubgroupOnWeb(admin, {
+        id: result.id,
+        name: newGroupName,
+        description: 'Created during pitch mode',
+        slug: result.slug || slug,
+      })
+    } catch (placeErr: any) {
+      console.error('[pitch/post] web placement failed:', placeErr?.message)
+    }
   }
 
   if (!subgroupId) {

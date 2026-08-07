@@ -102,7 +102,10 @@ export default function CreateSubgroupPage() {
         throw new Error('No slug returned from subgroup creation')
       }
 
-      toast.success('Subgroup created successfully!')
+      const under = result.placement?.parentLabels?.length
+        ? ` Added under ${result.placement.parentLabels.join(' + ')} on the web.`
+        : ' It will show on the creative web near related groups.'
+      toast.success(`Subgroup created.${under}`)
       router.push(`/subgroup/${result.slug}`)
       router.refresh()
     } catch (error: any) {
@@ -135,7 +138,7 @@ export default function CreateSubgroupPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Create Subgroup</h1>
           <p className="text-gray-600 text-sm">
-            Create a community around a specific niche or interest
+            Create a niche community — it will appear on the creative web near related groups
           </p>
         </div>
 

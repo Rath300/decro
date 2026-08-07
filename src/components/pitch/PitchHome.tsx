@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import { PITCH_TOUR_PARENT_ID, type PitchTourStage } from '@/lib/pitch-copy'
-import { childrenOf, getPitchHub } from '@/lib/pitch-taxonomy'
+import { getPitchHub } from '@/lib/pitch-taxonomy'
 import PitchWeb from '@/components/pitch/PitchWeb'
 import PitchOnboarding from '@/components/pitch/PitchOnboarding'
 import type {
@@ -121,16 +121,18 @@ export default function PitchHome() {
 
   const onRevealChildren = useCallback(
     (hubId: string) => {
-      const kids = childrenOf(hubId)
+      // Prefer graph childIds so user-placed niches expand with curated ones
+      const fromGraph =
+        nodes.find((n) => n.kind === 'hub' && n.hubId === hubId)?.childIds || []
       setRevealedIds((prev) => {
         const next = new Set(prev)
         next.add(hubId)
-        for (const k of kids) next.add(k.id)
+        for (const id of fromGraph) next.add(id)
         return next
       })
       focusCluster(hubId)
     },
-    [focusCluster]
+    [focusCluster, nodes]
   )
 
   const onEnterHub = useCallback(

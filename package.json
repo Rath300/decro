@@ -11,7 +11,8 @@
     "db:apply": "node scripts/db-apply.mjs",
     "db:password": "node scripts/set-db-password.mjs",
     "seed:genres": "node scripts/seed-pitch-genres.mjs",
-    "seed:public-domain": "node scripts/seed-public-domain.mjs"
+    "seed:public-domain": "node scripts/seed-public-domain.mjs",
+    "place:subgroups": "node scripts/place-existing-subgroups.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",

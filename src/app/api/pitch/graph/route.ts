@@ -5,10 +5,13 @@ import { isPitchMode } from '@/lib/pitch-mode'
 import {
   allParentChildLinks,
   childrenOf,
+  getPitchHub,
   hubNodeId,
   hubSlug,
+  isUserHubId,
   PITCH_HUBS,
   startVisibleHubs,
+  userHubId,
 } from '@/lib/pitch-taxonomy'
 
 export const dynamic = 'force-dynamic'
@@ -38,6 +41,8 @@ export type PitchGraphNode = {
   pending?: boolean
   postCount?: number | null
   clientKey?: string
+  /** True when this hub was placed via free local cosine (not curated taxonomy) */
+  userPlaced?: boolean
 }
 
 export type PitchGraphLink = {
@@ -72,22 +77,69 @@ export async function GET(request: Request) {
     ),
   ]
 
-  const { data: groups, error: gErr } = await admin
-    .from('subgroups')
-    .select('id,name,slug,post_count')
-    .in('slug', slugs)
+  const [groupsRes, placedRes, edgesRes] = await Promise.all([
+    admin.from('subgroups').select('id,name,slug,post_count').in('slug', slugs),
+    admin
+      .from('subgroups')
+      .select('id,name,slug,description,post_count,web_depth,placed_at')
+      .not('placed_at', 'is', null)
+      .limit(800),
+    admin.from('subgroup_parents').select('child_id,parent_hub_id,rank').limit(2000),
+  ])
 
-  if (gErr) {
-    console.error('[pitch/graph] groups query failed:', gErr.message)
+  if (groupsRes.error) {
+    console.error('[pitch/graph] groups query failed:', groupsRes.error.message)
     return NextResponse.json({ error: 'Could not load graph' }, { status: 500 })
   }
 
-  const bySlug = new Map((groups || []).map((g) => [g.slug, g]))
+  // Tables may not exist yet before migration — degrade gracefully.
+  const placedOk = !placedRes.error
+  const edgesOk = !edgesRes.error
+  if (placedRes.error) {
+    console.warn('[pitch/graph] placed groups:', placedRes.error.message)
+  }
+  if (edgesRes.error) {
+    console.warn('[pitch/graph] parent edges:', edgesRes.error.message)
+  }
+
+  const bySlug = new Map((groupsRes.data || []).map((g) => [g.slug, g]))
+  const taxonomyChildIds = new Map<string, string[]>()
+  for (const h of PITCH_HUBS) {
+    taxonomyChildIds.set(
+      h.id,
+      childrenOf(h.id).map((c) => c.id)
+    )
+  }
+
+  const edges = edgesOk ? edgesRes.data || [] : []
+  const placed = placedOk ? placedRes.data || [] : []
+  const placedById = new Map(placed.map((p) => [p.id, p]))
+
+  // parent_hub_id -> child user hub ids
+  const dbChildren = new Map<string, string[]>()
+  // child subgroup uuid -> parent hub ids
+  const dbParents = new Map<string, string[]>()
+  for (const e of edges) {
+    if (!placedById.has(e.child_id)) continue
+    const childHub = userHubId(e.child_id)
+    const list = dbChildren.get(e.parent_hub_id) || []
+    list.push(childHub)
+    dbChildren.set(e.parent_hub_id, list)
+    const parents = dbParents.get(e.child_id) || []
+    parents.push(e.parent_hub_id)
+    dbParents.set(e.child_id, parents)
+  }
+
+  const mergeKids = (hubId: string, curated: string[]): string[] => {
+    const extra = dbChildren.get(hubId) || []
+    if (!extra.length) return curated
+    return [...new Set([...curated, ...extra])]
+  }
 
   const nodes: PitchGraphNode[] = PITCH_HUBS.map((h) => {
     const slug = hubSlug(h)
     const row = slug ? bySlug.get(slug) : undefined
-    const kids = childrenOf(h.id)
+    const kids = mergeKids(h.id, taxonomyChildIds.get(h.id) || [])
     return {
       id: hubNodeId(h.id),
       kind: 'hub' as const,
@@ -95,7 +147,7 @@ export async function GET(request: Request) {
       hubId: h.id,
       depth: h.depth,
       parentIds: h.parents,
-      childIds: kids.map((c) => c.id),
+      childIds: kids,
       enterable: Boolean(row),
       isBridge: h.parents.length >= 2,
       startVisible: Boolean(
@@ -114,6 +166,51 @@ export async function GET(request: Request) {
     source: hubNodeId(child),
     target: hubNodeId(parent),
   }))
+
+  // User-placed hubs (organic subgroups)
+  for (const row of placed) {
+    const parents = dbParents.get(row.id) || []
+    if (!parents.length) continue
+    // Skip if this slug is already a curated enterable hub
+    if (row.slug && bySlug.has(row.slug)) continue
+
+    const hubId = userHubId(row.id)
+    const depth =
+      typeof row.web_depth === 'number' && row.web_depth > 0
+        ? row.web_depth
+        : Math.min(
+            4,
+            Math.max(
+              ...parents.map((p) => getPitchHub(p)?.depth ?? (isUserHubId(p) ? 2 : 1)),
+              1
+            ) + 1
+          )
+    const kids = mergeKids(hubId, [])
+    nodes.push({
+      id: hubNodeId(hubId),
+      kind: 'hub',
+      label: row.name,
+      hubId,
+      depth,
+      parentIds: parents,
+      childIds: kids,
+      enterable: true,
+      isBridge: parents.length >= 2,
+      startVisible: false,
+      slug: row.slug,
+      subgroupId: row.id,
+      description: row.description,
+      postCount: typeof row.post_count === 'number' ? row.post_count : 0,
+      userPlaced: true,
+    })
+
+    for (const p of parents) {
+      links.push({
+        source: hubNodeId(hubId),
+        target: hubNodeId(p),
+      })
+    }
+  }
 
   const startIds = new Set(startVisibleHubs().map((h) => h.id))
 

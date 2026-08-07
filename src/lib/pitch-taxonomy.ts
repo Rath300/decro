@@ -14,6 +14,23 @@ export type PitchHub = {
   genreName?: string
   /** Show at start (center, mains, key bridges) */
   startVisible?: boolean
+  /** Extra tokens for free local placement matching */
+  aliases?: string[]
+}
+
+/** User-created hub id on the pitch web (`sg:<uuid>`). */
+export function userHubId(subgroupId: string): string {
+  return `sg:${subgroupId}`
+}
+
+export function isUserHubId(hubId: string): boolean {
+  return hubId.startsWith('sg:')
+}
+
+export function parseUserHubId(hubId: string): string | null {
+  if (!hubId.startsWith('sg:')) return null
+  const id = hubId.slice(3)
+  return /^[0-9a-f-]{36}$/i.test(id) ? id : null
 }
 
 function slugify(name: string): string {
@@ -34,14 +51,70 @@ export function hubSlug(hub: PitchHub): string | null {
 export const PITCH_HUBS: PitchHub[] = [
   { id: 'decro', label: 'Decro', depth: 0, parents: [], startVisible: true },
 
-  { id: 'visual-art', label: 'Visual Art', depth: 1, parents: ['decro'], startVisible: true },
-  { id: 'photography', label: 'Photography', depth: 1, parents: ['decro'], startVisible: true },
-  { id: 'music', label: 'Music', depth: 1, parents: ['decro'], startVisible: true },
-  { id: 'film', label: 'Film', depth: 1, parents: ['decro'], startVisible: true },
-  { id: 'writing', label: 'Writing', depth: 1, parents: ['decro'], startVisible: true },
-  { id: 'design', label: 'Design', depth: 1, parents: ['decro'], startVisible: true },
-  { id: 'craft', label: 'Craft', depth: 1, parents: ['decro'], startVisible: true },
-  { id: 'games', label: 'Games', depth: 1, parents: ['decro'], startVisible: true },
+  {
+    id: 'visual-art',
+    label: 'Visual Art',
+    depth: 1,
+    parents: ['decro'],
+    startVisible: true,
+    aliases: ['painting', 'drawing', 'fine art', 'illustration', 'gallery', 'canvas', 'sketch'],
+  },
+  {
+    id: 'photography',
+    label: 'Photography',
+    depth: 1,
+    parents: ['decro'],
+    startVisible: true,
+    aliases: ['photo', 'camera', 'lens', 'darkroom', 'analog', 'digital photo', 'shoot'],
+  },
+  {
+    id: 'music',
+    label: 'Music',
+    depth: 1,
+    parents: ['decro'],
+    startVisible: true,
+    aliases: ['song', 'audio', 'beat', 'album', 'sound', 'producer', 'instrumental', 'track'],
+  },
+  {
+    id: 'film',
+    label: 'Film',
+    depth: 1,
+    parents: ['decro'],
+    startVisible: true,
+    aliases: ['cinema', 'movie', 'video', 'director', 'cinematography', 'short', 'motion'],
+  },
+  {
+    id: 'writing',
+    label: 'Writing',
+    depth: 1,
+    parents: ['decro'],
+    startVisible: true,
+    aliases: ['words', 'prose', 'poem', 'story', 'literature', 'text', 'author', 'writer'],
+  },
+  {
+    id: 'design',
+    label: 'Design',
+    depth: 1,
+    parents: ['decro'],
+    startVisible: true,
+    aliases: ['graphic', 'type', 'layout', 'ui', 'ux', 'brand', 'poster', 'web design'],
+  },
+  {
+    id: 'craft',
+    label: 'Craft',
+    depth: 1,
+    parents: ['decro'],
+    startVisible: true,
+    aliases: ['handmade', 'maker', 'pottery', 'fiber', 'wood', 'physical', 'object'],
+  },
+  {
+    id: 'games',
+    label: 'Games',
+    depth: 1,
+    parents: ['decro'],
+    startVisible: true,
+    aliases: ['game', 'gaming', 'indie', 'pixel', 'interactive', 'play', 'gamedev'],
+  },
 
   { id: 'street-photo', label: 'Street Photo', depth: 2, parents: ['photography'], genreName: 'Street Photo' },
   { id: 'portraiture', label: 'Portraiture', depth: 2, parents: ['photography'], genreName: 'Portraiture' },

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { uploadFileToStorage } from '@/lib/server-upload'
 import supabase from '@/lib/supabase-client'
+import { placeSubgroupOnWeb } from '@/lib/pitch-place'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -97,7 +98,12 @@ export async function POST(req: Request) {
       )
     }
 
-    const result = data as { success?: boolean; error?: string; slug?: string }
+    const result = data as {
+      success?: boolean
+      error?: string
+      slug?: string
+      id?: string
+    }
     if (!result?.success) {
       return NextResponse.json(
         { error: result?.error || 'Failed to create subgroup' },
@@ -105,7 +111,32 @@ export async function POST(req: Request) {
       )
     }
 
-    return NextResponse.json({ slug: result.slug, success: true })
+    let placement: Awaited<ReturnType<typeof placeSubgroupOnWeb>> = null
+    if (result.id) {
+      try {
+        placement = await placeSubgroupOnWeb(admin, {
+          id: result.id,
+          name,
+          description: description || null,
+          slug: result.slug || slug,
+        })
+      } catch (placeErr: any) {
+        console.error('[api/subgroups] web placement failed:', placeErr?.message)
+      }
+    }
+
+    return NextResponse.json({
+      slug: result.slug,
+      id: result.id,
+      success: true,
+      placement: placement
+        ? {
+            parentLabels: placement.labels,
+            depth: placement.depth,
+            lowConfidence: placement.lowConfidence,
+          }
+        : null,
+    })
   } catch (e: any) {
     console.error('Create subgroup failed:', e)
     return NextResponse.json(
