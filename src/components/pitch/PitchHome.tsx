@@ -37,8 +37,15 @@ export default function PitchHome() {
 
   useEffect(() => {
     try {
-      const done = sessionStorage.getItem(ENTERED_KEY) === '1'
-      setTourStage(done ? 'done' : 'welcome')
+      const restart = sessionStorage.getItem('decro_pitch_restart_tour') === '1'
+      if (restart) {
+        sessionStorage.removeItem('decro_pitch_restart_tour')
+        sessionStorage.removeItem(ENTERED_KEY)
+        setTourStage('welcome')
+      } else {
+        const done = sessionStorage.getItem(ENTERED_KEY) === '1'
+        setTourStage(done ? 'done' : 'welcome')
+      }
     } catch {
       setTourStage('welcome')
     }

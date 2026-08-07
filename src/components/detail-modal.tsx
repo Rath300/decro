@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { usePosts } from '@/context/post-context'
 import { useAuth } from '@/context/auth-context'
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments'
@@ -124,7 +123,12 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
   }
 
   return (
-    <div className="fixed inset-0 bg-white z-50 overflow-y-auto" onClick={handleCloseModal}>
+    <div
+      className={`fixed inset-x-0 bottom-0 bg-white overflow-y-auto ${
+        pitchMode ? 'top-14 z-[55]' : 'inset-0 z-50 top-0'
+      }`}
+      onClick={handleCloseModal}
+    >
       <div className="max-w-7xl mx-auto p-3 sm:p-6 bg-white" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="mb-6">
@@ -161,9 +165,16 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
                 {selectedCard.subgroupName && selectedCard.subgroupSlug && (
                   <>
                     <span>•</span>
-                    <span className="text-blue-600">
-                      in <Link href={`/subgroup/${selectedCard.subgroupSlug}`} className="hover:underline">{selectedCard.subgroupName}</Link>
-                    </span>
+                    <button
+                      type="button"
+                      className="text-black underline underline-offset-2 hover:no-underline"
+                      onClick={() => {
+                        handleCloseModal()
+                        router.push(`/subgroup/${selectedCard.subgroupSlug}`)
+                      }}
+                    >
+                      in {selectedCard.subgroupName}
+                    </button>
                   </>
                 )}
               </div>
@@ -842,7 +853,7 @@ function RedditComment({
             </div>
 
             {/* Reply input */}
-            {openReplyFor === commentId && (
+            {openReplyFor === commentId && (isAuthenticated || isPitchMode()) && (
               <div className="mt-3 pl-2 border-l-2 border-gray-200">
                 <div className="space-y-2">
                   <textarea
@@ -855,31 +866,40 @@ function RedditComment({
                   <div className="flex gap-2">
                     <button
                       onClick={async () => {
-                        const content = replyText[commentId]?.trim();
-                        if (!content || !isAuthenticated || !user?.id) return;
-                        
-                        // Clear the input immediately
-                        setReplyText((prev: Record<string, string>) => ({ ...prev, [commentId]: '' }));
-                        setOpenReplyFor(null);
-                        
+                        const content = replyText[commentId]?.trim()
+                        if (!content) return
+                        if (!isAuthenticated && !isPitchMode()) return
+
+                        setReplyText((prev: Record<string, string>) => ({ ...prev, [commentId]: '' }))
+                        setOpenReplyFor(null)
+
                         try {
-                          // Submit reply to server
-                          await callRpc('add_reply_ext', { comment_id_param: commentId, external_id_param: user.id, content_param: content });
-                          
-                          // Refresh ONLY replies for this comment (not all comments)
-                          const { data } = await supabase.rpc('get_comment_replies_with_nesting', { comment_id_param: commentId, page_size: 20, page_offset: 0 });
+                          const { error } = await callRpc('add_reply_ext', {
+                            comment_id_param: commentId,
+                            content_param: content,
+                          })
+                          if (error) throw error
+
+                          const { data } = await supabase.rpc('get_comment_replies_with_nesting', {
+                            comment_id_param: commentId,
+                            page_size: 20,
+                            page_offset: 0,
+                          })
                           const sanitized = sanitizeCommentList((data as RealtimeComment[] | null) || [])
-                          setReplies(prev => ({ ...prev, [commentId]: sanitized }));
-                          
-                          // Make replies visible
-                          setVisibleReplies(prev => {
-                            const next = new Set(prev);
-                            next.add(commentId);
-                            return next;
-                          });
-                        } catch (error) {
-                          console.error('Error adding reply:', error);
-                          alert('Failed to add reply. Please try again.');
+                          setReplies((prev) => ({ ...prev, [commentId]: sanitized }))
+
+                          setVisibleReplies((prev) => {
+                            const next = new Set(prev)
+                            next.add(commentId)
+                            return next
+                          })
+                        } catch (error: any) {
+                          console.error('Error adding reply:', error)
+                          alert('Failed to add reply: ' + (error?.message || 'Please try again.'))
+                          setReplyText((prev: Record<string, string>) => ({
+                            ...prev,
+                            [commentId]: content,
+                          }))
                         }
                       }}
                       className="px-3 py-1 text-xs bg-black text-white rounded hover:bg-gray-800"

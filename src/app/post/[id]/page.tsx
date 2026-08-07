@@ -23,6 +23,9 @@ interface PostData {
   media_url?: string
   audio_url?: string
   video_url?: string
+  subgroup_id?: string | null
+  subgroup_name?: string | null
+  subgroup_slug?: string | null
 }
 
 export default function PostDetailPage() {
@@ -62,8 +65,13 @@ export default function PostDetailPage() {
           created_at,
           views,
           creator_id,
+          subgroup_id,
           profiles!posts_creator_id_fkey (
             username
+          ),
+          subgroups (
+            name,
+            slug
           )
         `)
         .eq('id', postId)
@@ -87,6 +95,10 @@ export default function PostDetailPage() {
         ? postWithProfile.profiles[0]?.username 
         : postWithProfile.profiles?.username
       
+      const subgroup = Array.isArray(postWithProfile.subgroups)
+        ? postWithProfile.subgroups[0]
+        : postWithProfile.subgroups
+
       setPost({
         id: postWithProfile.id,
         title: postWithProfile.title || 'Untitled',
@@ -98,7 +110,10 @@ export default function PostDetailPage() {
         created_at: postWithProfile.created_at || new Date().toISOString(),
         views: postWithProfile.views || 0,
         creator_id: postWithProfile.creator_id || '',
-        creator_username: profileUsername || 'Unknown'
+        creator_username: profileUsername || 'Unknown',
+        subgroup_id: postWithProfile.subgroup_id || null,
+        subgroup_name: subgroup?.name || null,
+        subgroup_slug: subgroup?.slug || null,
       })
 
       // Track view for this post
@@ -197,8 +212,7 @@ export default function PostDetailPage() {
       }
 
       console.log('Post deleted successfully')
-      // Redirect to feed after successful deletion
-      router.push('/feed')
+      router.push(pitchMode ? '/' : '/feed')
       router.refresh()
     } catch (error: any) {
       console.error('Error deleting post:', error)
@@ -245,7 +259,15 @@ export default function PostDetailPage() {
       {/* Header */}
       <div className="mb-6">
         <button 
-          onClick={() => router.back()}
+          onClick={() => {
+            if (post.subgroup_slug) {
+              router.push(`/subgroup/${post.subgroup_slug}`)
+            } else if (pitchMode) {
+              router.push('/')
+            } else {
+              router.back()
+            }
+          }}
           className="text-sm text-gray-500 hover:text-black mb-4"
         >
           ← Back
@@ -257,12 +279,24 @@ export default function PostDetailPage() {
             {post.title}
           </h1>
           
-          <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-4">
             <span>Posted by {post.creator_username || 'Unknown'}</span>
             <span>•</span>
             <span>{getTimeAgo(post.created_at)}</span>
             <span>•</span>
             <span>{post.views} views</span>
+            {post.subgroup_slug && post.subgroup_name ? (
+              <>
+                <span>•</span>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/subgroup/${post.subgroup_slug}`)}
+                  className="text-black underline underline-offset-2 hover:no-underline"
+                >
+                  in {post.subgroup_name}
+                </button>
+              </>
+            ) : null}
           </div>
 
           {post.description && (
@@ -322,7 +356,7 @@ export default function PostDetailPage() {
           <div className="mt-6 flex items-center justify-between flex-wrap gap-2">
             <PostStats postId={post.id} initialViews={post.views} showDetailed />
             <div className="flex items-center gap-2">
-              <AddToSpotlightButton postId={post.id} />
+              {!pitchMode && <AddToSpotlightButton postId={post.id} />}
               {isOwner && (
                 <button
                   onClick={handleDeletePost}
@@ -384,6 +418,8 @@ export default function PostDetailPage() {
           postId={post.id}
           refreshSignal={commentsRefreshSignal}
           optimisticComments={optimisticComments}
+          guestUsername={guestUsername}
+          canReply={canComment}
         />
       </div>
       </div>
@@ -391,10 +427,18 @@ export default function PostDetailPage() {
   )
 }
 
-function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: { 
+function RedditStyleCommentsList({
+  postId,
+  refreshSignal,
+  optimisticComments,
+  guestUsername,
+  canReply,
+}: { 
   postId: string
   refreshSignal: number
   optimisticComments: RealtimeComment[]
+  guestUsername: string
+  canReply: boolean
 }) {
   const { comments, loading, refetch } = useRealtimeComments(postId)
   const [merged, setMerged] = useState<RealtimeComment[]>([])
@@ -444,6 +488,8 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
     // Drop empty / garbage rows; keep guest and anonymous display names.
     const filterValidComments = (commentsList: RealtimeComment[]) => {
       return commentsList.filter(comment => {
+        // Top-level only — replies load under Show replies
+        if ((comment as any).parent_id) return false
         if (!comment.username?.trim()) return false
         if (comment.created_at < '2020-01-01') return false
         return true
@@ -499,8 +545,8 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
   }, [merged, isAuthenticated, user?.id]);
 
 
-  const loadReplies = async (commentId: string) => {
-    if (loadingReplies[commentId] || replies[commentId] !== undefined) return
+  const loadReplies = async (commentId: string, force = false) => {
+    if (!force && (loadingReplies[commentId] || replies[commentId] !== undefined)) return
 
     setLoadingReplies(prev => ({ ...prev, [commentId]: true }))
     try {
@@ -568,7 +614,7 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
           }}
           replies={replies[comment.id] || []}
           loadingReplies={loadingReplies[comment.id]}
-          loadReplies={() => loadReplies(comment.id)}
+          loadReplies={(force?: boolean) => loadReplies(comment.id, force)}
           openReplyFor={openReplyFor}
           setOpenReplyFor={setOpenReplyFor}
           replyText={replyText}
@@ -580,6 +626,8 @@ function RedditStyleCommentsList({ postId, refreshSignal, optimisticComments }: 
           likedComments={likedComments}
           setLikedComments={setLikedComments}
           currentUserProfileId={currentUserProfileId}
+          canReply={canReply}
+          guestUsername={guestUsername}
         />
       ))}
     </div>
@@ -603,14 +651,16 @@ function RedditComment({
   setVisibleReplies,
   likedComments,
   setLikedComments,
-  currentUserProfileId
+  currentUserProfileId,
+  canReply,
+  guestUsername,
 }: { 
   comment: RealtimeComment
   depth: number
   onReply: (content: string) => void
   replies: RealtimeComment[]
   loadingReplies: boolean
-  loadReplies: () => void
+  loadReplies: (force?: boolean) => void
   openReplyFor: string | null
   setOpenReplyFor: (id: string | null) => void
   replyText: Record<string, string>
@@ -622,6 +672,8 @@ function RedditComment({
   likedComments: Set<string>
   setLikedComments: (setter: (prev: Set<string>) => Set<string>) => void
   currentUserProfileId?: string | null
+  canReply: boolean
+  guestUsername: string
 }) {
   const { isAuthenticated, user } = useAuth()
   const maxDepth = 2
@@ -806,7 +858,7 @@ function RedditComment({
           </div>
 
           {/* Reply input */}
-          {openReplyFor === comment.id && isAuthenticated && user?.id && (
+          {openReplyFor === comment.id && canReply && (
             <div className="mt-3 border border-gray-200 rounded-lg p-3">
               <textarea
                 value={replyText[comment.id] || ''}
@@ -818,19 +870,32 @@ function RedditComment({
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={async () => {
-                    const content = replyText[comment.id]?.trim();
-                    if (!content || !user?.id) return;
-                    
-                    setReplyText({ ...replyText, [comment.id]: '' });
+                    const content = replyText[comment.id]?.trim()
+                    if (!content) return
+
+                    setReplyText({ ...replyText, [comment.id]: '' })
+                    setOpenReplyFor(null)
                     try {
-                      await callRpc('add_reply_ext', { 
-                        comment_id_param: comment.id, 
-                        content_param: content 
-                      });
-                      if (loadReplies) loadReplies();
-                      if (refetch) refetch();
-                    } catch (error) {
-                      console.error('Error adding reply:', error);
+                      const args: Record<string, unknown> = {
+                        comment_id_param: comment.id,
+                        content_param: content,
+                      }
+                      if (!isAuthenticated && guestUsername.trim()) {
+                        args.pitch_username = guestUsername.trim()
+                      }
+                      const { error } = await callRpc('add_reply_ext', args)
+                      if (error) throw error
+                      setVisibleReplies((prev) => {
+                        const next = new Set(prev)
+                        next.add(comment.id)
+                        return next
+                      })
+                      await loadReplies(true)
+                      if (refetch) refetch()
+                    } catch (error: any) {
+                      console.error('Error adding reply:', error)
+                      alert('Failed to add reply: ' + (error?.message || 'Please try again'))
+                      setReplyText({ ...replyText, [comment.id]: content })
                     }
                   }}
                   className="px-3 py-1 text-xs bg-black text-white rounded hover:bg-gray-800"
@@ -839,12 +904,8 @@ function RedditComment({
                 </button>
                 <button
                   onClick={() => {
-                    // Clear the reply text first, then close the input
-                    setReplyText({ ...replyText, [comment.id]: '' });
-                    // Use setTimeout to ensure state update happens before closing
-                    setTimeout(() => {
-                      setOpenReplyFor(null);
-                    }, 0);
+                    setReplyText({ ...replyText, [comment.id]: '' })
+                    setOpenReplyFor(null)
                   }}
                   className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
                 >
@@ -881,6 +942,8 @@ function RedditComment({
                       likedComments={likedComments}
                       setLikedComments={setLikedComments}
                       currentUserProfileId={currentUserProfileId}
+                      canReply={canReply}
+                      guestUsername={guestUsername}
                     />
                   ))}
                 </div>

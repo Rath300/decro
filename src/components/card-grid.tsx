@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import { usePosts } from '@/context/post-context'
 import type { MediaCard } from '@/context/post-context'
 import { PostStats } from '@/components/post-stats'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function CardGrid({ cards }: { cards: MediaCard[] }) {
   const { setSelectedCard, setShowDetailModal, trackView, playingAudio, setPlayingAudio, likedCards, toggleLike } = usePosts()
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
   const router = useRouter()
+  const pitchMode = isPitchMode()
   
   // Validate cards prop
   if (!Array.isArray(cards)) {
@@ -25,14 +27,15 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
     
     try {
       trackView(card.id)
-      
-      if (card.type === 'text') {
-        // For text posts, redirect to Reddit-style forum page
+
+      // Pitch: always use /post pages so chrome/back/duck navigation stay clear
+      if (pitchMode || card.type === 'text') {
         router.push(`/post/${card.id}`)
-      } else {
-        setSelectedCard(card)
-        setShowDetailModal(true)
+        return
       }
+
+      setSelectedCard(card)
+      setShowDetailModal(true)
     } catch (error) {
       console.error('Error handling card click:', error)
     }

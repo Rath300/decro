@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import AppHeader from '@/components/AppHeader'
 import VersionIndicator from '@/components/VersionIndicator'
@@ -18,6 +18,7 @@ const HIDE_HEADER_PATHS = new Set<string>(['/', '/signup', '/forgot-password'])
 
 export default function RootChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '/'
+  const router = useRouter()
   const { isAuthenticated } = useAuth()
 
   if (isPitchMode()) {
@@ -29,12 +30,19 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
           }}
           onPitch={() => {
             try {
+              sessionStorage.removeItem('decro_pitch_onboarded_v5')
               sessionStorage.removeItem('decro_pitch_onboarded_v4')
               sessionStorage.removeItem('decro_pitch_onboarded_v3')
               sessionStorage.removeItem('decro_pitch_onboarded_v2')
               sessionStorage.removeItem('decro_pitch_entered')
+              sessionStorage.setItem('decro_pitch_restart_tour', '1')
             } catch {}
-            window.dispatchEvent(new Event('pitch:show-overlay'))
+            // Always return to the web; tour restarts via PitchHome
+            if (pathname === '/') {
+              window.dispatchEvent(new Event('pitch:show-overlay'))
+            } else {
+              router.push('/')
+            }
           }}
         />
         <div className="pt-14">{children}</div>
