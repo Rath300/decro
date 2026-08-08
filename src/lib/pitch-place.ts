@@ -36,6 +36,83 @@ export type PlacementResult = {
   lowConfidence: boolean
 }
 
+export type ParentSuggestion = {
+  hubId: string
+  label: string
+  score: number
+  depth: number
+}
+
+/** Ranked suggestions for the create UI — user confirms parents. */
+export function suggestParents(
+  name: string,
+  description: string | null | undefined,
+  limit = 10
+): { suggestions: ParentSuggestion[]; recommended: string[]; lowConfidence: boolean } {
+  const candidates = taxonomyPlaceables().filter((c) => !c.hubId.startsWith('sg:'))
+  const auto = chooseParents(name, description, candidates)
+  const query = vectorize(`${name} ${description || ''}`)
+  const ranked = candidates
+    .map((c) => ({
+      hubId: c.hubId,
+      label: c.label,
+      score: cosine(query, vectorize(c.label, c.aliases || [])),
+      depth: c.depth,
+    }))
+    .sort((a, b) => b.score - a.score)
+
+  // Always surface the 8 mains, then best niches
+  const mains = ranked.filter((r) => r.depth === 1)
+  const niches = ranked.filter((r) => r.depth >= 2).slice(0, Math.max(0, limit - mains.length))
+  const byId = new Map<string, ParentSuggestion>()
+  for (const r of [...mains, ...niches, ...ranked.slice(0, limit)]) {
+    if (!byId.has(r.hubId)) byId.set(r.hubId, r)
+  }
+  const suggestions = [...byId.values()]
+    .sort((a, b) => {
+      const aRec = auto.parentHubIds.includes(a.hubId) ? 1 : 0
+      const bRec = auto.parentHubIds.includes(b.hubId) ? 1 : 0
+      if (aRec !== bRec) return bRec - aRec
+      if (a.depth !== b.depth) return a.depth - b.depth
+      return b.score - a.score
+    })
+    .slice(0, limit + 4)
+
+  return {
+    suggestions,
+    recommended: auto.parentHubIds.slice(0, 2),
+    lowConfidence: auto.lowConfidence,
+  }
+}
+
+export function depthFromParents(parentHubIds: string[]): number {
+  const depths = parentHubIds.map((id) => getPitchHub(id)?.depth ?? 1)
+  return Math.min(MAX_DEPTH, Math.max(1, ...depths) + 1)
+}
+
+export function labelsForParents(parentHubIds: string[]): string[] {
+  return parentHubIds.map((id) => getPitchHub(id)?.label || id)
+}
+
+/** Validate user-chosen taxonomy parent ids (1–2, not center). */
+export function normalizeChosenParents(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null
+  const ids = [
+    ...new Set(
+      raw
+        .filter((x): x is string => typeof x === 'string')
+        .map((x) => x.trim())
+        .filter(Boolean)
+    ),
+  ]
+  if (ids.length < 1 || ids.length > 2) return null
+  for (const id of ids) {
+    const hub = getPitchHub(id)
+    if (!hub || hub.depth < 1 || hub.id === 'decro') return null
+  }
+  return ids
+}
+
 function rootMainOf(hubId: string): string {
   let cur = getPitchHub(hubId)
   if (!cur) return hubId
@@ -206,6 +283,8 @@ export async function placeSubgroupOnWeb(
     name: string
     description?: string | null
     slug?: string | null
+    /** When set, use these taxonomy parents instead of auto-pick */
+    parentHubIds?: string[] | null
   }
 ): Promise<PlacementResult | null> {
   const slugs = taxonomySlugs()
@@ -214,12 +293,26 @@ export async function placeSubgroupOnWeb(
     return null
   }
 
-  const candidates = [
-    ...taxonomyPlaceables(),
-    ...(await loadPlacedUserCandidates(admin, opts.id)),
-  ]
+  let placement: PlacementResult
+  const chosen = opts.parentHubIds?.length
+    ? normalizeChosenParents(opts.parentHubIds)
+    : null
 
-  const placement = chooseParents(opts.name, opts.description, candidates)
+  if (chosen) {
+    placement = {
+      parentHubIds: chosen,
+      scores: chosen.map(() => 1),
+      depth: depthFromParents(chosen),
+      labels: labelsForParents(chosen),
+      lowConfidence: false,
+    }
+  } else {
+    const candidates = [
+      ...taxonomyPlaceables(),
+      ...(await loadPlacedUserCandidates(admin, opts.id)),
+    ]
+    placement = chooseParents(opts.name, opts.description, candidates)
+  }
 
   // Replace any existing edges (idempotent re-place)
   await admin.from('subgroup_parents').delete().eq('child_id', opts.id)

@@ -12,6 +12,7 @@ export type PitchTourStage =
   | 'welcome'
   | 'click-main'
   | 'click-niche'
+  | 'create'
   | 'guest'
   | 'done'
 
@@ -21,7 +22,7 @@ export const PITCH_TOUR_COPY: Record<
 > = {
   welcome: {
     title: 'This is Decro',
-    body: 'Creative groups linked together. We’ll show you two moves: zoom into a group, or open it.',
+    body: 'Creative groups linked together. Zoom in, open a room, post work, or start your own niche.',
     cta: 'Show me',
   },
   'click-main': {
@@ -31,20 +32,27 @@ export const PITCH_TOUR_COPY: Record<
   },
   'click-niche': {
     title: '2 · Open a group',
-    body: 'Use Enter group (or double-tap a niche) to go inside — that’s where you post and comment.',
+    body: 'Use Enter group (or double-tap a niche) to go inside — that’s where you post, comment, and chat.',
+    cta: 'Next',
+  },
+  create: {
+    title: '3 · Create & post',
+    body: 'Upload puts work in a group. Logged-in users can create a new subgroup and choose which parent groups it hangs under (we suggest, you confirm).',
     cta: 'Next',
   },
   guest: {
     title: 'No login needed',
-    body: 'You can upload and comment as a guest. Login is optional.',
+    body: 'Guests can upload, comment, and chat. Log in if you want a profile and to create groups.',
     cta: 'Start exploring',
   },
 }
 
+export const PITCH_TOUR_TOTAL = 5
+
 export const PITCH_ENTER_CTA = 'Enter the groups'
 
 export const PITCH_HINT =
-  'tap a group to zoom in · Enter / double-tap to open · +/− to zoom · scroll to pan'
+  'search · tap to zoom · tap again to close niches · Decro / duck = mains · Tutorial for the walkthrough'
 
 export const PITCH_EMAIL = 'helpdecro.net@gmail.com'
 export const PITCH_DISCORD_HANDLES = ['rath6053', 'existsneel'] as const

@@ -7,14 +7,17 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
 import { useToast } from '@/hooks/use-toast'
-// Global header/menu are provided by layout
+import ParentHubPicker from '@/components/subgroup/ParentHubPicker'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function CreateSubgroupPage() {
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
   const toast = useToast()
+  const pitchMode = isPitchMode()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -23,6 +26,7 @@ export default function CreateSubgroupPage() {
     slug: '',
     description: ''
   })
+  const [parentHubIds, setParentHubIds] = useState<string[]>([])
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string>('')
 
@@ -72,6 +76,11 @@ export default function CreateSubgroupPage() {
       return
     }
 
+    if (parentHubIds.length < 1 || parentHubIds.length > 2) {
+      toast.error('Pick 1–2 parent groups for the creative web')
+      return
+    }
+
     if (isSubmitting) return
 
     setIsSubmitting(true)
@@ -84,6 +93,7 @@ export default function CreateSubgroupPage() {
       body.append('name', formData.name.trim())
       body.append('slug', formData.slug)
       body.append('description', formData.description.trim())
+      body.append('parentHubIds', JSON.stringify(parentHubIds))
       if (coverFile) {
         body.append('coverFile', coverFile)
       }
@@ -118,15 +128,15 @@ export default function CreateSubgroupPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="mb-4">You must be logged in to create a subgroup</p>
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2 bg-black text-white"
+      <div className="min-h-screen bg-white flex items-center justify-center font-['Space_Mono']">
+        <div className="text-center px-4">
+          <p className="mb-4 text-sm">Log in to create a subgroup</p>
+          <Link
+            href="/login"
+            className="inline-block px-4 py-2 bg-black text-white text-xs uppercase"
           >
-            Sign In
-          </button>
+            Log in
+          </Link>
         </div>
       </div>
     )
@@ -134,11 +144,26 @@ export default function CreateSubgroupPage() {
 
   return (
     <div className="min-h-screen bg-white font-['Space_Mono']">
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12 pt-20 sm:pt-24">
+      <main
+        className={`max-w-2xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12 ${
+          pitchMode ? 'pt-6' : 'pt-20 sm:pt-24'
+        }`}
+      >
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Create Subgroup</h1>
-          <p className="text-gray-600 text-sm">
-            Create a niche community — it will appear on the creative web near related groups
+          {pitchMode && (
+            <Link
+              href="/"
+              className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mb-4"
+            >
+              ← Creative web
+            </Link>
+          )}
+          <h1 className="text-3xl font-normal mb-2 uppercase tracking-tight">
+            Create subgroup
+          </h1>
+          <p className="text-black/60 text-sm">
+            Name your niche, then choose which parent groups it hangs under on the
+            web. We suggest — you confirm.
           </p>
         </div>
 
@@ -168,7 +193,6 @@ export default function CreateSubgroupPage() {
                 </div>
               ) : (
                 <div>
-                  <div className="text-4xl mb-4">🖼️</div>
                   <p className="text-sm text-gray-600 mb-4">
                     Add a cover image for your subgroup
                   </p>
@@ -247,13 +271,22 @@ export default function CreateSubgroupPage() {
             </div>
           </div>
 
+          <div className="border border-black p-4">
+            <ParentHubPicker
+              name={formData.name}
+              description={formData.description}
+              value={parentHubIds}
+              onChange={setParentHubIds}
+            />
+          </div>
+
           {/* Submit Button */}
           <div className="flex gap-3 pt-4">
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || parentHubIds.length < 1}
               className={`flex-1 py-3 text-sm font-medium border-2 border-black transition-colors ${
-                isSubmitting
+                isSubmitting || parentHubIds.length < 1
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-black text-white hover:bg-gray-800'
               }`}

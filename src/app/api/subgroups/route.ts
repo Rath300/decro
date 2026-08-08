@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { uploadFileToStorage } from '@/lib/server-upload'
 import supabase from '@/lib/supabase-client'
-import { placeSubgroupOnWeb } from '@/lib/pitch-place'
+import { normalizeChosenParents, placeSubgroupOnWeb } from '@/lib/pitch-place'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -55,6 +55,21 @@ export async function POST(req: Request) {
     const slug = String(form.get('slug') || '').trim()
     const description = String(form.get('description') || '').trim()
     const coverFile = form.get('coverFile') as File | null
+    let parentHubIds: string[] | null = null
+    const parentsRaw = form.get('parentHubIds')
+    if (typeof parentsRaw === 'string' && parentsRaw.trim()) {
+      try {
+        parentHubIds = normalizeChosenParents(JSON.parse(parentsRaw))
+      } catch {
+        parentHubIds = null
+      }
+    }
+    if (!parentHubIds) {
+      return NextResponse.json(
+        { error: 'Pick 1–2 parent groups for where this sits on the web' },
+        { status: 400 }
+      )
+    }
 
     if (!name || name.length < 3) {
       return NextResponse.json(
@@ -119,6 +134,7 @@ export async function POST(req: Request) {
           name,
           description: description || null,
           slug: result.slug || slug,
+          parentHubIds,
         })
       } catch (placeErr: any) {
         console.error('[api/subgroups] web placement failed:', placeErr?.message)

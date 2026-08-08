@@ -3,49 +3,70 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
+import PitchGroupSearch from '@/components/pitch/PitchGroupSearch'
 
 type Props = {
   onUpload: () => void
-  onPitch: () => void
+  /** Duck — return to / reset the web to main groups (no tour). */
+  onHome: () => void
+  /** Restart the interactive tutorial. */
+  onTutorial: () => void
 }
 
-export default function PitchChrome({ onUpload, onPitch }: Props) {
+export default function PitchChrome({ onUpload, onHome, onTutorial }: Props) {
   const { isAuthenticated, signOut, loading } = useAuth()
 
   return (
-    <header className="fixed top-0 inset-x-0 z-[60] h-14 border-b border-black bg-white flex items-center justify-between px-3 sm:px-6 gap-3">
-      <div className="flex items-center gap-3 min-w-0">
-        <button
-          type="button"
-          onClick={onPitch}
-          className="inline-flex items-center shrink-0"
-          aria-label="Decro"
-        >
-          <Image
-            src="/decky.png"
-            alt="Decro logo"
-            width={36}
-            height={36}
-            className="sm:w-10 sm:h-10"
-            priority
-          />
-        </button>
-      </div>
+    <header className="fixed top-0 inset-x-0 z-[60] h-14 border-b border-black bg-white flex items-center gap-2 sm:gap-3 px-2 sm:px-4">
+      <button
+        type="button"
+        onClick={onHome}
+        className="inline-flex items-center shrink-0"
+        aria-label="Reset web to main groups"
+        title="Home — main groups"
+      >
+        <Image
+          src="/decky.png"
+          alt="Decro logo"
+          width={36}
+          height={36}
+          className="sm:w-10 sm:h-10"
+          priority
+        />
+      </button>
 
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <PitchGroupSearch />
+
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
         <button
           type="button"
-          onClick={onPitch}
-          className="hidden sm:inline text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
+          onClick={onTutorial}
+          className="hidden md:inline text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
         >
-          Pitch
+          Tutorial
         </button>
+        {isAuthenticated && (
+          <>
+            <Link
+              href="/subgroup/create"
+              className="hidden sm:inline text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
+            >
+              New group
+            </Link>
+            <Link
+              href="/profile"
+              className="text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
+            >
+              Profile
+            </Link>
+          </>
+        )}
         {!loading &&
           (isAuthenticated ? (
             <button
               type="button"
               onClick={() => void signOut()}
-              className="text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
+              className="hidden sm:inline text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
             >
               Log out
             </button>

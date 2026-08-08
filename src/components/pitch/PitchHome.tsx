@@ -12,7 +12,7 @@ import type {
   UploadCommit,
 } from '@/components/pitch/PitchUploadSheet'
 
-const ENTERED_KEY = 'decro_pitch_onboarded_v5'
+const ENTERED_KEY = 'decro_pitch_onboarded_v6'
 
 function displayUsername(raw?: string | null) {
   if (!raw || /^anonymous(_|$)/i.test(raw)) return 'anonymous'
@@ -29,6 +29,7 @@ export default function PitchHome() {
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set())
   const [focusHubId, setFocusHubId] = useState<string | null>(null)
   const [focusKey, setFocusKey] = useState(0)
+  const [resetNonce, setResetNonce] = useState(0)
   const [highlightPostId, setHighlightPostId] = useState<string | null>(null)
   const [selected, setSelected] = useState<PitchGraphNode | null>(null)
   const [loadError, setLoadError] = useState('')
@@ -98,22 +99,70 @@ export default function PitchHome() {
     void loadGraph()
   }, [loadGraph])
 
+  const resetWebToMains = useCallback(() => {
+    setSelected(null)
+    setFocusHubId(null)
+    setRevealedIds(new Set(startHubIds))
+    setResetNonce((n) => n + 1)
+  }, [startHubIds])
+
   useEffect(() => {
     const onOverlay = () => {
-      setSelected(null)
-      setFocusHubId(null)
-      setRevealedIds(new Set(startHubIds))
+      resetWebToMains()
       setTourStage('welcome')
       try {
         sessionStorage.removeItem(ENTERED_KEY)
+        sessionStorage.removeItem('decro_pitch_onboarded_v5')
         sessionStorage.removeItem('decro_pitch_onboarded_v4')
         sessionStorage.removeItem('decro_pitch_onboarded_v3')
         sessionStorage.removeItem('decro_pitch_onboarded_v2')
       } catch {}
     }
+    const onResetWeb = () => {
+      resetWebToMains()
+    }
     window.addEventListener('pitch:show-overlay', onOverlay)
-    return () => window.removeEventListener('pitch:show-overlay', onOverlay)
-  }, [startHubIds])
+    window.addEventListener('pitch:reset-web', onResetWeb)
+    return () => {
+      window.removeEventListener('pitch:show-overlay', onOverlay)
+      window.removeEventListener('pitch:reset-web', onResetWeb)
+    }
+  }, [resetWebToMains])
+
+  // Duck navigated here from another page — collapse to mains
+  useEffect(() => {
+    if (!startHubIds.length) return
+    try {
+      if (sessionStorage.getItem('decro_pitch_reset_web') === '1') {
+        sessionStorage.removeItem('decro_pitch_reset_web')
+        resetWebToMains()
+      }
+    } catch {}
+  }, [startHubIds, resetWebToMains])
+
+  // Search → focus hub on the web
+  useEffect(() => {
+    if (!nodes.length || startHubIds.length === 0) return
+    let hubId: string | null = null
+    try {
+      hubId = sessionStorage.getItem('decro_pitch_focus_hub')
+      if (hubId) sessionStorage.removeItem('decro_pitch_focus_hub')
+    } catch {
+      return
+    }
+    if (!hubId) return
+    const exists = nodes.some((n) => n.hubId === hubId)
+    if (!exists) return
+    setRevealedIds((prev) => {
+      const next = new Set(prev)
+      next.add(hubId!)
+      const node = nodes.find((n) => n.hubId === hubId)
+      for (const p of node?.parentIds || []) next.add(p)
+      return next
+    })
+    setFocusHubId(hubId)
+    setFocusKey((k) => k + 1)
+  }, [nodes, startHubIds.length])
 
   useEffect(() => {
     if (!toast) return
@@ -142,6 +191,37 @@ export default function PitchHome() {
     [focusCluster, nodes]
   )
 
+  /** Collapse niches under a hub (Decro → full reset to mains). */
+  const onCollapseChildren = useCallback(
+    (hubId: string) => {
+      if (hubId === 'decro') {
+        resetWebToMains()
+        return
+      }
+      const start = new Set(startHubIds)
+      const toRemove = new Set<string>()
+      const queue = [
+        ...(nodes.find((n) => n.hubId === hubId)?.childIds || []),
+      ]
+      while (queue.length) {
+        const id = queue.pop()!
+        if (toRemove.has(id) || start.has(id)) continue
+        toRemove.add(id)
+        const kids =
+          nodes.find((n) => n.hubId === id)?.childIds || []
+        for (const k of kids) queue.push(k)
+      }
+      setRevealedIds((prev) => {
+        const next = new Set(prev)
+        for (const id of toRemove) next.delete(id)
+        return next
+      })
+      setSelected(null)
+      focusCluster(hubId)
+    },
+    [nodes, startHubIds, resetWebToMains, focusCluster]
+  )
+
   const onEnterHub = useCallback(
     (slug: string) => {
       router.push(`/subgroup/${slug}`)
@@ -149,11 +229,7 @@ export default function PitchHome() {
     [router]
   )
 
-  const onResetView = useCallback(() => {
-    setSelected(null)
-    setFocusHubId(null)
-    setRevealedIds(new Set(startHubIds))
-  }, [startHubIds])
+  const onResetView = resetWebToMains
 
   const onTourNext = () => {
     if (tourStage === 'welcome') {
@@ -167,6 +243,10 @@ export default function PitchHome() {
       return
     }
     if (tourStage === 'click-niche') {
+      setTourStage('create')
+      return
+    }
+    if (tourStage === 'create') {
       setTourStage('guest')
       return
     }
@@ -301,12 +381,14 @@ export default function PitchHome() {
         revealedIds={revealedIds}
         focusHubId={focusHubId}
         focusKey={focusKey}
+        resetNonce={resetNonce}
         highlightPostId={highlightPostId}
         tourStage={tourStage}
         tourParentId={PITCH_TOUR_PARENT_ID}
         onUploadClick={() => openUpload()}
         onNodeSelect={hidePanels ? undefined : setSelected}
         onRevealChildren={onRevealChildren}
+        onCollapseChildren={onCollapseChildren}
         onEnterHub={onEnterHub}
         onResetView={onResetView}
         onTourMainOpened={onTourMainOpened}

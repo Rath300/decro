@@ -32,12 +32,16 @@ type Props = {
   focusHubId?: string | null
   /** Bump to re-zoom the same hub (e.g. Zoom in pressed again) */
   focusKey?: number
+  /** Bump when collapsing to mains — camera refits */
+  resetNonce?: number
   highlightPostId?: string | null
   tourStage?: PitchTourStage | null
   tourParentId?: string | null
   onUploadClick: () => void
   onNodeSelect?: (node: PitchGraphNode | null) => void
   onRevealChildren?: (hubId: string) => void
+  /** Collapse niches under a hub; Decro resets to mains */
+  onCollapseChildren?: (hubId: string) => void
   onEnterHub?: (slug: string) => void
   onResetView?: () => void
   onTourMainOpened?: (hubId: string) => void
@@ -69,12 +73,14 @@ export default function PitchWeb({
   revealedIds,
   focusHubId = null,
   focusKey = 0,
+  resetNonce = 0,
   highlightPostId,
   tourStage = null,
   tourParentId = null,
   onUploadClick,
   onNodeSelect,
   onRevealChildren,
+  onCollapseChildren,
   onEnterHub,
   onResetView,
   onTourMainOpened,
@@ -472,6 +478,14 @@ export default function PitchWeb({
     }
   }, [focusHubId, focusKey, graphReady, zoomToCluster, graphData.nodes.length])
 
+  // Duck / Decro / Reset view — frame mains again
+  useEffect(() => {
+    if (!graphReady || !resetNonce) return
+    lastFocusRef.current = null
+    const t = window.setTimeout(() => fitMains(450), 80)
+    return () => window.clearTimeout(t)
+  }, [resetNonce, graphReady, fitMains])
+
   useEffect(() => {
     if (!graphReady || !highlightPostId) return
     const fg = getFg()
@@ -572,14 +586,23 @@ export default function PitchWeb({
       const isDouble = Boolean(prev && prev.id === n.id && now - prev.at < 350)
       lastClickRef.current = { id: n.id, at: now }
 
-      setSelectedId(n.id)
-      onNodeSelect?.(n)
-
       const hid = n.hubId || parseHubNodeId(n.id)
       if (!hid) return
 
+      // Center Decro — collapse everything back to main groups
+      if ((n.depth ?? 0) === 0) {
+        setSelectedId(null)
+        onNodeSelect?.(null)
+        onResetView?.()
+        return
+      }
+
+      setSelectedId(n.id)
+      onNodeSelect?.(n)
+
       const hasKids = (n.childIds?.length || 0) > 0
       const unrevealedKids = (n.childIds || []).some((cid) => !revealedIds.has(cid))
+      const kidsOpen = (n.childIds || []).some((cid) => revealedIds.has(cid))
 
       if (tourStage === 'click-main') {
         if ((n.depth ?? 0) !== 1) return
@@ -605,12 +628,23 @@ export default function PitchWeb({
         return
       }
 
-      // Normal: double-click enters; single-click expands + selects
+      // Normal: double-click enters; single-click expands / collapses
       if (isDouble && n.enterable && n.slug) {
         onEnterHub?.(n.slug)
         return
       }
-      if (unrevealedKids || hasKids) {
+      if (unrevealedKids) {
+        onRevealChildren?.(hid)
+        nudgeToNode(n)
+        return
+      }
+      if (kidsOpen) {
+        // Second click on an expanded hub closes its niches
+        onCollapseChildren?.(hid)
+        nudgeToNode(n)
+        return
+      }
+      if (hasKids) {
         onRevealChildren?.(hid)
         nudgeToNode(n)
       }
@@ -619,6 +653,8 @@ export default function PitchWeb({
       tourStage,
       onNodeSelect,
       onRevealChildren,
+      onCollapseChildren,
+      onResetView,
       onEnterHub,
       onTourMainOpened,
       onTourNicheOpened,
@@ -732,12 +768,10 @@ export default function PitchWeb({
             type="button"
             onClick={() => {
               onResetView()
-              lastFocusRef.current = null
-              window.setTimeout(() => fitMains(450), 100)
             }}
             className="border border-black bg-white px-3 py-2 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
           >
-            ← Reset view
+            ← Main groups
           </button>
         </div>
       ) : null}

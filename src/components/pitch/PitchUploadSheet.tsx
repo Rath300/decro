@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import supabase from '@/lib/supabase-client'
+import ParentHubPicker from '@/components/subgroup/ParentHubPicker'
 
 type GroupHit = { id: string; name: string; slug: string }
 
@@ -89,6 +90,7 @@ export default function PitchUploadSheet({
   const [groupHits, setGroupHits] = useState<GroupHit[]>([])
   const [selectedGroup, setSelectedGroup] = useState<GroupHit | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
+  const [parentHubIds, setParentHubIds] = useState<string[]>([])
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const honeypotRef = useRef<HTMLInputElement>(null)
@@ -150,6 +152,7 @@ export default function PitchUploadSheet({
     setGroupHits([])
     setSelectedGroup(null)
     setNewGroupName('')
+    setParentHubIds([])
     setError('')
     setContentType('image')
     if (fileRef.current) fileRef.current.value = ''
@@ -170,6 +173,10 @@ export default function PitchUploadSheet({
     }
     if (!selectedGroup && newGroupName.trim().length < 3) {
       setError('Pick a group or create one (3+ characters)')
+      return
+    }
+    if (!selectedGroup && parentHubIds.length < 1) {
+      setError('Pick 1–2 parent groups for the new group')
       return
     }
     if (contentType !== 'text' && !file) {
@@ -236,6 +243,7 @@ export default function PitchUploadSheet({
     const submitContentType = contentType
     const submitGroupId = selectedGroup?.id ?? null
     const submitNewGroup = selectedGroup ? '' : newGroupName.trim()
+    const submitParents = selectedGroup ? [] : [...parentHubIds]
 
     onOptimistic({
       tempPostId,
@@ -289,6 +297,7 @@ export default function PitchUploadSheet({
           videoUrl,
           subgroupId: submitGroupId,
           newGroupName: submitNewGroup,
+          parentHubIds: submitParents,
           website: '',
         }),
       })
@@ -473,6 +482,16 @@ export default function PitchUploadSheet({
                   className="w-full border border-black px-3 py-2 text-sm bg-white outline-none"
                   placeholder="New group name"
                 />
+                {newGroupName.trim().length >= 2 && (
+                  <div className="mt-3 border border-black p-3">
+                    <ParentHubPicker
+                      name={newGroupName}
+                      description={description}
+                      value={parentHubIds}
+                      onChange={setParentHubIds}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>

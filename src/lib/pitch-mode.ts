@@ -14,7 +14,7 @@ export const PITCH_PARKED_PREFIXES = [
   '/feed',
   '/spotlight',
   '/trending',
-  '/profile',
+  // /profile stays open so logged-in users can manage their page
   '/messages',
   '/settings',
   '/search',

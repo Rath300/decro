@@ -10,7 +10,7 @@ import {
   sanitizePitchUsername,
   slugifyName,
 } from '@/lib/pitch-guest'
-import { placeSubgroupOnWeb } from '@/lib/pitch-place'
+import { normalizeChosenParents, placeSubgroupOnWeb } from '@/lib/pitch-place'
 
 export const dynamic = 'force-dynamic'
 
@@ -124,8 +124,15 @@ export async function POST(request: Request) {
 
   const newGroupName =
     typeof body.newGroupName === 'string' ? body.newGroupName.trim().slice(0, 60) : ''
+  const chosenParents = normalizeChosenParents(body.parentHubIds)
 
   if (!subgroupId && newGroupName.length >= 3) {
+    if (!chosenParents) {
+      return NextResponse.json(
+        { error: 'Pick 1–2 parent groups for the new group' },
+        { status: 400 }
+      )
+    }
     const slug = slugifyName(newGroupName)
     if (slug.length < 3) {
       return NextResponse.json({ error: 'Group name is invalid' }, { status: 400 })
@@ -160,6 +167,7 @@ export async function POST(request: Request) {
         name: newGroupName,
         description: 'Created during pitch mode',
         slug: result.slug || slug,
+        parentHubIds: chosenParents,
       })
     } catch (placeErr: any) {
       console.error('[pitch/post] web placement failed:', placeErr?.message)

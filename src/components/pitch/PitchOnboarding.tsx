@@ -5,6 +5,7 @@ import {
   PITCH_DISCORD_HANDLES,
   PITCH_EMAIL,
   PITCH_TOUR_COPY,
+  PITCH_TOUR_TOTAL,
   type PitchTourStage,
 } from '@/lib/pitch-copy'
 
@@ -14,14 +15,31 @@ type Props = {
   onSkip: () => void
 }
 
+function stepOf(stage: PitchTourStage): number {
+  switch (stage) {
+    case 'welcome':
+      return 1
+    case 'click-main':
+      return 2
+    case 'click-niche':
+      return 3
+    case 'create':
+      return 4
+    case 'guest':
+      return 5
+    default:
+      return 1
+  }
+}
+
 export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
   if (stage === 'done') return null
 
   const copy = PITCH_TOUR_COPY[stage]
   const isWelcome = stage === 'welcome'
   const isGuest = stage === 'guest'
+  const stepNum = stepOf(stage)
 
-  // Welcome is a full-screen start card; later steps float over the live graph.
   if (isWelcome) {
     return (
       <div className="fixed inset-0 z-[70] bg-white/95 flex items-center justify-center px-5 sm:px-8 py-20">
@@ -35,7 +53,7 @@ export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
             priority
           />
           <p className="mt-5 text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/45">
-            Tour · 1 / 4
+            Tour · {stepNum} / {PITCH_TOUR_TOTAL}
           </p>
           <h1 className="mt-2 text-xl sm:text-2xl font-['Space_Mono'] font-normal">
             {copy.title}
@@ -64,15 +82,11 @@ export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
     )
   }
 
-  const stepNum =
-    stage === 'click-main' ? 2 : stage === 'click-niche' ? 3 : 4
-
-  // Top on mobile (clears zoom controls on the right); bottom on desktop
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-16 sm:top-auto sm:bottom-0 z-[65] flex justify-center px-3 pt-0 sm:pt-0 sm:pb-6">
+    <div className="pointer-events-none fixed inset-x-0 top-16 sm:top-auto sm:bottom-0 z-[65] flex justify-center px-3 sm:pb-6">
       <div className="pointer-events-auto max-w-md w-full border border-black bg-white p-4 sm:p-5 mr-14 sm:mr-0">
         <p className="text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/45">
-          Tour · {stepNum} / 4
+          Tour · {stepNum} / {PITCH_TOUR_TOTAL}
         </p>
         <h2 className="mt-1 text-base sm:text-lg font-['Space_Mono'] font-normal">
           {copy.title}

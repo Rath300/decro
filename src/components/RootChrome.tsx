@@ -28,8 +28,20 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
           onUpload={() => {
             window.dispatchEvent(new Event('pitch:open-upload'))
           }}
-          onPitch={() => {
+          onHome={() => {
+            // Duck: home + collapse web to main groups (not the tutorial)
             try {
+              sessionStorage.setItem('decro_pitch_reset_web', '1')
+            } catch {}
+            if (pathname === '/') {
+              window.dispatchEvent(new Event('pitch:reset-web'))
+            } else {
+              router.push('/')
+            }
+          }}
+          onTutorial={() => {
+            try {
+              sessionStorage.removeItem('decro_pitch_onboarded_v6')
               sessionStorage.removeItem('decro_pitch_onboarded_v5')
               sessionStorage.removeItem('decro_pitch_onboarded_v4')
               sessionStorage.removeItem('decro_pitch_onboarded_v3')
@@ -37,7 +49,6 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
               sessionStorage.removeItem('decro_pitch_entered')
               sessionStorage.setItem('decro_pitch_restart_tour', '1')
             } catch {}
-            // Always return to the web; tour restarts via PitchHome
             if (pathname === '/') {
               window.dispatchEvent(new Event('pitch:show-overlay'))
             } else {

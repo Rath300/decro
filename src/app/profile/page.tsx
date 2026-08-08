@@ -17,6 +17,7 @@ import { usePosts } from '@/context/post-context'
 import DetailModal from '@/components/detail-modal'
 import { NetworkView } from '@/components/collab/NetworkView'
 import { CollaborationRequests } from '@/components/collab/CollaborationRequests'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 interface UserPost {
   id: string
@@ -46,6 +47,7 @@ interface UserStats {
 export default function ProfilePage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const router = useRouter()
+  const pitchMode = isPitchMode()
   const { setSelectedCard, setShowDetailModal, trackView } = usePosts()
   const [posts, setPosts] = useState<UserPost[]>([])
   const [likedPosts, setLikedPosts] = useState<UserPost[]>([])
@@ -407,6 +409,14 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-white text-black font-['Space_Mono']">
       <main className="max-w-5xl mx-auto px-4 pb-12">
+        {pitchMode && (
+          <Link
+            href="/"
+            className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mt-4 mb-2"
+          >
+            ← Creative web
+          </Link>
+        )}
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-black"></div>
@@ -419,13 +429,13 @@ export default function ProfilePage() {
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-6">
                   {/* Avatar */}
-                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-3xl font-bold text-gray-600">
+                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-3xl font-normal text-gray-600">
                     {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
                   </div>
                   
                   {/* User Info */}
                   <div>
-                    <h1 className="text-3xl font-bold mb-2">
+                    <h1 className="text-3xl font-normal mb-2">
                       {user?.name || user?.email}
                     </h1>
                     <p className="text-gray-600 text-sm">@{user?.email?.split('@')[0]}</p>
