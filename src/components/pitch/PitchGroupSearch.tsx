@@ -91,7 +91,7 @@ export default function PitchGroupSearch() {
   }
 
   return (
-    <div ref={wrapRef} className="relative min-w-0 flex-1 max-w-xs sm:max-w-sm">
+    <div ref={wrapRef} className="relative w-full">
       <input
         type="search"
         value={q}

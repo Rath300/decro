@@ -8,6 +8,7 @@ import {
   PITCH_TOUR_TOTAL,
   type PitchTourStage,
 } from '@/lib/pitch-copy'
+import PitchTourSpotlight from '@/components/pitch/PitchTourSpotlight'
 
 type Props = {
   stage: PitchTourStage
@@ -16,20 +17,17 @@ type Props = {
 }
 
 function stepOf(stage: PitchTourStage): number {
-  switch (stage) {
-    case 'welcome':
-      return 1
-    case 'click-main':
-      return 2
-    case 'click-niche':
-      return 3
-    case 'create':
-      return 4
-    case 'guest':
-      return 5
-    default:
-      return 1
-  }
+  const order: PitchTourStage[] = [
+    'welcome',
+    'click-main',
+    'click-niche',
+    'upload',
+    'search',
+    'create',
+    'guest',
+  ]
+  const i = order.indexOf(stage)
+  return i >= 0 ? i + 1 : 1
 }
 
 export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
@@ -39,6 +37,7 @@ export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
   const isWelcome = stage === 'welcome'
   const isGuest = stage === 'guest'
   const stepNum = stepOf(stage)
+  const target = copy.target
 
   if (isWelcome) {
     return (
@@ -53,7 +52,7 @@ export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
             priority
           />
           <p className="mt-5 text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/45">
-            Tour · {stepNum} / {PITCH_TOUR_TOTAL}
+            Tutorial · {stepNum} / {PITCH_TOUR_TOTAL}
           </p>
           <h1 className="mt-2 text-xl sm:text-2xl font-['Space_Mono'] font-normal">
             {copy.title}
@@ -74,7 +73,7 @@ export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
               onClick={onSkip}
               className="text-xs font-['Space_Mono'] uppercase underline underline-offset-4 text-black/45 hover:text-black"
             >
-              Skip tour
+              Skip
             </button>
           </div>
         </div>
@@ -82,41 +81,58 @@ export default function PitchOnboarding({ stage, onNext, onSkip }: Props) {
     )
   }
 
+  const cardBottom =
+    target === 'upload' || target === 'search' || target === 'new-group' || target === 'duck'
+
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-16 sm:top-auto sm:bottom-0 z-[65] flex justify-center px-3 sm:pb-6">
-      <div className="pointer-events-auto max-w-md w-full border border-black bg-white p-4 sm:p-5 mr-14 sm:mr-0">
-        <p className="text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/45">
-          Tour · {stepNum} / {PITCH_TOUR_TOTAL}
-        </p>
-        <h2 className="mt-1 text-base sm:text-lg font-['Space_Mono'] font-normal">
-          {copy.title}
-        </h2>
-        <p className="mt-2 text-sm font-['Space_Mono'] leading-relaxed text-black/75">
-          {copy.body}
-        </p>
-        {isGuest && (
-          <p className="mt-2 text-xs font-['Space_Mono'] text-black/50">
-            Feedback: {PITCH_EMAIL} · Discord {PITCH_DISCORD_HANDLES[0]} /{' '}
-            {PITCH_DISCORD_HANDLES[1]}
+    <>
+      <PitchTourSpotlight target={target && target !== 'graph' ? target : null} />
+      <div
+        className={`pointer-events-none fixed inset-x-0 z-[69] flex justify-center px-3 ${
+          cardBottom
+            ? 'top-16 sm:top-20'
+            : 'top-16 sm:top-auto sm:bottom-0 sm:pb-6'
+        }`}
+      >
+        <div className="pointer-events-auto max-w-md w-full border border-black bg-white p-4 sm:p-5 mr-0 sm:mr-0">
+          <p className="text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/45">
+            Tutorial · {stepNum} / {PITCH_TOUR_TOTAL}
           </p>
-        )}
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={onNext}
-            className="border border-black bg-black text-white px-4 py-2 text-xs font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
-          >
-            {copy.cta || 'Next'}
-          </button>
-          <button
-            type="button"
-            onClick={onSkip}
-            className="text-[10px] font-['Space_Mono'] uppercase underline underline-offset-4 text-black/40 hover:text-black"
-          >
-            Skip
-          </button>
+          <h2 className="mt-1 text-base sm:text-lg font-['Space_Mono'] font-normal">
+            {copy.title}
+          </h2>
+          <p className="mt-2 text-sm font-['Space_Mono'] leading-relaxed text-black/75">
+            {copy.body}
+          </p>
+          {target && target !== 'graph' && (
+            <p className="mt-2 text-[10px] font-['Space_Mono'] uppercase tracking-wide text-black/40">
+              Look for the highlighted control ↑
+            </p>
+          )}
+          {isGuest && (
+            <p className="mt-2 text-xs font-['Space_Mono'] text-black/50">
+              Feedback: {PITCH_EMAIL} · Discord {PITCH_DISCORD_HANDLES[0]} /{' '}
+              {PITCH_DISCORD_HANDLES[1]}
+            </p>
+          )}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={onNext}
+              className="border border-black bg-black text-white px-4 py-2 text-xs font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
+            >
+              {copy.cta || 'Next'}
+            </button>
+            <button
+              type="button"
+              onClick={onSkip}
+              className="text-[10px] font-['Space_Mono'] uppercase underline underline-offset-4 text-black/40 hover:text-black"
+            >
+              Skip
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -41,6 +41,7 @@ export default function RootChrome({ children }: { children: React.ReactNode }) 
           }}
           onTutorial={() => {
             try {
+              sessionStorage.removeItem('decro_pitch_onboarded_v7')
               sessionStorage.removeItem('decro_pitch_onboarded_v6')
               sessionStorage.removeItem('decro_pitch_onboarded_v5')
               sessionStorage.removeItem('decro_pitch_onboarded_v4')

@@ -20,6 +20,7 @@ export default function PitchChrome({ onUpload, onHome, onTutorial }: Props) {
     <header className="fixed top-0 inset-x-0 z-[60] h-14 border-b border-black bg-white flex items-center gap-2 sm:gap-3 px-2 sm:px-4">
       <button
         type="button"
+        data-tour="duck"
         onClick={onHome}
         className="inline-flex items-center shrink-0"
         aria-label="Reset web to main groups"
@@ -35,11 +36,14 @@ export default function PitchChrome({ onUpload, onHome, onTutorial }: Props) {
         />
       </button>
 
-      <PitchGroupSearch />
+      <div data-tour="search" className="min-w-0 flex-1 max-w-xs sm:max-w-sm">
+        <PitchGroupSearch />
+      </div>
 
       <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
         <button
           type="button"
+          data-tour="tutorial"
           onClick={onTutorial}
           className="hidden md:inline text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
         >
@@ -49,6 +53,7 @@ export default function PitchChrome({ onUpload, onHome, onTutorial }: Props) {
           <>
             <Link
               href="/subgroup/create"
+              data-tour="new-group"
               className="hidden sm:inline text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
             >
               New group
@@ -60,6 +65,15 @@ export default function PitchChrome({ onUpload, onHome, onTutorial }: Props) {
               Profile
             </Link>
           </>
+        )}
+        {!isAuthenticated && (
+          <span
+            data-tour="new-group"
+            className="hidden sm:inline text-xs font-['Space_Mono'] uppercase text-black/30"
+            title="Log in to create groups"
+          >
+            New group
+          </span>
         )}
         {!loading &&
           (isAuthenticated ? (
@@ -80,6 +94,7 @@ export default function PitchChrome({ onUpload, onHome, onTutorial }: Props) {
           ))}
         <button
           type="button"
+          data-tour="upload"
           onClick={onUpload}
           className="border border-black bg-black text-white px-3 sm:px-4 py-1.5 text-xs font-['Space_Mono'] uppercase tracking-wide hover:bg-white hover:text-black"
         >

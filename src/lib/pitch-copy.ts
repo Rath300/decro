@@ -7,52 +7,79 @@ export const PITCH_PARAGRAPHS = [
   'You can email me at helpdecro.net@gmail.com or send a message on discord at rath6053 or existsneel. Thanks so much.',
 ]
 
-/** Interactive tour stages — driven by real graph actions. */
+/** Interactive tour stages — driven by real UI targets + graph actions. */
 export type PitchTourStage =
   | 'welcome'
   | 'click-main'
   | 'click-niche'
+  | 'upload'
+  | 'search'
   | 'create'
   | 'guest'
   | 'done'
 
+/** CSS selector / data-tour id for spotlight stages */
+export type PitchTourTarget =
+  | 'graph'
+  | 'upload'
+  | 'search'
+  | 'new-group'
+  | 'duck'
+  | null
+
 export const PITCH_TOUR_COPY: Record<
   Exclude<PitchTourStage, 'done'>,
-  { title: string; body: string; cta?: string }
+  { title: string; body: string; cta?: string; target?: PitchTourTarget }
 > = {
   welcome: {
     title: 'This is Decro',
-    body: 'Creative groups linked together. Zoom in, open a room, post work, or start your own niche.',
+    body: 'A map of creative groups. We’ll walk through zooming, opening a room, uploading, and searching.',
     cta: 'Show me',
   },
   'click-main': {
     title: '1 · Zoom into a group',
-    body: 'Tap Photography, Music, Games… The camera zooms in and related niches appear around it.',
+    body: 'Tap a main label on the map (Photography, Music…). Niches bloom around it. Tap again later to close them.',
     cta: 'Next',
+    target: 'graph',
   },
   'click-niche': {
-    title: '2 · Open a group',
-    body: 'Use Enter group (or double-tap a niche) to go inside — that’s where you post, comment, and chat.',
+    title: '2 · Open a room',
+    body: 'Select a niche, then Enter group (or double-tap) to go inside — posts, comments, and room chat live there.',
     cta: 'Next',
+    target: 'graph',
+  },
+  upload: {
+    title: '3 · Upload work',
+    body: 'This Upload button is how you post. Pick an existing group or create a new one and choose its parents.',
+    cta: 'Next',
+    target: 'upload',
+  },
+  search: {
+    title: '4 · Find groups',
+    body: 'Search here anytime — jump straight into a group or focus it on the map.',
+    cta: 'Next',
+    target: 'search',
   },
   create: {
-    title: '3 · Create & post',
-    body: 'Upload puts work in a group. Logged-in users can create a new subgroup and choose which parent groups it hangs under (we suggest, you confirm).',
+    title: '5 · Start a subgroup',
+    body: 'Logged in? New group lets you create a niche and pick which parents it hangs under. We suggest; you decide.',
     cta: 'Next',
+    target: 'new-group',
   },
   guest: {
-    title: 'No login needed',
-    body: 'Guests can upload, comment, and chat. Log in if you want a profile and to create groups.',
+    title: 'You’re ready',
+    body: 'Guests can upload, comment, and chat. Log in for a profile and creating groups. Duck resets the map to mains.',
     cta: 'Start exploring',
+    target: 'duck',
   },
 }
 
-export const PITCH_TOUR_TOTAL = 5
+export const PITCH_TOUR_TOTAL = 7
 
 export const PITCH_ENTER_CTA = 'Enter the groups'
 
 export const PITCH_HINT =
-  'search · tap to zoom · tap again to close niches · Decro / duck = mains · Tutorial for the walkthrough'
+  'search · tap to zoom · tap again to close niches · duck = mains · Tutorial for the walkthrough'
 
 export const PITCH_EMAIL = 'helpdecro.net@gmail.com'
 export const PITCH_DISCORD_HANDLES = ['rath6053', 'existsneel'] as const

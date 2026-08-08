@@ -460,29 +460,26 @@ export default function PitchWeb({
     return () => window.clearTimeout(t)
   }, [graphReady, graphData.nodes.length, fitMains])
 
-  // Zoom INTO the cluster when a hub is expanded (not fit-all).
-  // Re-run when node count changes so we frame after children spawn.
+  // Zoom INTO the cluster when expanded — single animation (no double-fire).
   useEffect(() => {
     if (!graphReady) return
     if (!focusHubId) {
       lastFocusRef.current = null
       return
     }
-    lastFocusRef.current = focusHubId
+    const stamp = `${focusHubId}:${focusKey}`
+    if (lastFocusRef.current === stamp) return
+    lastFocusRef.current = stamp
     const id = focusHubId
-    const t1 = window.setTimeout(() => zoomToCluster(id, 700), 60)
-    const t2 = window.setTimeout(() => zoomToCluster(id, 420), 420)
-    return () => {
-      window.clearTimeout(t1)
-      window.clearTimeout(t2)
-    }
-  }, [focusHubId, focusKey, graphReady, zoomToCluster, graphData.nodes.length])
+    const t = window.setTimeout(() => zoomToCluster(id, 520), 140)
+    return () => window.clearTimeout(t)
+  }, [focusHubId, focusKey, graphReady, zoomToCluster])
 
-  // Duck / Decro / Reset view — frame mains again
+  // Duck / Decro / Reset — one calm fit to mains
   useEffect(() => {
     if (!graphReady || !resetNonce) return
     lastFocusRef.current = null
-    const t = window.setTimeout(() => fitMains(450), 80)
+    const t = window.setTimeout(() => fitMains(650), 40)
     return () => window.clearTimeout(t)
   }, [resetNonce, graphReady, fitMains])
 
@@ -608,7 +605,6 @@ export default function PitchWeb({
         if ((n.depth ?? 0) !== 1) return
         onRevealChildren?.(hid)
         onTourMainOpened?.(hid)
-        nudgeToNode(n)
         return
       }
 
@@ -619,7 +615,6 @@ export default function PitchWeb({
         }
         if (unrevealedKids) {
           onRevealChildren?.(hid)
-          nudgeToNode(n)
           return
         }
         if (n.enterable && n.slug) {
@@ -635,18 +630,15 @@ export default function PitchWeb({
       }
       if (unrevealedKids) {
         onRevealChildren?.(hid)
-        nudgeToNode(n)
         return
       }
       if (kidsOpen) {
-        // Second click on an expanded hub closes its niches
+        // Second click closes niches — keep camera still
         onCollapseChildren?.(hid)
-        nudgeToNode(n)
         return
       }
       if (hasKids) {
         onRevealChildren?.(hid)
-        nudgeToNode(n)
       }
     },
     [
@@ -659,7 +651,6 @@ export default function PitchWeb({
       onTourMainOpened,
       onTourNicheOpened,
       revealedIds,
-      nudgeToNode,
     ]
   )
 

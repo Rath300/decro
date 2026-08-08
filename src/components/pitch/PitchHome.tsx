@@ -12,7 +12,7 @@ import type {
   UploadCommit,
 } from '@/components/pitch/PitchUploadSheet'
 
-const ENTERED_KEY = 'decro_pitch_onboarded_v6'
+const ENTERED_KEY = 'decro_pitch_onboarded_v7'
 
 function displayUsername(raw?: string | null) {
   if (!raw || /^anonymous(_|$)/i.test(raw)) return 'anonymous'
@@ -112,6 +112,7 @@ export default function PitchHome() {
       setTourStage('welcome')
       try {
         sessionStorage.removeItem(ENTERED_KEY)
+        sessionStorage.removeItem('decro_pitch_onboarded_v6')
         sessionStorage.removeItem('decro_pitch_onboarded_v5')
         sessionStorage.removeItem('decro_pitch_onboarded_v4')
         sessionStorage.removeItem('decro_pitch_onboarded_v3')
@@ -217,9 +218,10 @@ export default function PitchHome() {
         return next
       })
       setSelected(null)
-      focusCluster(hubId)
+      // Don't refocus/zoom — leave the camera still so collapse feels instant
+      setFocusHubId(null)
     },
-    [nodes, startHubIds, resetWebToMains, focusCluster]
+    [nodes, startHubIds, resetWebToMains]
   )
 
   const onEnterHub = useCallback(
@@ -243,6 +245,14 @@ export default function PitchHome() {
       return
     }
     if (tourStage === 'click-niche') {
+      setTourStage('upload')
+      return
+    }
+    if (tourStage === 'upload') {
+      setTourStage('search')
+      return
+    }
+    if (tourStage === 'search') {
       setTourStage('create')
       return
     }

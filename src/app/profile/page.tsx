@@ -373,192 +373,170 @@ export default function ProfilePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white text-black font-['Space_Mono'] flex items-center justify-center">
-        <div className="max-w-md w-full mx-4 border border-black p-8 bg-white">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
-              👤
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Sign up to view profiles</h2>
-            <p className="text-gray-600 text-sm">
-              Join Decro to discover creators, view their work, and connect with the community.
-            </p>
-          </div>
-          <div className="space-y-3">
-            <a 
-              href="/signup" 
-              className="block w-full text-center px-4 py-3 bg-black text-white hover:bg-gray-800 transition-colors font-medium"
-            >
-              Create Account
-            </a>
-            <a 
-              href="/" 
-              className="block w-full text-center px-4 py-3 border border-black text-black hover:bg-gray-50 transition-colors"
-            >
-              Sign In
-            </a>
-          </div>
-          <p className="text-xs text-gray-500 text-center mt-4">
-            Already have an account? <a href="/" className="text-black hover:underline">Sign in</a>
+      <div className="min-h-[calc(100dvh-3.5rem)] bg-white text-black font-['Space_Mono'] flex items-center justify-center px-4">
+        <div className="max-w-md w-full border border-black p-6 sm:p-8 bg-white">
+          <p className="text-[10px] uppercase tracking-wide text-black/40">Profile</p>
+          <h2 className="mt-2 text-xl font-normal uppercase tracking-tight">
+            Log in to see your page
+          </h2>
+          <p className="mt-3 text-sm text-black/60 leading-relaxed">
+            Your posts and likes live here once you have an account.
           </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/login"
+              className="border border-black bg-black text-white px-5 py-2.5 text-xs uppercase tracking-wide hover:bg-white hover:text-black"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className="border border-black px-5 py-2.5 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
+            >
+              Sign up
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
 
+  const pitchTabs = (
+    [
+      ['posts', 'Posts'],
+      ['liked', 'Liked'],
+    ] as const
+  )
+  const fullTabs = (
+    [
+      ['posts', 'Posts'],
+      ['liked', 'Liked'],
+      ['spotlights', 'Spotlights'],
+      ['network', 'Connections'],
+      ['requests', 'Requests'],
+    ] as const
+  )
+  const tabs = pitchMode ? pitchTabs : fullTabs
+
   return (
-    <div className="min-h-screen bg-white text-black font-['Space_Mono']">
-      <main className="max-w-5xl mx-auto px-4 pb-12">
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-white text-black font-['Space_Mono']">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-16">
         {pitchMode && (
           <Link
             href="/"
-            className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mt-4 mb-2"
+            className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mb-6"
           >
             ← Creative web
           </Link>
         )}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-black"></div>
-            <p className="mt-4 text-gray-600">Loading profile...</p>
+          <div className="text-center py-20">
+            <p className="text-xs uppercase tracking-wide text-black/40">Loading…</p>
           </div>
         ) : (
           <>
-            {/* Profile Header */}
-            <div className="mb-8">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-6">
-                  {/* Avatar */}
-                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-3xl font-normal text-gray-600">
-                    {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
+            <header className="border-b border-black pb-6 mb-6">
+              <p className="text-[10px] uppercase tracking-wide text-black/40 mb-2">
+                Profile
+              </p>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex items-center gap-4 sm:gap-5">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 border border-black flex items-center justify-center text-2xl sm:text-3xl font-normal uppercase">
+                    {user?.name?.[0]?.toUpperCase() ||
+                      user?.email?.[0]?.toUpperCase() ||
+                      '?'}
                   </div>
-                  
-                  {/* User Info */}
                   <div>
-                    <h1 className="text-3xl font-normal mb-2">
+                    <h1 className="text-2xl sm:text-3xl font-normal uppercase tracking-tight">
                       {user?.name || user?.email}
                     </h1>
-                    <p className="text-gray-600 text-sm">@{user?.email?.split('@')[0]}</p>
+                    <p className="text-xs text-black/45 mt-1 uppercase tracking-wide">
+                      @{username || user?.email?.split('@')[0]}
+                    </p>
                   </div>
                 </div>
-
-                {/* Edit Button */}
                 <button
+                  type="button"
                   onClick={() => router.push('/profile/edit')}
-                  className="mt-2 px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors"
+                  className="border border-black px-4 py-2 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
                 >
-                  Edit Profile
+                  Edit
                 </button>
               </div>
 
-              {/* Stats */}
               {stats && (
-                <div className="flex items-center gap-8 text-sm">
-                  <div>
-                    <span className="font-bold">{stats.post_count || 0}</span>
-                    <span className="text-gray-600 ml-1">posts</span>
-                  </div>
-                  <button className="hover:underline">
-                    <span className="font-bold">{stats.follower_count || 0}</span>
-                    <span className="text-gray-600 ml-1">followers</span>
-                  </button>
-                  <button className="hover:underline">
-                    <span className="font-bold">{stats.following_count || 0}</span>
-                    <span className="text-gray-600 ml-1">following</span>
-                  </button>
-                  <div>
-                    <span className="font-bold">{(stats.total_likes || 0).toLocaleString()}</span>
-                    <span className="text-gray-600 ml-1">total likes</span>
-                  </div>
-                  <div>
-                    <span className="font-bold">{(stats.total_views || 0).toLocaleString()}</span>
-                    <span className="text-gray-600 ml-1">total views</span>
-                  </div>
+                <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[10px] uppercase tracking-wide text-black/50">
+                  <span>
+                    <span className="text-black">{stats.post_count || 0}</span> posts
+                  </span>
+                  {!pitchMode && (
+                    <>
+                      <span>
+                        <span className="text-black">{stats.follower_count || 0}</span>{' '}
+                        followers
+                      </span>
+                      <span>
+                        <span className="text-black">{stats.following_count || 0}</span>{' '}
+                        following
+                      </span>
+                    </>
+                  )}
+                  <span>
+                    <span className="text-black">
+                      {(stats.total_likes || 0).toLocaleString()}
+                    </span>{' '}
+                    likes
+                  </span>
+                  <span>
+                    <span className="text-black">
+                      {(stats.total_views || 0).toLocaleString()}
+                    </span>{' '}
+                    views
+                  </span>
                 </div>
               )}
-            </div>
 
-            {/* Tabs */}
-            <div className="border-b border-gray-300 mb-6">
-              <div className="flex gap-8">
-                <button
-                  onClick={() => setActiveTab('posts')}
-                  className={`pb-3 px-1 border-b-2 transition-colors ${
-                    activeTab === 'posts'
-                      ? 'border-black font-bold text-black'
-                      : 'border-transparent text-gray-500 hover:text-black'
-                  }`}
-                >
-                  Posts
-                </button>
-                <button
-                  onClick={() => setActiveTab('liked')}
-                  className={`pb-3 px-1 border-b-2 transition-colors ${
-                    activeTab === 'liked'
-                      ? 'border-black font-bold text-black'
-                      : 'border-transparent text-gray-500 hover:text-black'
-                  }`}
-                >
-                  Liked
-                </button>
-                <button
-                  onClick={() => setActiveTab('spotlights')}
-                  className={`pb-3 px-1 border-b-2 transition-colors ${
-                    activeTab === 'spotlights'
-                      ? 'border-black font-bold text-black'
-                      : 'border-transparent text-gray-500 hover:text-black'
-                  }`}
-                >
-                  Spotlights
-                </button>
-                <button
-                  onClick={() => setActiveTab('network')}
-                  className={`pb-3 px-1 border-b-2 transition-colors ${
-                    activeTab === 'network'
-                      ? 'border-black font-bold text-black'
-                      : 'border-transparent text-gray-500 hover:text-black'
-                  }`}
-                >
-                  Connections
-                </button>
-                <button
-                  onClick={() => setActiveTab('requests')}
-                  className={`pb-3 px-1 border-b-2 transition-colors ${
-                    activeTab === 'requests'
-                      ? 'border-black font-bold text-black'
-                      : 'border-transparent text-gray-500 hover:text-black'
-                  }`}
-                >
-                  Connection Requests
-                </button>
+              <div className="mt-6 flex flex-wrap border border-black w-fit">
+                {tabs.map(([id, label], i) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setActiveTab(id)}
+                    className={`px-3 sm:px-4 py-2 text-[10px] sm:text-xs uppercase tracking-wide ${
+                      activeTab === id
+                        ? 'bg-black text-white'
+                        : 'bg-white text-black hover:bg-black/5'
+                    } ${i > 0 ? 'border-l border-black' : ''}`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-            </div>
+            </header>
 
-            {/* Sort Controls - only show for posts and liked tabs */}
             {(activeTab === 'posts' || activeTab === 'liked') && (
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm font-['Space_Mono'] text-gray-600">Sort by:</span>
-                  <div className="flex space-x-2">
-                    {[
-                      { id: 'newest', label: 'Newest' },
-                      { id: 'oldest', label: 'Oldest' },
-                      { id: 'most_liked', label: 'Most Liked' }
-                    ].map((option) => (
-                      <button
-                        key={option.id}
-                        onClick={() => handleSort(option.id as 'newest' | 'oldest' | 'most_liked')}
-                        className={`px-3 py-1 text-xs font-['Space_Mono'] border border-black transition-colors ${
-                          sortMode === option.id
-                            ? 'bg-black text-white'
-                            : 'bg-white text-black hover:bg-gray-50'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <div className="flex items-center justify-end gap-2 mb-6">
+                <span className="text-[10px] uppercase text-black/40">Sort</span>
+                {(
+                  [
+                    ['newest', 'New'],
+                    ['oldest', 'Old'],
+                    ['most_liked', 'Liked'],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => handleSort(id)}
+                    className={`px-2.5 py-1 text-[10px] uppercase tracking-wide border border-black ${
+                      sortMode === id
+                        ? 'bg-black text-white'
+                        : 'bg-white text-black hover:bg-black hover:text-white'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             )}
 
@@ -603,16 +581,21 @@ export default function ProfilePage() {
               /* Posts/Liked Grid - use masonry layout like feed page */
               <>
                 {(activeTab === 'posts' ? posts : likedPosts).length === 0 ? (
-                  <div className="text-center py-12 border border-dashed border-gray-300">
-                    <p className="text-gray-600">
+                  <div className="text-center py-16 border border-dashed border-black/30">
+                    <p className="text-sm text-black/50">
                       {activeTab === 'posts' ? 'No posts yet' : 'No liked posts yet'}
                     </p>
                     {activeTab === 'posts' && (
                       <button
-                        onClick={() => router.push('/create')}
-                        className="mt-4 px-4 py-2 bg-black text-white hover:bg-gray-800"
+                        type="button"
+                        onClick={() =>
+                          pitchMode
+                            ? window.dispatchEvent(new Event('pitch:open-upload'))
+                            : router.push('/create')
+                        }
+                        className="mt-4 border border-black bg-black text-white px-5 py-2 text-xs uppercase tracking-wide hover:bg-white hover:text-black"
                       >
-                        Create Your First Post
+                        {pitchMode ? 'Upload' : 'Create post'}
                       </button>
                     )}
                   </div>
@@ -638,7 +621,7 @@ export default function ProfilePage() {
                       className="group break-inside-avoid mb-4"
                     >
                     <button
-                      className="relative block w-full aspect-square overflow-hidden border border-gray-200 hover:border-black transition-colors"
+                      className="relative block w-full aspect-square overflow-hidden border border-black/20 hover:border-black transition-colors"
                       onClick={() => handlePostClick(post)}
                     >
                       {post.media_url && post.content_type !== 'text' ? (
