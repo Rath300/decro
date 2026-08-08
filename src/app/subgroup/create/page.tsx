@@ -1,8 +1,3 @@
-/**
- * Create Subgroup Page
- * Form to create a new subgroup/niche
- */
-
 'use client'
 
 import { useState, useRef } from 'react'
@@ -24,35 +19,32 @@ export default function CreateSubgroupPage() {
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
-    description: ''
+    description: '',
   })
   const [parentHubIds, setParentHubIds] = useState<string[]>([])
   const [coverFile, setCoverFile] = useState<File | null>(null)
-  const [coverPreview, setCoverPreview] = useState<string>('')
+  const [coverPreview, setCoverPreview] = useState('')
 
   const handleNameChange = (value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       name: value,
       slug: value
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+        .replace(/^-+|-+$/g, ''),
     }))
   }
 
   const handleCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image must be less than 5MB')
-        return
-      }
-
-      setCoverFile(file)
-      const url = URL.createObjectURL(file)
-      setCoverPreview(url)
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB')
+      return
     }
+    setCoverFile(file)
+    setCoverPreview(URL.createObjectURL(file))
   }
 
   const handleSubmit = async () => {
@@ -60,57 +52,33 @@ export default function CreateSubgroupPage() {
       toast.error('You must be logged in')
       return
     }
-
-    if (!formData.name.trim()) {
-      toast.error('Name is required')
-      return
-    }
-
-    if (formData.name.length < 3) {
+    if (!formData.name.trim() || formData.name.length < 3) {
       toast.error('Name must be at least 3 characters')
       return
     }
-
     if (!formData.slug || formData.slug.length < 3) {
-      toast.error('Invalid slug - must be at least 3 characters')
+      toast.error('Invalid slug — must be at least 3 characters')
       return
     }
-
     if (parentHubIds.length < 1 || parentHubIds.length > 2) {
       toast.error('Pick 1–2 parent groups for the creative web')
       return
     }
-
     if (isSubmitting) return
 
     setIsSubmitting(true)
-
     try {
-      // Cover upload has to go through the authenticated API route; the browser
-      // cannot call create_subgroup_ext with a cover URL alone after EXECUTE was
-      // revoked from anon.
       const body = new FormData()
       body.append('name', formData.name.trim())
       body.append('slug', formData.slug)
       body.append('description', formData.description.trim())
       body.append('parentHubIds', JSON.stringify(parentHubIds))
-      if (coverFile) {
-        body.append('coverFile', coverFile)
-      }
+      if (coverFile) body.append('coverFile', coverFile)
 
-      const response = await fetch('/api/subgroups', {
-        method: 'POST',
-        body,
-      })
-
+      const response = await fetch('/api/subgroups', { method: 'POST', body })
       const result = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create subgroup')
-      }
-
-      if (!result.slug) {
-        throw new Error('No slug returned from subgroup creation')
-      }
+      if (!response.ok) throw new Error(result.error || 'Failed to create subgroup')
+      if (!result.slug) throw new Error('No slug returned from subgroup creation')
 
       const under = result.placement?.parentLabels?.length
         ? ` Added under ${result.placement.parentLabels.join(' + ')} on the web.`
@@ -126,81 +94,100 @@ export default function CreateSubgroupPage() {
     }
   }
 
+  const field =
+    'w-full border border-black px-3 py-2.5 text-sm font-["Space_Mono"] bg-white outline-none focus:bg-black/[0.02]'
+  const label =
+    'block text-[10px] uppercase tracking-wide text-black/45 mb-2 font-["Space_Mono"]'
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center font-['Space_Mono']">
-        <div className="text-center px-4">
-          <p className="mb-4 text-sm">Log in to create a subgroup</p>
-          <Link
-            href="/login"
-            className="inline-block px-4 py-2 bg-black text-white text-xs uppercase"
-          >
-            Log in
-          </Link>
+      <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono'] flex items-center justify-center px-4">
+        <div className="max-w-md w-full border border-black p-6 sm:p-8">
+          <p className="text-[10px] uppercase tracking-wide text-black/40">
+            New group
+          </p>
+          <h1 className="mt-2 text-xl font-normal uppercase tracking-tight">
+            Log in to create a subgroup
+          </h1>
+          <p className="mt-3 text-sm text-black/60 leading-relaxed">
+            Groups hang on the creative web under parents you choose.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/login"
+              className="border border-black bg-black text-white px-5 py-2.5 text-xs uppercase tracking-wide hover:bg-white hover:text-black"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/"
+              className="border border-black px-5 py-2.5 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
+            >
+              Back
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white font-['Space_Mono']">
-      <main
-        className={`max-w-2xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12 ${
-          pitchMode ? 'pt-6' : 'pt-20 sm:pt-24'
-        }`}
-      >
-        <div className="mb-8">
-          {pitchMode && (
-            <Link
-              href="/"
-              className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mb-4"
-            >
-              ← Creative web
-            </Link>
-          )}
-          <h1 className="text-3xl font-normal mb-2 uppercase tracking-tight">
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono']">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-16">
+        <Link
+          href={pitchMode ? '/' : '/subgroup'}
+          className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mb-6"
+        >
+          {pitchMode ? '← Creative web' : '← Subgroups'}
+        </Link>
+
+        <header className="border-b border-black pb-6 mb-8">
+          <p className="text-[10px] uppercase tracking-wide text-black/40 mb-2">
+            New group
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-normal uppercase tracking-tight">
             Create subgroup
           </h1>
-          <p className="text-black/60 text-sm">
-            Name your niche, then choose which parent groups it hangs under on the
-            web. We suggest — you confirm.
+          <p className="mt-3 text-sm text-black/60 max-w-xl leading-relaxed">
+            Name your niche, then choose which parent groups it hangs under. We
+            suggest — you confirm.
           </p>
-        </div>
+        </header>
 
         <div className="space-y-6">
-          {/* Cover Image */}
           <div>
-            <label className="block text-sm font-medium text-black mb-3">
-              Cover Image (Optional)
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <p className={label}>Cover (optional)</p>
+            <div className="border border-dashed border-black/40 p-6 text-center">
               {coverPreview ? (
                 <div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={coverPreview}
                     alt="Cover preview"
-                    className="max-w-full h-48 mx-auto object-cover rounded-lg mb-4"
+                    className="max-w-full h-44 mx-auto object-cover border border-black mb-4"
                   />
                   <button
+                    type="button"
                     onClick={() => {
                       setCoverFile(null)
                       setCoverPreview('')
                     }}
-                    className="text-red-500 hover:text-red-700 text-sm"
+                    className="text-[10px] uppercase tracking-wide underline underline-offset-4 text-black/50 hover:text-black"
                   >
                     Remove
                   </button>
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Add a cover image for your subgroup
+                  <p className="text-xs text-black/45 mb-4">
+                    Optional cover for the group page
                   </p>
                   <button
+                    type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-black text-white hover:bg-gray-800 transition-colors"
+                    className="border border-black px-4 py-2 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
                   >
-                    Choose Image
+                    Choose image
                   </button>
                   <input
                     ref={fileInputRef}
@@ -214,64 +201,70 @@ export default function CreateSubgroupPage() {
             </div>
           </div>
 
-          {/* Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-black mb-2">
-              Subgroup Name *
+            <label htmlFor="name" className={label}>
+              Name *
             </label>
             <input
               type="text"
               id="name"
               value={formData.name}
               onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="e.g., Street Photography"
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
+              placeholder="Street Photography"
+              className={field}
               maxLength={50}
             />
           </div>
 
-          {/* Slug (Auto-generated) */}
           <div>
-            <label htmlFor="slug" className="block text-sm font-medium text-black mb-2">
-              URL Slug *
+            <label htmlFor="slug" className={label}>
+              URL slug *
             </label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">/subgroup/</span>
+            <div className="flex items-stretch border border-black">
+              <span className="px-3 py-2.5 text-xs text-black/40 border-r border-black bg-black/[0.02] flex items-center">
+                /subgroup/
+              </span>
               <input
                 type="text"
                 id="slug"
                 value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                }
                 placeholder="street-photography"
-                className="flex-1 p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm text-black bg-white"
+                className="flex-1 px-3 py-2.5 text-sm outline-none bg-white"
                 maxLength={50}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Auto-generated from name. Letters, numbers, and hyphens only.
+            <p className="mt-1.5 text-[10px] uppercase tracking-wide text-black/35">
+              Auto from name · letters, numbers, hyphens
             </p>
           </div>
 
-          {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-black mb-2">
+            <label htmlFor="description" className={label}>
               Description
             </label>
             <textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="What is this subgroup about?"
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="What is this group about?"
               rows={4}
-              className="w-full p-3 border-2 border-gray-300 focus:border-black focus:outline-none text-sm resize-none text-black bg-white"
+              className={`${field} resize-none`}
               maxLength={500}
             />
-            <div className="text-xs text-gray-500 mt-1 text-right">
+            <p className="mt-1.5 text-[10px] uppercase tracking-wide text-black/35 text-right">
               {formData.description.length}/500
-            </div>
+            </p>
           </div>
 
-          <div className="border border-black p-4">
+          <div className="border border-black p-4 sm:p-5">
             <ParentHubPicker
               name={formData.name}
               description={formData.description}
@@ -280,23 +273,20 @@ export default function CreateSubgroupPage() {
             />
           </div>
 
-          {/* Submit Button */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-wrap gap-3 pt-2">
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || parentHubIds.length < 1}
-              className={`flex-1 py-3 text-sm font-medium border-2 border-black transition-colors ${
-                isSubmitting || parentHubIds.length < 1
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-black text-white hover:bg-gray-800'
-              }`}
+              className="border border-black bg-black text-white px-6 py-2.5 text-xs uppercase tracking-wide hover:bg-white hover:text-black disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Creating...' : 'Create Subgroup'}
+              {isSubmitting ? 'Creating…' : 'Create subgroup'}
             </button>
             <button
+              type="button"
               onClick={() => router.back()}
               disabled={isSubmitting}
-              className="px-6 py-3 text-sm border-2 border-gray-300 hover:border-black transition-colors disabled:opacity-50 text-black bg-white"
+              className="border border-black px-6 py-2.5 text-xs uppercase tracking-wide hover:bg-black hover:text-white disabled:opacity-40"
             >
               Cancel
             </button>

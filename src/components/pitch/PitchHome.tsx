@@ -141,7 +141,36 @@ export default function PitchHome() {
     } catch {}
   }, [startHubIds, resetWebToMains])
 
-  // Search → focus hub on the web
+  // Search (or external) → reveal ancestors and focus hub on the web
+  const applyFocusHub = useCallback(
+    (hubId: string) => {
+      if (!hubId || !nodes.length) return
+      const exists = nodes.some((n) => n.hubId === hubId)
+      if (!exists) return
+      setRevealedIds((prev) => {
+        const next = new Set(prev)
+        next.add(hubId)
+        // Walk ancestors so niches under collapsed parents become visible
+        const queue = [...(nodes.find((n) => n.hubId === hubId)?.parentIds || [])]
+        const seen = new Set<string>()
+        while (queue.length) {
+          const pid = queue.pop()!
+          if (seen.has(pid)) continue
+          seen.add(pid)
+          next.add(pid)
+          const parents =
+            nodes.find((n) => n.hubId === pid)?.parentIds || []
+          for (const p of parents) queue.push(p)
+        }
+        return next
+      })
+      setSelected(nodes.find((n) => n.hubId === hubId) || null)
+      setFocusHubId(hubId)
+      setFocusKey((k) => k + 1)
+    },
+    [nodes]
+  )
+
   useEffect(() => {
     if (!nodes.length || startHubIds.length === 0) return
     let hubId: string | null = null
@@ -152,18 +181,17 @@ export default function PitchHome() {
       return
     }
     if (!hubId) return
-    const exists = nodes.some((n) => n.hubId === hubId)
-    if (!exists) return
-    setRevealedIds((prev) => {
-      const next = new Set(prev)
-      next.add(hubId!)
-      const node = nodes.find((n) => n.hubId === hubId)
-      for (const p of node?.parentIds || []) next.add(p)
-      return next
-    })
-    setFocusHubId(hubId)
-    setFocusKey((k) => k + 1)
-  }, [nodes, startHubIds.length])
+    applyFocusHub(hubId)
+  }, [nodes, startHubIds.length, applyFocusHub])
+
+  useEffect(() => {
+    const onFocus = (e: Event) => {
+      const hubId = (e as CustomEvent<{ hubId?: string }>).detail?.hubId
+      if (hubId) applyFocusHub(hubId)
+    }
+    window.addEventListener('pitch:focus-hub', onFocus)
+    return () => window.removeEventListener('pitch:focus-hub', onFocus)
+  }, [applyFocusHub])
 
   useEffect(() => {
     if (!toast) return

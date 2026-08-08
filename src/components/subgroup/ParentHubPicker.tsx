@@ -76,10 +76,10 @@ export default function ParentHubPicker({
   return (
     <div className="space-y-3 font-['Space_Mono']">
       <div>
-        <p className="text-sm font-normal text-black mb-1">
-          Where does this sit on the web?
+        <p className="text-[10px] uppercase tracking-wide text-black/45 mb-1">
+          Parents on the web
         </p>
-        <p className="text-xs text-black/50">
+        <p className="text-sm text-black/70 leading-relaxed">
           Pick 1–2 parent groups. We suggest based on the name — you decide.
         </p>
       </div>
@@ -91,7 +91,7 @@ export default function ParentHubPicker({
       )}
 
       {recLabels.length > 0 && (
-        <p className="text-xs text-black/70 border border-black/20 px-3 py-2">
+        <p className="text-xs text-black/70 border border-black px-3 py-2">
           Suggested: <span className="text-black">{recLabels.join(' + ')}</span>
           {lowConfidence ? ' · low confidence — please check' : ''}
         </p>

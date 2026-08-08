@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { PITCH_HUBS, hubSlug } from '@/lib/pitch-taxonomy'
+import { usePathname, useRouter } from 'next/navigation'
+import { PITCH_HUBS, hubSlug, userHubId } from '@/lib/pitch-taxonomy'
 
 type Hit = {
   kind: 'hub' | 'subgroup'
@@ -12,8 +12,20 @@ type Hit = {
   hubId?: string
 }
 
+function focusHubOnWeb(hubId: string) {
+  try {
+    sessionStorage.setItem('decro_pitch_focus_hub', hubId)
+  } catch {}
+  try {
+    window.dispatchEvent(
+      new CustomEvent('pitch:focus-hub', { detail: { hubId } })
+    )
+  } catch {}
+}
+
 export default function PitchGroupSearch() {
   const router = useRouter()
+  const pathname = usePathname()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [hits, setHits] = useState<Hit[]>([])
@@ -61,6 +73,7 @@ export default function PitchGroupSearch() {
           id: g.id,
           label: g.name,
           slug: g.slug,
+          hubId: userHubId(g.id),
         }))
         // Prefer unique by label
         const seen = new Set(hubHits.map((h) => h.label.toLowerCase()))
@@ -79,15 +92,13 @@ export default function PitchGroupSearch() {
   const go = (hit: Hit) => {
     setOpen(false)
     setQ('')
-    if (hit.slug) {
-      router.push(`/subgroup/${hit.slug}`)
-      return
-    }
-    // Non-enterable hub — go home and ask graph to focus
-    try {
-      sessionStorage.setItem('decro_pitch_focus_hub', hit.hubId || hit.id)
-    } catch {}
-    router.push('/')
+    // Always land on the creative web at that group's place (not the subgroup page)
+    const hubId =
+      hit.kind === 'subgroup'
+        ? hit.hubId || userHubId(hit.id)
+        : hit.hubId || hit.id
+    focusHubOnWeb(hubId)
+    if (pathname !== '/') router.push('/')
   }
 
   return (

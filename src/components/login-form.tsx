@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
-import VersionIndicator from '@/components/VersionIndicator'
 import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function LoginForm() {
@@ -14,68 +14,62 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { signIn } = useAuth()
+  const pitchMode = isPitchMode()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await handleSignIn()
-  }
-
-  const handleSignIn = async () => {
     if (!email || !password) {
       setError('Please fill in all fields')
       return
     }
-
     setLoading(true)
     setError('')
-
     try {
       const result = await signIn(email, password)
-      
       if (result.success) {
-        router.push(isPitchMode() ? '/' : '/feed')
+        router.push(pitchMode ? '/' : '/feed')
         router.refresh()
       } else {
         setError(result.error || 'Sign in failed')
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
   }
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword)
-  }
-
-  const handleSignUpClick = () => {
-    router.push('/signup')
-  }
-
-  const handleBackHome = () => {
-    if (isPitchMode()) router.push('/')
-  }
-
-  const handleForgotPasswordClick = () => {
-    router.push('/forgot-password')
-  }
+  const field =
+    'w-full border border-black px-3 py-2.5 text-sm font-["Space_Mono"] bg-white outline-none'
+  const label =
+    'block text-[10px] uppercase tracking-wide text-black/45 mb-2 font-["Space_Mono"]'
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <VersionIndicator />
-      {/* Main card without border */}
-      <div className="login-card p-6 sm:p-8 lg:p-12">
-        {/* Sign In Title - Back at the top */}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-normal text-black text-center mb-6 sm:mb-8 lg:mb-12 font-space-grotesk">
-          Sign In
-        </h1>
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono'] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md border border-black p-6 sm:p-8">
+        {pitchMode && (
+          <Link
+            href="/"
+            className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mb-6"
+          >
+            ← Creative web
+          </Link>
+        )}
 
-        {/* Form with proper input dimensions */}
-        <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
-          {/* Email Field */}
-          <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-normal text-black font-space-grotesk">
+        <p className="text-[10px] uppercase tracking-wide text-black/40">
+          Account
+        </p>
+        <h1 className="mt-2 text-2xl sm:text-3xl font-normal uppercase tracking-tight">
+          Log in
+        </h1>
+        <p className="mt-3 text-sm text-black/60 leading-relaxed">
+          Optional — guests can still upload and comment. Log in for a profile
+          and creating groups.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          <div>
+            <label htmlFor="email" className={label}>
               Email or username
             </label>
             <input
@@ -83,107 +77,72 @@ export default function LoginForm() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input-field focus:outline-none focus:ring-2 focus:ring-blue-500 font-space-grotesk"
-              placeholder="Email or username"
+              className={field}
+              placeholder="you@example.com"
               autoComplete="username"
               required
             />
           </div>
 
-          {/* Password Field with Toggle */}
-          <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-normal text-black font-space-grotesk">
+          <div>
+            <label htmlFor="password" className={label}>
               Password
             </label>
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
-                placeholder="Enter your password"
+                className={`${field} pr-16`}
+                placeholder="Your password"
+                autoComplete="current-password"
                 required
               />
               <button
                 type="button"
-                onClick={togglePasswordVisibility}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wide text-black/40 hover:text-black"
               >
-                {showPassword ? (
-                  // Eye slash icon (password visible)
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                  </svg>
-                ) : (
-                  // Eye icon (password hidden)
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                )}
+                {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
           </div>
-          <div className="mt-6 text-center">
-            <button
-              type="submit"
-              disabled={loading}
-              className="input-field bg-white text-black font-space-grotesk text-base font-normal border border-black hover:bg-black hover:text-white active:bg-black active:text-white transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Signing In...' : 'Sign In'}
-            </button>
-          </div>
-        </form>
 
-        {/* Error message */}
-        {error && (
-          <div className="mt-4 text-center">
-            <p className="text-sm text-red-600 font-space-grotesk">
+          {error && (
+            <p className="text-xs text-red-700 border border-red-700 px-3 py-2">
               {error}
             </p>
-          </div>
-        )}
+          )}
 
-        {/* Forgot Password Link - Moved down */}
-        <div className="mt-6 text-center">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full border border-black bg-black text-white py-2.5 text-xs uppercase tracking-wide hover:bg-white hover:text-black disabled:opacity-40"
+          >
+            {loading ? 'Signing in…' : 'Log in'}
+          </button>
+        </form>
+
+        <div className="mt-6 space-y-3 text-xs">
           <button
             type="button"
-            onClick={handleForgotPasswordClick}
-            className="text-sm font-normal text-black font-space-grotesk hover:underline transition-colors cursor-pointer"
+            onClick={() => router.push('/forgot-password')}
+            className="block uppercase tracking-wide underline underline-offset-4 text-black/50 hover:text-black"
           >
-            Forgot Password?
+            Forgot password
           </button>
-        </div>
-
-        {/* Sign Up Link - Moved down */}
-        <div className="mt-4 text-center">
-          <p className="text-sm font-normal text-black font-space-grotesk">
-            Don&apos;t Have an Account?{' '}
-            <button 
-              type="button"
-              onClick={handleSignUpClick}
-              className="font-normal text-black hover:underline transition-colors cursor-pointer"
+          <p className="text-black/50">
+            No account?{' '}
+            <Link
+              href="/signup"
+              className="text-black underline underline-offset-4"
             >
-              Sign Up
-            </button>
+              Sign up
+            </Link>
           </p>
         </div>
-
-        {isPitchMode() && (
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={handleBackHome}
-              className="text-sm font-normal text-black/60 font-space-grotesk hover:text-black hover:underline"
-            >
-              ← Back to groups
-            </button>
-          </div>
-        )}
       </div>
     </div>
   )
-} 
-
+}

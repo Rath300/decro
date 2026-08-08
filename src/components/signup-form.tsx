@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
-import VersionIndicator from '@/components/VersionIndicator'
 import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function SignupForm() {
@@ -17,23 +17,18 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { signUp } = useAuth()
+  const pitchMode = isPitchMode()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await handleSignUp()
-  }
-
-  const handleSignUp = async () => {
     if (!username || !password || !confirmPassword) {
       setError('Please fill in all required fields')
       return
     }
-
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
     }
-
     if (password.length < 8) {
       setError('Password must be at least 8 characters')
       return
@@ -41,185 +36,155 @@ export default function SignupForm() {
 
     setLoading(true)
     setError('')
-
     try {
       const result = await signUp(email, password, username)
-      
       if (result.success) {
-        router.push(isPitchMode() ? '/' : '/feed')
+        router.push(pitchMode ? '/' : '/feed')
         router.refresh()
       } else {
         setError(result.error || 'Sign up failed')
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
   }
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword)
-  }
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword)
-  }
-
-  const handleSignInClick = () => {
-    router.push(isPitchMode() ? '/login' : '/')
-  }
+  const field =
+    'w-full border border-black px-3 py-2.5 text-sm font-["Space_Mono"] bg-white outline-none'
+  const label =
+    'block text-[10px] uppercase tracking-wide text-black/45 mb-2 font-["Space_Mono"]'
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <VersionIndicator />
-      {/* Main signup card */}
-      <div className="signup-card p-6 sm:p-8 lg:p-12">
-        {/* Sign Up Title */}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-normal text-black text-center mb-6 sm:mb-8 lg:mb-12 font-space-grotesk">
-          Sign Up
-        </h1>
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono'] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md border border-black p-6 sm:p-8">
+        {pitchMode && (
+          <Link
+            href="/"
+            className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mb-6"
+          >
+            ← Creative web
+          </Link>
+        )}
 
-        {/* Form with proper input dimensions */}
-        <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
-          {/* Email Field - Optional */}
-          <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-normal text-black font-space-grotesk">
-              Email <span className="text-gray-500">(optional)</span>
+        <p className="text-[10px] uppercase tracking-wide text-black/40">
+          Account
+        </p>
+        <h1 className="mt-2 text-2xl sm:text-3xl font-normal uppercase tracking-tight">
+          Sign up
+        </h1>
+        <p className="mt-3 text-sm text-black/60 leading-relaxed">
+          Create a name for your profile. Email is optional.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          <div>
+            <label htmlFor="email" className={label}>
+              Email <span className="normal-case text-black/30">(optional)</span>
             </label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input-field focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email (optional)"
+              className={field}
+              placeholder="you@example.com"
+              autoComplete="email"
             />
           </div>
 
-          {/* Username Field */}
-          <div className="space-y-2">
-            <label htmlFor="username" className="block text-sm font-normal text-black font-space-grotesk">
-              Username
+          <div>
+            <label htmlFor="username" className={label}>
+              Username *
             </label>
             <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="input-field focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your username"
+              className={field}
+              placeholder="yourname"
+              autoComplete="username"
               required
             />
           </div>
 
-          {/* Password Field with Toggle */}
-          <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-normal text-black font-space-grotesk">
-              Password
+          <div>
+            <label htmlFor="password" className={label}>
+              Password *
             </label>
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
-                placeholder="Enter your password"
+                className={`${field} pr-16`}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
                 required
               />
               <button
                 type="button"
-                onClick={togglePasswordVisibility}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wide text-black/40 hover:text-black"
               >
-                {showPassword ? (
-                  // Eye slash icon (password visible)
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                  </svg>
-                ) : (
-                  // Eye icon (password hidden)
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                )}
+                {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
           </div>
 
-          {/* Confirm Password Field with Toggle */}
-          <div className="space-y-2">
-            <label htmlFor="confirmPassword" className="block text-sm font-normal text-black font-space-grotesk">
-              Confirm Password
+          <div>
+            <label htmlFor="confirmPassword" className={label}>
+              Confirm password *
             </label>
             <div className="relative">
               <input
-                type={showConfirmPassword ? "text" : "password"}
+                type={showConfirmPassword ? 'text' : 'password'}
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="input-field focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
-                placeholder="Confirm your password"
+                className={`${field} pr-16`}
+                placeholder="Repeat password"
+                autoComplete="new-password"
                 required
               />
               <button
                 type="button"
-                onClick={toggleConfirmPasswordVisibility}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wide text-black/40 hover:text-black"
               >
-                {showConfirmPassword ? (
-                  // Eye slash icon (password visible)
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                  </svg>
-                ) : (
-                  // Eye icon (password hidden)
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                )}
+                {showConfirmPassword ? 'Hide' : 'Show'}
               </button>
             </div>
           </div>
-          {/* Submit Button inside form */}
-          <div className="mt-6 text-center">
-            <button
-              type="submit"
-              disabled={loading}
-              className="input-field bg-white text-black font-space-grotesk text-base font-normal border border-black hover:bg-black hover:text-white active:bg-black active:text-white transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Signing Up...' : 'Sign Up'}
-            </button>
-          </div>
-        </form>
 
-        {/* Error message */}
-        {error && (
-          <div className="mt-4 text-center">
-            <p className="text-sm text-red-600 font-space-grotesk">
+          {error && (
+            <p className="text-xs text-red-700 border border-red-700 px-3 py-2">
               {error}
             </p>
-          </div>
-        )}
+          )}
 
-        {/* Already have an Account Link */}
-        <div className="mt-6 text-center">
-          <p className="text-sm font-normal text-black font-space-grotesk">
-            Already have an Account?{' '}
-            <button 
-              onClick={handleSignInClick}
-              className="font-normal text-black hover:underline transition-colors cursor-pointer"
-            >
-              Sign in
-            </button>
-          </p>
-        </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full border border-black bg-black text-white py-2.5 text-xs uppercase tracking-wide hover:bg-white hover:text-black disabled:opacity-40"
+          >
+            {loading ? 'Creating…' : 'Sign up'}
+          </button>
+        </form>
+
+        <p className="mt-6 text-xs text-black/50">
+          Already have an account?{' '}
+          <Link
+            href="/login"
+            className="text-black underline underline-offset-4"
+          >
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   )
-} 
+}
