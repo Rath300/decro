@@ -148,10 +148,6 @@ export default function CreateSubgroupPage() {
           <h1 className="text-3xl sm:text-4xl font-normal uppercase tracking-tight">
             Create subgroup
           </h1>
-          <p className="mt-3 text-sm text-black/60 max-w-xl leading-relaxed">
-            Name your niche, then choose which parent groups it hangs under. We
-            suggest — you confirm.
-          </p>
         </header>
 
         <div className="space-y-6">

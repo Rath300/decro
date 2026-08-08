@@ -63,8 +63,8 @@ export default function LoginForm() {
           Log in
         </h1>
         <p className="mt-3 text-sm text-black/60 leading-relaxed">
-          Optional — guests can still upload and comment. Log in for a profile
-          and creating groups.
+          Guests can still upload and comment. Log in for a profile and creating
+          groups!
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">

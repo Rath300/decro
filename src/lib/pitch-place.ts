@@ -7,6 +7,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   getPitchHub,
   hubSlug,
+  isUserHubId,
+  parseUserHubId,
   PITCH_HUBS,
   userHubId,
 } from '@/lib/pitch-taxonomy'
@@ -43,40 +45,62 @@ export type ParentSuggestion = {
   depth: number
 }
 
-/** Ranked suggestions for the create UI — user confirms parents. */
+type SuggestParentsResult = {
+  suggestions: ParentSuggestion[]
+  recommended: string[]
+  lowConfidence: boolean
+}
+
+/** Sync fallback — taxonomy only. Prefer suggestParentsForUi with DB. */
 export function suggestParents(
   name: string,
   description: string | null | undefined,
-  limit = 10
-): { suggestions: ParentSuggestion[]; recommended: string[]; lowConfidence: boolean } {
-  const candidates = taxonomyPlaceables().filter((c) => !c.hubId.startsWith('sg:'))
-  const auto = chooseParents(name, description, candidates)
+  limit = 24,
+  candidates?: PlaceableHub[]
+): SuggestParentsResult {
+  const pool = (candidates || taxonomyPlaceables()).filter(
+    (c) => c.hubId !== 'decro'
+  )
+  const auto = chooseParents(name, description, pool)
   const query = vectorize(`${name} ${description || ''}`)
-  const ranked = candidates
-    .map((c) => ({
-      hubId: c.hubId,
-      label: c.label,
-      score: cosine(query, vectorize(c.label, c.aliases || [])),
-      depth: c.depth,
-    }))
-    .sort((a, b) => b.score - a.score)
-
-  // Always surface the 8 mains, then best niches
-  const mains = ranked.filter((r) => r.depth === 1)
-  const niches = ranked.filter((r) => r.depth >= 2).slice(0, Math.max(0, limit - mains.length))
-  const byId = new Map<string, ParentSuggestion>()
-  for (const r of [...mains, ...niches, ...ranked.slice(0, limit)]) {
-    if (!byId.has(r.hubId)) byId.set(r.hubId, r)
-  }
-  const suggestions = [...byId.values()]
-    .sort((a, b) => {
-      const aRec = auto.parentHubIds.includes(a.hubId) ? 1 : 0
-      const bRec = auto.parentHubIds.includes(b.hubId) ? 1 : 0
-      if (aRec !== bRec) return bRec - aRec
-      if (a.depth !== b.depth) return a.depth - b.depth
-      return b.score - a.score
+  const ranked = pool
+    .map((c) => {
+      const raw = cosine(query, vectorize(c.label, c.aliases || []))
+      // Slight boost so niches / existing groups outrank broad mains
+      const depthBoost = Math.min(0.12, Math.max(0, c.depth - 1) * 0.035)
+      return {
+        hubId: c.hubId,
+        label: c.label,
+        score: raw,
+        depth: c.depth,
+        rank: raw + depthBoost,
+      }
     })
-    .slice(0, limit + 4)
+    .sort((a, b) => b.rank - a.rank)
+
+  // Prefer specific niches + existing subgroups; mains only as filler
+  const specific = ranked.filter((r) => r.depth >= 2 && r.score >= 0.04)
+  const mains = ranked.filter((r) => r.depth === 1 && r.score >= 0.1)
+  const byId = new Map<string, ParentSuggestion>()
+  for (const r of [...specific, ...mains, ...ranked]) {
+    if (byId.has(r.hubId)) continue
+    byId.set(r.hubId, {
+      hubId: r.hubId,
+      label: r.label,
+      score: r.score,
+      depth: r.depth,
+    })
+    if (byId.size >= limit) break
+  }
+
+  const suggestions = [...byId.values()].sort((a, b) => {
+    const aRec = auto.parentHubIds.includes(a.hubId) ? 1 : 0
+    const bRec = auto.parentHubIds.includes(b.hubId) ? 1 : 0
+    if (aRec !== bRec) return bRec - aRec
+    // More specific first
+    if (a.depth !== b.depth) return b.depth - a.depth
+    return b.score - a.score
+  })
 
   return {
     suggestions,
@@ -85,8 +109,22 @@ export function suggestParents(
   }
 }
 
+/** Taxonomy niches + every placed subgroup on the web. */
+export async function suggestParentsForUi(
+  admin: SupabaseClient,
+  name: string,
+  description: string | null | undefined,
+  limit = 28
+): Promise<SuggestParentsResult> {
+  const candidates = [
+    ...taxonomyPlaceables(),
+    ...(await loadPlacedUserCandidates(admin)),
+  ]
+  return suggestParents(name, description, limit, candidates)
+}
+
 export function depthFromParents(parentHubIds: string[]): number {
-  const depths = parentHubIds.map((id) => getPitchHub(id)?.depth ?? 1)
+  const depths = parentHubIds.map((id) => getPitchHub(id)?.depth ?? 2)
   return Math.min(MAX_DEPTH, Math.max(1, ...depths) + 1)
 }
 
@@ -94,7 +132,7 @@ export function labelsForParents(parentHubIds: string[]): string[] {
   return parentHubIds.map((id) => getPitchHub(id)?.label || id)
 }
 
-/** Validate user-chosen taxonomy parent ids (1–2, not center). */
+/** Validate user-chosen parent ids (1–2): taxonomy hubs or `sg:<uuid>`. */
 export function normalizeChosenParents(raw: unknown): string[] | null {
   if (!Array.isArray(raw)) return null
   const ids = [
@@ -107,10 +145,52 @@ export function normalizeChosenParents(raw: unknown): string[] | null {
   ]
   if (ids.length < 1 || ids.length > 2) return null
   for (const id of ids) {
+    if (id === 'decro') return null
+    if (isUserHubId(id)) {
+      if (!parseUserHubId(id)) return null
+      continue
+    }
     const hub = getPitchHub(id)
-    if (!hub || hub.depth < 1 || hub.id === 'decro') return null
+    if (!hub || hub.depth < 1) return null
   }
   return ids
+}
+
+/** Resolve labels/depths for taxonomy + existing subgroup parents. */
+export async function resolveParentMeta(
+  admin: SupabaseClient,
+  parentHubIds: string[]
+): Promise<{ labels: string[]; depth: number } | null> {
+  const labels: string[] = []
+  const depths: number[] = []
+
+  for (const id of parentHubIds) {
+    const tax = getPitchHub(id)
+    if (tax && tax.depth >= 1) {
+      labels.push(tax.label)
+      depths.push(tax.depth)
+      continue
+    }
+    const uuid = parseUserHubId(id)
+    if (!uuid) return null
+    const { data, error } = await admin
+      .from('subgroups')
+      .select('name,web_depth,placed_at')
+      .eq('id', uuid)
+      .maybeSingle()
+    if (error || !data) return null
+    labels.push(data.name || id)
+    depths.push(
+      typeof data.web_depth === 'number' && data.web_depth > 0
+        ? data.web_depth
+        : 2
+    )
+  }
+
+  return {
+    labels,
+    depth: Math.min(MAX_DEPTH, Math.max(1, ...depths) + 1),
+  }
 }
 
 function rootMainOf(hubId: string): string {
@@ -157,17 +237,26 @@ export function chooseParents(
   const scored = candidates
     .map((c) => {
       const vec = vectorize(`${c.label}`, c.aliases || [])
-      return { c, score: cosine(query, vec) }
+      const raw = cosine(query, vec)
+      const depthBoost = Math.min(0.1, Math.max(0, c.depth - 1) * 0.03)
+      return { c, score: raw, rank: raw + depthBoost }
     })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      if (Math.abs(b.rank - a.rank) > 0.02) return b.rank - a.rank
+      return b.c.depth - a.c.depth
+    })
 
   const mains = scored.filter((s) => s.c.depth === 1)
-  let primary = scored.find((s) => s.score >= SCORE_THRESHOLD)
+  // Prefer a specific niche/subgroup when it clears the threshold
+  let primary =
+    scored.find((s) => s.c.depth >= 2 && s.score >= SCORE_THRESHOLD) ||
+    scored.find((s) => s.score >= SCORE_THRESHOLD)
   let lowConfidence = false
 
   if (!primary) {
     lowConfidence = true
-    primary = mains[0] || scored[0]
+    primary =
+      scored.find((s) => s.c.depth >= 2) || mains[0] || scored[0]
     if (!primary || primary.score < 0.06) {
       const fb = candidates.find((c) => c.hubId === FALLBACK_PARENT)
       if (fb) {
@@ -250,27 +339,36 @@ export async function loadPlacedUserCandidates(
 ): Promise<PlaceableHub[]> {
   const { data, error } = await admin
     .from('subgroups')
-    .select('id,name,web_depth')
+    .select('id,name,description,web_depth,slug')
     .not('placed_at', 'is', null)
-    .limit(500)
+    .limit(800)
 
   if (error) {
     console.error('[pitch-place] load placed failed:', error.message)
     return []
   }
 
+  const taxSlugs = taxonomySlugs()
   return (data || [])
-    .filter((row) => row.id !== excludeSubgroupId)
+    .filter(
+      (row) =>
+        row.id !== excludeSubgroupId &&
+        !(row.slug && taxSlugs.has(row.slug))
+    )
     .map((row) => {
       const depth =
         typeof row.web_depth === 'number' && row.web_depth > 0
           ? row.web_depth
           : 2
+      const aliases = [row.description, row.slug].filter(
+        (x): x is string => Boolean(x && String(x).trim())
+      )
       return {
         hubId: userHubId(row.id),
         label: row.name,
         depth,
         rootMain: FALLBACK_PARENT,
+        aliases: aliases.length ? aliases : undefined,
         subgroupId: row.id,
       }
     })
@@ -299,11 +397,15 @@ export async function placeSubgroupOnWeb(
     : null
 
   if (chosen) {
+    const meta = await resolveParentMeta(admin, chosen)
+    if (!meta) {
+      throw new Error('Invalid parent group — pick groups that exist on the web')
+    }
     placement = {
       parentHubIds: chosen,
       scores: chosen.map(() => 1),
-      depth: depthFromParents(chosen),
-      labels: labelsForParents(chosen),
+      depth: meta.depth,
+      labels: meta.labels,
       lowConfidence: false,
     }
   } else {

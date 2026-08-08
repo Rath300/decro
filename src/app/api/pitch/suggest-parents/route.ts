@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { isPitchMode } from '@/lib/pitch-mode'
 import { clientKey, rateLimit, tooManyRequests } from '@/lib/rate-limit'
-import { suggestParents } from '@/lib/pitch-place'
+import { suggestParents, suggestParentsForUi } from '@/lib/pitch-place'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +26,18 @@ export async function GET(request: Request) {
     })
   }
 
-  const result = suggestParents(name, description)
+  let result
+  try {
+    const admin = getSupabaseAdmin()
+    result = await suggestParentsForUi(admin, name, description)
+  } catch (e: any) {
+    console.warn(
+      '[suggest-parents] DB unavailable, taxonomy only:',
+      e?.message
+    )
+    result = suggestParents(name, description)
+  }
+
   return NextResponse.json(result, {
     headers: {
       'Cache-Control': isPitchMode()

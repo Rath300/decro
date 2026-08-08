@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ParentSuggestion } from '@/lib/pitch-place'
 
 type Props = {
@@ -18,9 +18,9 @@ export default function ParentHubPicker({
 }: Props) {
   const [suggestions, setSuggestions] = useState<ParentSuggestion[]>([])
   const [recommended, setRecommended] = useState<string[]>([])
-  const [lowConfidence, setLowConfidence] = useState(false)
   const [loading, setLoading] = useState(false)
   const [appliedDefault, setAppliedDefault] = useState('')
+  const [filter, setFilter] = useState('')
 
   useEffect(() => {
     if (name.trim().length < 2) {
@@ -40,7 +40,6 @@ export default function ParentHubPicker({
         if (!res.ok) return
         setSuggestions(data.suggestions || [])
         setRecommended(data.recommended || [])
-        setLowConfidence(Boolean(data.lowConfidence))
         const key = name.trim().toLowerCase()
         // Pre-select suggestions once per name; user can change freely after
         if (appliedDefault !== key && (data.recommended || []).length) {
@@ -57,6 +56,12 @@ export default function ParentHubPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-suggest on name/desc
   }, [name, description])
 
+  const visible = useMemo(() => {
+    const q = filter.trim().toLowerCase()
+    if (!q) return suggestions
+    return suggestions.filter((s) => s.label.toLowerCase().includes(q))
+  }, [suggestions, filter])
+
   const toggle = (hubId: string) => {
     if (value.includes(hubId)) {
       onChange(value.filter((id) => id !== hubId))
@@ -69,36 +74,36 @@ export default function ParentHubPicker({
     onChange([...value, hubId])
   }
 
-  const recLabels = recommended
-    .map((id) => suggestions.find((s) => s.hubId === id)?.label || id)
-    .filter(Boolean)
-
   return (
     <div className="space-y-3 font-['Space_Mono']">
       <div>
         <p className="text-[10px] uppercase tracking-wide text-black/45 mb-1">
-          Parents on the web
+          Parent groups
         </p>
         <p className="text-sm text-black/70 leading-relaxed">
-          Pick 1–2 parent groups. We suggest based on the name — you decide.
+          Pick 1–2 specific groups this hangs under.
         </p>
       </div>
 
+      {suggestions.length > 8 && (
+        <input
+          type="search"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Filter groups"
+          className="w-full border border-black px-3 py-2 text-xs bg-white outline-none"
+          aria-label="Filter parent groups"
+        />
+      )}
+
       {loading && (
         <p className="text-[10px] uppercase tracking-wide text-black/40">
-          Suggesting…
+          Loading groups…
         </p>
       )}
 
-      {recLabels.length > 0 && (
-        <p className="text-xs text-black/70 border border-black px-3 py-2">
-          Suggested: <span className="text-black">{recLabels.join(' + ')}</span>
-          {lowConfidence ? ' · low confidence — please check' : ''}
-        </p>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {suggestions.map((s) => {
+      <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto">
+        {visible.map((s) => {
           const on = value.includes(s.hubId)
           const isRec = recommended.includes(s.hubId)
           return (
@@ -113,13 +118,19 @@ export default function ParentHubPicker({
                     ? 'bg-black/5 hover:bg-black hover:text-white'
                     : 'bg-white hover:bg-black hover:text-white'
               }`}
+              title={s.depth >= 2 ? 'Niche / group' : 'Main category'}
             >
               {s.label}
-              {s.depth === 1 ? '' : ''}
             </button>
           )
         })}
       </div>
+
+      {!loading && name.trim().length >= 2 && visible.length === 0 && (
+        <p className="text-[10px] uppercase tracking-wide text-black/40">
+          No matching groups
+        </p>
+      )}
 
       {value.length === 0 && name.trim().length >= 2 && (
         <p className="text-[10px] uppercase text-red-600/80">
