@@ -38,13 +38,23 @@ export default function ParentHubPicker({
         const res = await fetch(`/api/pitch/suggest-parents?${qs}`)
         const data = await res.json()
         if (!res.ok) return
-        setSuggestions(data.suggestions || [])
-        setRecommended(data.recommended || [])
+        const nextSuggestions: ParentSuggestion[] = data.suggestions || []
+        const suggestionIds = new Set(nextSuggestions.map((s) => s.hubId))
+        // Never recommend an id that isn't a visible chip
+        const nextRecommended = ((data.recommended as string[]) || []).filter(
+          (id) => suggestionIds.has(id)
+        )
+        setSuggestions(nextSuggestions)
+        setRecommended(nextRecommended)
+
         const key = name.trim().toLowerCase()
-        // Pre-select suggestions once per name; user can change freely after
-        if (appliedDefault !== key && (data.recommended || []).length) {
-          onChange((data.recommended as string[]).slice(0, 2))
+        if (appliedDefault !== key && nextRecommended.length) {
+          onChange(nextRecommended.slice(0, 1))
           setAppliedDefault(key)
+        } else if (appliedDefault === key && value.length) {
+          // Drop ghost selections that vanished from the list
+          const kept = value.filter((id) => suggestionIds.has(id))
+          if (kept.length !== value.length) onChange(kept.slice(0, 2))
         }
       } catch {
         /* ignore */
@@ -56,11 +66,30 @@ export default function ParentHubPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-suggest on name/desc
   }, [name, description])
 
+  const selectedChips = useMemo(() => {
+    return value
+      .map((id) => {
+        const fromList = suggestions.find((s) => s.hubId === id)
+        if (fromList) return fromList
+        return {
+          hubId: id,
+          label: id.startsWith('sg:') ? 'Selected group' : id.replace(/-/g, ' '),
+          score: 1,
+          depth: 2,
+        } satisfies ParentSuggestion
+      })
+      .filter(Boolean)
+  }, [value, suggestions])
+
   const visible = useMemo(() => {
     const q = filter.trim().toLowerCase()
-    if (!q) return suggestions
-    return suggestions.filter((s) => s.label.toLowerCase().includes(q))
-  }, [suggestions, filter])
+    const rest = suggestions.filter((s) => !value.includes(s.hubId))
+    const filtered = q
+      ? rest.filter((s) => s.label.toLowerCase().includes(q))
+      : rest
+    // Selected always stay visible at the front (even when filter mismatches)
+    return [...selectedChips, ...filtered]
+  }, [suggestions, filter, value, selectedChips])
 
   const toggle = (hubId: string) => {
     if (value.includes(hubId)) {
@@ -102,7 +131,7 @@ export default function ParentHubPicker({
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto">
+      <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto content-start">
         {visible.map((s) => {
           const on = value.includes(s.hubId)
           const isRec = recommended.includes(s.hubId)

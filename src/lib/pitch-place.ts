@@ -82,6 +82,19 @@ export function suggestParents(
   const specific = ranked.filter((r) => r.depth >= 2 && r.score >= 0.04)
   const mains = ranked.filter((r) => r.depth === 1 && r.score >= 0.1)
   const byId = new Map<string, ParentSuggestion>()
+
+  // Always surface auto-picks as chips so selection never points at a ghost
+  for (const id of auto.parentHubIds) {
+    const hit = ranked.find((r) => r.hubId === id) || pool.find((c) => c.hubId === id)
+    if (!hit) continue
+    byId.set(id, {
+      hubId: id,
+      label: hit.label,
+      score: 'score' in hit ? (hit as { score: number }).score : 1,
+      depth: hit.depth,
+    })
+  }
+
   for (const r of [...specific, ...mains, ...ranked]) {
     if (byId.has(r.hubId)) continue
     byId.set(r.hubId, {
@@ -102,9 +115,14 @@ export function suggestParents(
     return b.score - a.score
   })
 
+  // One clear default — second parent is optional (avoids invisible 2/2)
+  const recommended = auto.parentHubIds
+    .filter((id) => byId.has(id))
+    .slice(0, 1)
+
   return {
     suggestions,
-    recommended: auto.parentHubIds.slice(0, 2),
+    recommended,
     lowConfidence: auto.lowConfidence,
   }
 }

@@ -103,6 +103,12 @@ export default function PitchWeb({
   const fittedRef = useRef(false)
   const cameraLockUntil = useRef(0)
   const lastFocusRef = useRef<string | null>(null)
+  const zoomToClusterRef = useRef<(hubId: string, ms?: number) => void>(() => {})
+  const fitMainsRef = useRef<(ms?: number) => void>(() => {})
+  const prevNodeCountRef = useRef(0)
+  const focusHubIdRef = useRef<string | null>(focusHubId)
+  focusHubIdRef.current = focusHubId
+  const pendingReheatRef = useRef<number | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -244,10 +250,41 @@ export default function PitchWeb({
     })
     fg.d3Force?.('link')?.strength?.(0.35)
     fg.d3Force?.('center')?.strength?.(0.035)
-    try {
-      fg.d3ReheatSimulation?.()
-    } catch {
-      /* ignore */
+
+    // Only reheat when the visible set grows. Defer while the camera is
+    // focusing so nodes don't fly apart mid zoom-in (feels like zoom-out).
+    const count = graphData.nodes.length
+    const grew = count > prevNodeCountRef.current
+    prevNodeCountRef.current = count
+    if (!grew) return
+
+    if (pendingReheatRef.current) {
+      window.clearTimeout(pendingReheatRef.current)
+      pendingReheatRef.current = null
+    }
+
+    const cameraBusy =
+      Boolean(focusHubIdRef.current) || Date.now() < cameraLockUntil.current
+    const run = () => {
+      pendingReheatRef.current = null
+      try {
+        fg.d3ReheatSimulation?.()
+      } catch {
+        /* ignore */
+      }
+    }
+    if (cameraBusy) {
+      const delay = Math.max(450, cameraLockUntil.current - Date.now() + 80)
+      pendingReheatRef.current = window.setTimeout(run, delay)
+    } else {
+      run()
+    }
+
+    return () => {
+      if (pendingReheatRef.current) {
+        window.clearTimeout(pendingReheatRef.current)
+        pendingReheatRef.current = null
+      }
     }
   }, [graphData, graphReady])
 
@@ -293,39 +330,36 @@ export default function PitchWeb({
   )
 
   const zoomToCluster = useCallback(
-    (hubId: string, ms = 750) => {
+    (hubId: string, ms = 650) => {
       const fg = getFg()
       if (!fg) return
       const parent = graphData.nodes.find(
         (n) => n.kind === 'hub' && n.hubId === hubId
       )
       if (!parent || parent.x == null || parent.y == null) return
-      const kids = graphData.nodes.filter(
+
+      // Stable framing: center on the parent and size by expected cluster
+      // radius — NOT live kid bounding boxes (those grow as the sim settles
+      // and cause zoom-in-then-out).
+      const kidCount = graphData.nodes.filter(
         (n) =>
           n.kind === 'hub' &&
           n.hubId !== hubId &&
-          (n.parentIds || []).includes(hubId) &&
-          n.x != null &&
-          n.y != null
-      )
-      const xs = [parent.x, ...kids.map((k) => k.x!)]
-      const ys = [parent.y, ...kids.map((k) => k.y!)]
-      const minX = Math.min(...xs)
-      const maxX = Math.max(...xs)
-      const minY = Math.min(...ys)
-      const maxY = Math.max(...ys)
-      const cx = (minX + maxX) / 2
-      const cy = (minY + maxY) / 2
-      const span = Math.max(maxX - minX, maxY - minY, 140)
+          (n.parentIds || []).includes(hubId)
+      ).length
+      const expectedSpan = Math.max(240, 140 + kidCount * 32)
       const short = Math.min(dims.w, dims.h)
-      const zoom = Math.min(2.8, Math.max(1.35, (short * 0.7) / span))
-      cameraLockUntil.current = Date.now() + ms + 80
-      fg.centerAt(cx, cy, ms)
+      const zoom = Math.min(2.05, Math.max(1.15, (short * 0.52) / expectedSpan))
+      cameraLockUntil.current = Date.now() + ms + 220
+      fg.centerAt(parent.x, parent.y, ms)
       fg.zoom(zoom, ms)
       setViewZoom(zoom)
     },
     [getFg, graphData.nodes, dims.w, dims.h]
   )
+
+  zoomToClusterRef.current = zoomToCluster
+  fitMainsRef.current = fitMains
 
   const nudgeToNode = useCallback(
     (node: GraphNode, ms = 650) => {
@@ -456,11 +490,12 @@ export default function PitchWeb({
     if (!graphReady || fittedRef.current) return
     if (graphData.nodes.length < 2) return
     fittedRef.current = true
-    const t = window.setTimeout(() => fitMains(0), 80)
+    const t = window.setTimeout(() => fitMainsRef.current(0), 80)
     return () => window.clearTimeout(t)
-  }, [graphReady, graphData.nodes.length, fitMains])
+  }, [graphReady, graphData.nodes.length])
 
-  // Zoom INTO the cluster when expanded — single animation (no double-fire).
+  // One zoom per focus action — never re-frame when kids appear (that was
+  // the zoom-in-then-out). Refs keep the timeout from cancelling on rerenders.
   useEffect(() => {
     if (!graphReady) return
     if (!focusHubId) {
@@ -471,17 +506,17 @@ export default function PitchWeb({
     if (lastFocusRef.current === stamp) return
     lastFocusRef.current = stamp
     const id = focusHubId
-    const t = window.setTimeout(() => zoomToCluster(id, 520), 140)
+    const t = window.setTimeout(() => zoomToClusterRef.current(id, 600), 120)
     return () => window.clearTimeout(t)
-  }, [focusHubId, focusKey, graphReady, zoomToCluster])
+  }, [focusHubId, focusKey, graphReady])
 
   // Duck / Decro / Reset — one calm fit to mains
   useEffect(() => {
     if (!graphReady || !resetNonce) return
     lastFocusRef.current = null
-    const t = window.setTimeout(() => fitMains(650), 40)
+    const t = window.setTimeout(() => fitMainsRef.current(650), 40)
     return () => window.clearTimeout(t)
-  }, [resetNonce, graphReady, fitMains])
+  }, [resetNonce, graphReady])
 
   useEffect(() => {
     if (!graphReady || !highlightPostId) return
@@ -597,13 +632,12 @@ export default function PitchWeb({
       setSelectedId(n.id)
       onNodeSelect?.(n)
 
-      const hasKids = (n.childIds?.length || 0) > 0
       const unrevealedKids = (n.childIds || []).some((cid) => !revealedIds.has(cid))
       const kidsOpen = (n.childIds || []).some((cid) => revealedIds.has(cid))
 
       if (tourStage === 'click-main') {
         if ((n.depth ?? 0) !== 1) return
-        onRevealChildren?.(hid)
+        // onTourMainOpened also reveals — don't double-zoom
         onTourMainOpened?.(hid)
         return
       }
@@ -623,7 +657,7 @@ export default function PitchWeb({
         return
       }
 
-      // Normal: double-click enters; single-click expands / collapses
+      // Normal: double-click enters; single-click expands / collapses / focuses
       if (isDouble && n.enterable && n.slug) {
         onEnterHub?.(n.slug)
         return
@@ -637,9 +671,8 @@ export default function PitchWeb({
         onCollapseChildren?.(hid)
         return
       }
-      if (hasKids) {
-        onRevealChildren?.(hid)
-      }
+      // Expand kids, or frame a leaf group in place (no zoom bounce)
+      onRevealChildren?.(hid)
     },
     [
       tourStage,

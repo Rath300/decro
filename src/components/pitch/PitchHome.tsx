@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import { PITCH_TOUR_PARENT_ID, type PitchTourStage } from '@/lib/pitch-copy'
@@ -35,6 +35,7 @@ export default function PitchHome() {
   const [loadError, setLoadError] = useState('')
   const [toast, setToast] = useState('')
   const [pendingNicheSlug, setPendingNicheSlug] = useState<string | null>(null)
+  const focusRetryRef = useRef<string | null>(null)
 
   useEffect(() => {
     try {
@@ -144,14 +145,30 @@ export default function PitchHome() {
   // Search (or external) → reveal ancestors and focus hub on the web
   const applyFocusHub = useCallback(
     (hubId: string) => {
-      if (!hubId || !nodes.length) return
+      if (!hubId) return
       const exists = nodes.some((n) => n.hubId === hubId)
-      if (!exists) return
+      if (!exists) {
+        // One reload for newly placed groups — never loop
+        if (focusRetryRef.current !== hubId) {
+          focusRetryRef.current = hubId
+          try {
+            sessionStorage.setItem('decro_pitch_focus_hub', hubId)
+          } catch {}
+          void loadGraph()
+        } else {
+          focusRetryRef.current = null
+          setToast('That group is not on the web yet')
+        }
+        return
+      }
+      focusRetryRef.current = null
       setRevealedIds((prev) => {
         const next = new Set(prev)
         next.add(hubId)
         // Walk ancestors so niches under collapsed parents become visible
-        const queue = [...(nodes.find((n) => n.hubId === hubId)?.parentIds || [])]
+        const queue = [
+          ...(nodes.find((n) => n.hubId === hubId)?.parentIds || []),
+        ]
         const seen = new Set<string>()
         while (queue.length) {
           const pid = queue.pop()!
@@ -168,7 +185,7 @@ export default function PitchHome() {
       setFocusHubId(hubId)
       setFocusKey((k) => k + 1)
     },
-    [nodes]
+    [nodes, loadGraph]
   )
 
   useEffect(() => {
@@ -189,9 +206,16 @@ export default function PitchHome() {
       const hubId = (e as CustomEvent<{ hubId?: string }>).detail?.hubId
       if (hubId) applyFocusHub(hubId)
     }
+    const onReload = () => {
+      void loadGraph()
+    }
     window.addEventListener('pitch:focus-hub', onFocus)
-    return () => window.removeEventListener('pitch:focus-hub', onFocus)
-  }, [applyFocusHub])
+    window.addEventListener('pitch:reload-graph', onReload)
+    return () => {
+      window.removeEventListener('pitch:focus-hub', onFocus)
+      window.removeEventListener('pitch:reload-graph', onReload)
+    }
+  }, [applyFocusHub, loadGraph])
 
   useEffect(() => {
     if (!toast) return
@@ -215,9 +239,11 @@ export default function PitchHome() {
         for (const id of fromGraph) next.add(id)
         return next
       })
+      // Same hub already framed — don't bump focusKey (avoids a second zoom)
+      if (focusHubId === hubId) return
       focusCluster(hubId)
     },
-    [focusCluster, nodes]
+    [focusCluster, focusHubId, nodes]
   )
 
   /** Collapse niches under a hub (Decro → full reset to mains). */

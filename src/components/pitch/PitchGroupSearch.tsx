@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { PITCH_HUBS, hubSlug, userHubId } from '@/lib/pitch-taxonomy'
 
@@ -30,6 +30,15 @@ export default function PitchGroupSearch() {
   const [open, setOpen] = useState(false)
   const [hits, setHits] = useState<Hit[]>([])
   const wrapRef = useRef<HTMLDivElement>(null)
+
+  const slugToHubId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const h of PITCH_HUBS) {
+      const s = hubSlug(h)
+      if (s) map.set(s, h.id)
+    }
+    return map
+  }, [])
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -68,36 +77,55 @@ export default function PitchGroupSearch() {
           `/api/subgroups?query=${encodeURIComponent(query)}`
         )
         const data = await res.json()
-        const dbHits: Hit[] = (data.items || []).slice(0, 8).map((g: any) => ({
-          kind: 'subgroup' as const,
-          id: g.id,
-          label: g.name,
-          slug: g.slug,
-          hubId: userHubId(g.id),
-        }))
-        // Prefer unique by label
-        const seen = new Set(hubHits.map((h) => h.label.toLowerCase()))
-        const merged = [
-          ...hubHits,
-          ...dbHits.filter((h) => !seen.has(h.label.toLowerCase())),
-        ].slice(0, 10)
+        if (!res.ok) {
+          setHits(hubHits)
+          return
+        }
+        const dbHits: Hit[] = (data.items || []).slice(0, 12).map((g: any) => {
+          // Curated genre rows live on the web as taxonomy hubs, not sg:uuid
+          const taxHub = g.slug ? slugToHubId.get(g.slug) : null
+          return {
+            kind: 'subgroup' as const,
+            id: g.id,
+            label: g.name,
+            slug: g.slug,
+            hubId: taxHub || userHubId(g.id),
+          }
+        })
+
+        const seenHub = new Set<string>()
+        const seenLabel = new Set<string>()
+        const merged: Hit[] = []
+
+        // Prefer real / user groups first so they aren't crowded out by mains
+        for (const h of [...dbHits, ...hubHits]) {
+          const hubKey = h.hubId || h.id
+          const labelKey = h.label.toLowerCase()
+          if (seenHub.has(hubKey) || seenLabel.has(labelKey)) continue
+          seenHub.add(hubKey)
+          seenLabel.add(labelKey)
+          merged.push(h)
+          if (merged.length >= 12) break
+        }
         setHits(merged)
       } catch {
         setHits(hubHits)
       }
     }, 200)
     return () => window.clearTimeout(t)
-  }, [q])
+  }, [q, slugToHubId])
 
   const go = (hit: Hit) => {
     setOpen(false)
     setQ('')
-    // Always land on the creative web at that group's place (not the subgroup page)
     const hubId =
-      hit.kind === 'subgroup'
-        ? hit.hubId || userHubId(hit.id)
-        : hit.hubId || hit.id
+      hit.hubId ||
+      (hit.kind === 'subgroup' ? userHubId(hit.id) : hit.id)
     focusHubOnWeb(hubId)
+    // Ask home to reload graph if the node isn't loaded yet
+    try {
+      window.dispatchEvent(new CustomEvent('pitch:reload-graph'))
+    } catch {}
     if (pathname !== '/') router.push('/')
   }
 
@@ -115,6 +143,11 @@ export default function PitchGroupSearch() {
         className="w-full border border-black px-2.5 py-1.5 text-xs font-['Space_Mono'] bg-white outline-none"
         aria-label="Search groups"
       />
+      {open && q.trim().length >= 1 && hits.length === 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 border border-black bg-white z-[70] px-3 py-2 text-[10px] uppercase tracking-wide text-black/40 font-['Space_Mono']">
+          No groups found
+        </div>
+      )}
       {open && hits.length > 0 && (
         <ul className="absolute top-full left-0 right-0 mt-1 border border-black bg-white z-[70] max-h-64 overflow-y-auto shadow-none">
           {hits.map((h) => (

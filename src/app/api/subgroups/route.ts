@@ -26,11 +26,20 @@ export async function GET(req: Request) {
 
     if (!q) return NextResponse.json({ items: [] })
 
-    const { data, error } = await supabase
+    // Prefer service role so search always sees newly created groups
+    let client = supabase
+    try {
+      client = getSupabaseAdmin()
+    } catch {
+      /* fall back to anon */
+    }
+
+    const { data, error } = await client
       .from('subgroups')
-      .select('id,name,slug')
+      .select('id,name,slug,placed_at,web_depth')
       .or(`name.ilike.*${q}*,slug.ilike.*${q}*`)
-      .limit(20)
+      .order('placed_at', { ascending: false, nullsFirst: false })
+      .limit(24)
 
     if (error) throw error
     return NextResponse.json({ items: data || [] })
@@ -138,6 +147,16 @@ export async function POST(req: Request) {
         })
       } catch (placeErr: any) {
         console.error('[api/subgroups] web placement failed:', placeErr?.message)
+        return NextResponse.json(
+          {
+            error:
+              placeErr?.message ||
+              'Group created but could not be placed on the web — try again',
+            slug: result.slug,
+            id: result.id,
+          },
+          { status: 500 }
+        )
       }
     }
 
