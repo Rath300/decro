@@ -71,17 +71,34 @@ export default function PitchHome() {
       const remoteLinks = (data.links || []) as PitchGraphLink[]
       const start = (data.startHubIds || []) as string[]
       setNodes((prev) => {
-        const pending = prev.filter((n) => n.pending)
-        const pendingIds = new Set(pending.map((n) => n.id))
-        return [...remote.filter((n) => !pendingIds.has(n.id)), ...pending]
+        // Keep local post nodes (pending + just-committed) — graph API is hubs-only
+        const localPosts = prev.filter(
+          (n) =>
+            n.kind === 'post' ||
+            n.pending ||
+            String(n.id).startsWith('p:')
+        )
+        const localIds = new Set(localPosts.map((n) => n.id))
+        return [
+          ...remote.filter((n) => !localIds.has(n.id)),
+          ...localPosts,
+        ]
       })
       setLinks((prev) => {
-        const pendingLinks = prev.filter(
+        const localLinks = prev.filter(
           (l) =>
-            String(l.source).startsWith('p:temp-') ||
+            String(l.source).startsWith('p:') ||
+            String(l.target).startsWith('p:') ||
+            String(l.source).startsWith('g:temp-') ||
             String(l.target).startsWith('g:temp-')
         )
-        return [...remoteLinks, ...pendingLinks]
+        const key = (l: PitchGraphLink) =>
+          `${String(l.source)}→${String(l.target)}`
+        const seen = new Set(remoteLinks.map(key))
+        return [
+          ...remoteLinks,
+          ...localLinks.filter((l) => !seen.has(key(l))),
+        ]
       })
       setStartHubIds(start)
       setRevealedIds((prev) => {
@@ -354,35 +371,55 @@ export default function PitchHome() {
     setHighlightPostId(upload.tempPostId)
     const post = upload.nodes.find((n) => n.kind === 'post')
     if (post) setSelected(post)
+    setToast('Uploading…')
   }, [])
 
-  const applyCommit = useCallback(
-    (commit: UploadCommit) => {
-      const realPostId = `p:${commit.postId}`
-      const tempPostId = `p:${commit.tempPostId}`
-      setNodes((prev) =>
-        prev.map((n) => {
-          if (n.id === tempPostId) {
-            return {
-              ...n,
-              id: realPostId,
-              subgroupId: commit.subgroupId,
-              username: displayUsername(commit.username),
-              imageUrl: commit.imageUrl ?? n.imageUrl,
-              audioUrl: commit.audioUrl ?? n.audioUrl,
-              videoUrl: commit.videoUrl ?? n.videoUrl,
-              pending: false,
-              clientKey: commit.tempPostId,
-            }
+  const applyCommit = useCallback((commit: UploadCommit) => {
+    const realPostId = `p:${commit.postId}`
+    const tempPostId = `p:${commit.tempPostId}`
+    // Keep the committed post on the web — loadGraph only returns hubs, so a
+    // full reload would wipe the new post from the graph.
+    setNodes((prev) =>
+      prev.map((n) => {
+        if (n.id === tempPostId) {
+          return {
+            ...n,
+            id: realPostId,
+            subgroupId: commit.subgroupId,
+            username: displayUsername(commit.username),
+            imageUrl: commit.imageUrl ?? n.imageUrl,
+            audioUrl: commit.audioUrl ?? n.audioUrl,
+            videoUrl: commit.videoUrl ?? n.videoUrl,
+            pending: false,
+            clientKey: commit.tempPostId,
           }
-          return n
-        })
-      )
-      setHighlightPostId(commit.postId)
-      void loadGraph()
-    },
-    [loadGraph]
-  )
+        }
+        return n
+      })
+    )
+    setLinks((prev) =>
+      prev.map((l) => ({
+        ...l,
+        source:
+          String(l.source) === tempPostId ? realPostId : l.source,
+        target:
+          String(l.target) === tempPostId ? realPostId : l.target,
+      }))
+    )
+    setHighlightPostId(commit.postId)
+    setSelected((prev) =>
+      prev?.id === tempPostId
+        ? {
+            ...prev,
+            id: realPostId,
+            subgroupId: commit.subgroupId,
+            username: displayUsername(commit.username),
+            pending: false,
+          }
+        : prev
+    )
+    setToast('Posted')
+  }, [])
 
   const applyFail = useCallback(
     (tempPostId: string, _tempHubId: string | undefined, message: string) => {
@@ -462,7 +499,6 @@ export default function PitchHome() {
         highlightPostId={highlightPostId}
         tourStage={tourStage}
         tourParentId={PITCH_TOUR_PARENT_ID}
-        onUploadClick={() => openUpload()}
         onNodeSelect={hidePanels ? undefined : setSelected}
         onRevealChildren={onRevealChildren}
         onCollapseChildren={onCollapseChildren}

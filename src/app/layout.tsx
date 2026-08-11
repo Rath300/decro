@@ -11,13 +11,18 @@ import { ProfileInitializer } from '@/components/ProfileInitializer'
 
 const GA_ID = 'G-TS03JV5TNX'
 
+const pitchMode = process.env.NEXT_PUBLIC_PITCH_MODE === 'true'
+const siteDescription = pitchMode
+  ? 'Explore Decro’s creative web — connect groups, upload work, and find your niche. No algorithm, just creators.'
+  : 'Share your creativity with the world. A social platform for artists, musicians, photographers, and creators. No algorithm, just authentic content.'
+
 export const metadata: Metadata = {
   title: {
-    default: 'Decro',
+    default: pitchMode ? 'Decro — Creative web' : 'Decro',
     template: '%s | Decro'
   },
-  description: 'Share your creativity with the world. A social platform for artists, musicians, photographers, and creators. No algorithm, just authentic content.',
-  keywords: ['social media', 'creative platform', 'art sharing', 'music sharing', 'photography', 'creators', 'portfolio'],
+  description: siteDescription,
+  keywords: ['social media', 'creative platform', 'art sharing', 'music sharing', 'photography', 'creators', 'portfolio', 'creative web'],
   authors: [{ name: 'Decro' }],
   creator: 'Decro',
   publisher: 'Decro',
@@ -26,7 +31,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://decro.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.decro.net'),
   alternates: {
     canonical: '/',
   },
@@ -35,8 +40,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: '/',
     siteName: 'Decro',
-    title: 'Decro',
-    description: 'Share your creativity with the world. A social platform for artists, musicians, photographers, and creators.',
+    title: pitchMode ? 'Decro — Creative web' : 'Decro',
+    description: siteDescription,
     images: [
       {
         url: '/decky.png',
@@ -48,8 +53,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Decro',
-    description: 'Share your creativity with the world. A social platform for artists, musicians, and creators.',
+    title: pitchMode ? 'Decro — Creative web' : 'Decro',
+    description: siteDescription,
     images: ['/decky.png'],
   },
   robots: {

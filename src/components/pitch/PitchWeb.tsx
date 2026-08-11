@@ -37,7 +37,6 @@ type Props = {
   highlightPostId?: string | null
   tourStage?: PitchTourStage | null
   tourParentId?: string | null
-  onUploadClick: () => void
   onNodeSelect?: (node: PitchGraphNode | null) => void
   onRevealChildren?: (hubId: string) => void
   /** Collapse niches under a hub; Decro resets to mains */
@@ -77,7 +76,6 @@ export default function PitchWeb({
   highlightPostId,
   tourStage = null,
   tourParentId = null,
-  onUploadClick,
   onNodeSelect,
   onRevealChildren,
   onCollapseChildren,
@@ -839,13 +837,6 @@ export default function PitchWeb({
         <p className="hidden sm:block text-[10px] font-['Space_Mono'] text-black/40 uppercase tracking-wide">
           {viewZoom.toFixed(1)}× · pinch or ⌘scroll
         </p>
-        <button
-          type="button"
-          onClick={onUploadClick}
-          className="sm:hidden border border-black bg-black text-white px-4 py-2.5 text-xs font-['Space_Mono'] uppercase"
-        >
-          Upload
-        </button>
       </div>
 
       {showHint && (

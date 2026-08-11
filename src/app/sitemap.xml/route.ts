@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase-client'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 // Subgroup slugs and usernames are interpolated into XML, so a name containing
 // & or < would produce a document no crawler can parse.
@@ -17,32 +17,50 @@ function urlPath(...segments: string[]) {
 }
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://decro.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.decro.net'
+  const pitch = isPitchMode()
 
   try {
-    // Get all public posts
     const { data: posts } = await supabase
       .from('posts')
       .select('id, created_at, updated_at')
       .order('created_at', { ascending: false })
       .limit(1000)
 
-    // Get all subgroups
     const { data: subgroups } = await supabase
       .from('subgroups')
       .select('slug, updated_at')
       .limit(100)
 
-    // Get all public profiles
     const { data: profiles } = await supabase
       .from('profiles')
       .select('username, updated_at')
       .not('username', 'is', null)
       .limit(1000)
 
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Static Pages -->
+    const staticPitch = `
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/login</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/signup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/create</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`
+
+    const staticFull = `
   <url>
     <loc>${baseUrl}/feed</loc>
     <changefreq>hourly</changefreq>
@@ -67,7 +85,12 @@ export async function GET() {
     <loc>${baseUrl}/create</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-  </url>
+  </url>`
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Static Pages -->
+  ${pitch ? staticPitch : staticFull}
 
   <!-- Posts -->
   ${posts?.map((post) => `
@@ -108,4 +131,3 @@ export async function GET() {
     return new Response('Error generating sitemap', { status: 500 })
   }
 }
-

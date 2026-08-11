@@ -1,45 +1,57 @@
 'use client'
 
 import Link from 'next/link'
-
-// This page used to set `sent = true` on submit and display "Link sent!" without
-// sending anything, so anyone who locked themselves out waited for an email that
-// was never coming. Self-service reset needs an email provider, which is not
-// configured yet, so say so instead of faking it.
+import { isPitchMode } from '@/lib/pitch-mode'
 
 export default function ForgotPasswordPage() {
+  const pitchMode = isPitchMode()
+
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center p-6">
-      <div className="forgot-password-card p-8">
-        <h1 className="text-3xl text-black font-space-grotesk mb-6 text-center">
-          Forgot Password
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono'] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md border border-black p-6 sm:p-8">
+        <Link
+          href="/login"
+          className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mb-6"
+        >
+          ← Log in
+        </Link>
+
+        <p className="text-[10px] uppercase tracking-wide text-black/40">
+          Account
+        </p>
+        <h1 className="mt-2 text-2xl sm:text-3xl font-normal uppercase tracking-tight">
+          Forgot password
         </h1>
+        <p className="mt-3 text-sm text-black/60 leading-relaxed">
+          Email password reset isn&apos;t set up yet. Guests can still use the
+          site without an account.
+        </p>
+        <p className="mt-4 text-sm text-black/60 leading-relaxed">
+          Locked out of a named account? Email{' '}
+          <a
+            href="mailto:hello@decro.net?subject=Password%20help"
+            className="text-black underline underline-offset-4"
+          >
+            hello@decro.net
+          </a>{' '}
+          with your username and we&apos;ll help.
+        </p>
 
-        <div className="space-y-4 text-center">
-          <p className="text-black font-space-grotesk">
-            Password reset by email isn&apos;t available yet.
-          </p>
-          <p className="text-sm text-gray-600 font-space-grotesk">
-            If you&apos;re locked out, send us a note through the feedback page with
-            the username on your account and we&apos;ll help you get back in.
-          </p>
-
-          <div className="pt-2 flex flex-col items-center gap-3">
-            <Link
-              href="/feedback"
-              className="input-field bg-white text-black font-space-grotesk text-base border border-black hover:bg-black hover:text-white text-center"
-            >
-              Contact support
-            </Link>
-            <Link
-              href="/"
-              className="text-sm font-space-grotesk text-black hover:underline"
-            >
-              Back to Sign In
-            </Link>
-          </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            href="/login"
+            className="border border-black bg-black text-white px-5 py-2.5 text-xs uppercase tracking-wide hover:bg-white hover:text-black"
+          >
+            Back to log in
+          </Link>
+          <Link
+            href={pitchMode ? '/' : '/feed'}
+            className="border border-black px-5 py-2.5 text-xs uppercase tracking-wide hover:bg-black hover:text-white"
+          >
+            {pitchMode ? 'Creative web' : 'Home'}
+          </Link>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

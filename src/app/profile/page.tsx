@@ -18,6 +18,7 @@ import DetailModal from '@/components/detail-modal'
 import { NetworkView } from '@/components/collab/NetworkView'
 import { CollaborationRequests } from '@/components/collab/CollaborationRequests'
 import { isPitchMode } from '@/lib/pitch-mode'
+import { seedPostOpen } from '@/lib/pitch-nav'
 
 interface UserPost {
   id: string
@@ -330,54 +331,68 @@ export default function ProfilePage() {
     handleSort(sortMode)
   }, [posts, likedPosts, sortMode, activeTab])
 
-  // Optimized post click handler with useCallback - handle text posts like feed page
-  const handlePostClick = useCallback(async (post: UserPost) => {
-    try {
-      // Validate post has required fields
-      if (!post || !post.id) {
-        console.error('Invalid post data:', post)
-        return
-      }
-      
-      // Track view (with error handling)
+  const handlePostClick = useCallback(
+    async (post: UserPost) => {
       try {
-        await trackView(post.id)
-      } catch (trackError) {
-        console.warn('Failed to track view:', trackError)
-        // Continue anyway - don't block UI for tracking failure
+        if (!post?.id) return
+        try {
+          await trackView(post.id)
+        } catch {
+          /* non-blocking */
+        }
+
+        // Pitch (and all types): open the pitch post page — not the old modal
+        if (pitchMode || post.content_type === 'text') {
+          seedPostOpen({
+            id: post.id,
+            title: post.title || 'Untitled',
+            description: post.description,
+            content_type: post.content_type,
+            media_url: post.media_url,
+            audio_url: post.audio_url,
+            video_url: post.video_url,
+            created_at: post.created_at,
+            views: post.views,
+            creator_username: username || user?.email?.split('@')[0] || 'anonymous',
+            subgroup_name: post.subgroup_name,
+            subgroup_slug: post.subgroup_slug,
+            subgroup_id: post.subgroup_id,
+          })
+          router.push(`/post/${post.id}`)
+          return
+        }
+
+        setSelectedCard({
+          id: post.id,
+          type: (post.content_type as any) || 'image',
+          title: post.title || 'Untitled',
+          description: post.description || '',
+          imageUrl: post.media_url || '',
+          aspectRatio: 'square' as const,
+          audioUrl: post.audio_url || undefined,
+          videoUrl: post.video_url || undefined,
+          creator: username || user?.email?.split('@')[0] || 'Anonymous',
+          date: post.created_at || new Date().toISOString(),
+          views: post.views || 0,
+          subgroupName: post.subgroup_name || undefined,
+          subgroupSlug: post.subgroup_slug || undefined,
+          tags: [],
+        })
+        setShowDetailModal(true)
+      } catch (error) {
+        console.error('Failed to open post detail:', error)
       }
-      
-      // For text posts, redirect to Reddit-style forum page like feed page does
-      if (post.content_type === 'text') {
-        router.push(`/post/${post.id}`)
-        return
-      }
-      
-      // Set selected card with complete data for other content types
-      setSelectedCard({
-        id: post.id,
-        type: (post.content_type as any) || 'image',
-        title: post.title || 'Untitled',
-        description: post.description || '',
-        imageUrl: post.media_url || '',
-        aspectRatio: 'square' as const,
-        audioUrl: post.audio_url || undefined,
-        videoUrl: post.video_url || undefined,
-        creator: username || user?.email?.split('@')[0] || 'Anonymous',
-        date: post.created_at || new Date().toISOString(),
-        views: post.views || 0,
-        subgroupName: post.subgroup_name || undefined,
-        subgroupSlug: post.subgroup_slug || undefined,
-        tags: [],
-      })
-      
-      // Show modal
-      setShowDetailModal(true)
-    } catch (error) {
-      console.error('Failed to open post detail:', error)
-      alert('Failed to open post. Please try again.')
-    }
-  }, [trackView, setSelectedCard, setShowDetailModal, username, user?.email, router])
+    },
+    [
+      trackView,
+      setSelectedCard,
+      setShowDetailModal,
+      username,
+      user?.email,
+      router,
+      pitchMode,
+    ]
+  )
 
   if (!isAuthenticated) {
     return (
@@ -656,11 +671,11 @@ export default function ProfilePage() {
                         />
                       ) : (
                         // Text post or no media - show title as cover
-                        <div className="w-full h-full bg-white border border-gray-200 flex items-center justify-center p-4">
+                        <div className="w-full h-full bg-white flex items-center justify-center p-4">
                           <div className="text-center">
                             <h4 className="text-sm md:text-base font-['Space_Mono'] text-black line-clamp-2">{post.title || 'Post'}</h4>
                             {post.description && (
-                              <p className="mt-2 text-xs md:text-sm text-gray-600 line-clamp-3">{post.description}</p>
+                              <p className="mt-2 text-xs md:text-sm text-black/50 line-clamp-3">{post.description}</p>
                             )}
                           </div>
                         </div>
@@ -681,8 +696,14 @@ export default function ProfilePage() {
                     {/* Always-visible compact stats below the tile */}
                     <div className="mt-1">
                       {post.subgroup_name && post.subgroup_slug && (
-                        <div className="text-[10px] text-gray-500 mb-1 font-['Space_Mono']">
-                          in <Link href={`/subgroup/${post.subgroup_slug}`} className="hover:text-blue-600 transition-colors">{post.subgroup_name}</Link>
+                        <div className="text-[10px] uppercase tracking-wide text-black/40 mb-1 font-['Space_Mono']">
+                          in{' '}
+                          <Link
+                            href={`/subgroup/${post.subgroup_slug}`}
+                            className="text-black underline underline-offset-2 hover:no-underline"
+                          >
+                            {post.subgroup_name}
+                          </Link>
                         </div>
                       )}
                       <PostStats
@@ -703,7 +724,7 @@ export default function ProfilePage() {
     </>
   )}
 </main>
-<DetailModal refetchPosts={refreshPosts} />
+{!pitchMode && <DetailModal refetchPosts={refreshPosts} />}
 </div>
 )
 }

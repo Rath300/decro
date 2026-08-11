@@ -318,7 +318,6 @@ export default function SubgroupDetail() {
             </div>
           )}
         </div>
-        <DetailModal />
       </div>
     )
   }

@@ -12,7 +12,12 @@ import {
 } from '@/lib/pitch-guest'
 
 /** RPCs that pitch-mode guests may call with the pitch_guest_id cookie. */
-const PITCH_GUEST_FNS = new Set(['add_comment_ext', 'add_reply_ext'])
+const PITCH_GUEST_FNS = new Set([
+  'add_comment_ext',
+  'add_reply_ext',
+  'toggle_like_ext',
+  'toggle_comment_vote_ext',
+])
 
 // Server-authoritative RPC proxy.
 //

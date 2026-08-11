@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { clientKey, rateLimit, tooManyRequests } from '@/lib/rate-limit'
 import { isPitchMode } from '@/lib/pitch-mode'
@@ -93,10 +95,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'An image is required' }, { status: 400 })
   }
 
-  const existingGuest = readPitchGuestId()
-  const guestId = existingGuest || createPitchGuestId()
-  const externalId = pitchExternalId(guestId)
-  const username = sanitizePitchUsername(body.username, guestId)
+  const session = await getServerSession(authOptions)
+  let externalId = session?.user?.id || ''
+  let username =
+    (session?.user as { username?: string } | undefined)?.username ||
+    session?.user?.name ||
+    session?.user?.email?.split('@')[0] ||
+    ''
+  let newGuestId: string | null = null
 
   let admin
   try {
@@ -106,14 +112,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
   }
 
-  const { error: profileError } = await admin.rpc('upsert_profile_from_external', {
-    external_id_param: externalId,
-    username_param: username,
-    full_name_param: username,
-  })
-  if (profileError) {
-    console.error('[pitch/post] profile upsert failed:', profileError.message)
-    return NextResponse.json({ error: 'Could not create guest profile' }, { status: 500 })
+  if (externalId) {
+    // Signed-in: ensure profile exists and prefer DB username
+    const { data: ensuredId, error: ensureErr } = await admin.rpc(
+      'ensure_profile',
+      { external_id_param: externalId }
+    )
+    if (ensureErr) {
+      console.error('[pitch/post] ensure_profile failed:', ensureErr.message)
+      return NextResponse.json({ error: 'Could not load profile' }, { status: 500 })
+    }
+    if (ensuredId) {
+      const { data: profile } = await admin
+        .from('profiles')
+        .select('username')
+        .eq('id', ensuredId)
+        .maybeSingle()
+      if (profile?.username) username = profile.username
+    }
+    if (!username) username = 'member'
+  } else {
+    const existingGuest = readPitchGuestId()
+    const guestId = existingGuest || createPitchGuestId()
+    if (!existingGuest) newGuestId = guestId
+    externalId = pitchExternalId(guestId)
+    username = sanitizePitchUsername(body.username, guestId)
+
+    const { error: profileError } = await admin.rpc(
+      'upsert_profile_from_external',
+      {
+        external_id_param: externalId,
+        username_param: username,
+        full_name_param: username,
+      }
+    )
+    if (profileError) {
+      console.error('[pitch/post] profile upsert failed:', profileError.message)
+      return NextResponse.json(
+        { error: 'Could not create guest profile' },
+        { status: 500 }
+      )
+    }
   }
 
   let subgroupId: string | null =
@@ -204,8 +243,8 @@ export async function POST(request: Request) {
     subgroupId,
     username,
   })
-  if (!existingGuest) {
-    attachPitchGuestCookie(res, guestId)
+  if (newGuestId) {
+    attachPitchGuestCookie(res, newGuestId)
   }
   return res
 }

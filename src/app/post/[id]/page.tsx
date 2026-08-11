@@ -306,7 +306,20 @@ export default function PostDetailPage() {
             {post.title}
           </h1>
           <p className="mt-3 text-[10px] uppercase tracking-wide text-black/45 flex flex-wrap gap-x-2 gap-y-1">
-            <span>{post.creator_username || 'anonymous'}</span>
+            {(() => {
+              const name = post.creator_username || 'anonymous'
+              const linkable = !/^anonymous(_|$)/i.test(name)
+              return linkable ? (
+                <Link
+                  href={`/profile/${encodeURIComponent(name)}`}
+                  className="text-black underline underline-offset-4 hover:no-underline"
+                >
+                  {name}
+                </Link>
+              ) : (
+                <span>{name}</span>
+              )
+            })()}
             <span>·</span>
             <span>{getTimeAgo(post.created_at)}</span>
             <span>·</span>
@@ -696,6 +709,8 @@ function RedditComment({
   guestUsername: string
 }) {
   const { isAuthenticated, user } = useAuth()
+  const pitchMode = isPitchMode()
+  const canVote = isAuthenticated || pitchMode
   const maxDepth = 2
   const isCommentOwner = currentUserProfileId && currentUserProfileId === comment.user_id
 
@@ -807,7 +822,7 @@ function RedditComment({
                   : 'hover:text-red-500'
               }`}
               onClick={async () => {
-                if (!isAuthenticated || !user?.id) return;
+                if (!canVote) return;
                 try {
                   const { data, error: rpcError } = await callRpc('toggle_comment_vote_ext', { 
                     comment_id_param: comment.id, 
