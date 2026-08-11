@@ -59,6 +59,10 @@ export default function ProfilePage() {
   const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'most_liked'>('newest')
   const [displayedPosts, setDisplayedPosts] = useState<UserPost[]>([])
   const [profileId, setProfileId] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [fullName, setFullName] = useState<string>('')
+  const [bio, setBio] = useState<string>('')
+  const [avatarBroken, setAvatarBroken] = useState(false)
 
   // Function to refresh posts after deletion
   const refreshPosts = useCallback(async () => {
@@ -197,16 +201,20 @@ export default function ProfilePage() {
 
       setProfileId(userId)
 
-      // Get username from profile
+      // Get profile fields including avatar
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('username')
+        .select('username, full_name, bio, avatar_url')
         .eq('id', userId)
         .single()
       
       if (profileData?.username) {
         setUsername(profileData.username)
       }
+      setFullName(profileData?.full_name || '')
+      setBio(profileData?.bio || '')
+      setAvatarUrl(profileData?.avatar_url || null)
+      setAvatarBroken(false)
 
       // Load user stats
       const { data: statsData, error: statsError } = await supabase.rpc('get_user_stats', {
@@ -441,18 +449,34 @@ export default function ProfilePage() {
               </p>
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex items-center gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 border border-black flex items-center justify-center text-2xl sm:text-3xl font-normal uppercase">
-                    {user?.name?.[0]?.toUpperCase() ||
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 border border-black overflow-hidden flex items-center justify-center text-2xl sm:text-3xl font-normal uppercase bg-white shrink-0">
+                    {avatarUrl && !avatarBroken ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={() => setAvatarBroken(true)}
+                      />
+                    ) : (
+                      user?.name?.[0]?.toUpperCase() ||
+                      username?.[0]?.toUpperCase() ||
                       user?.email?.[0]?.toUpperCase() ||
-                      '?'}
+                      '?'
+                    )}
                   </div>
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-normal uppercase tracking-tight">
-                      {user?.name || user?.email}
+                      {fullName || user?.name || username || user?.email}
                     </h1>
                     <p className="text-xs text-black/45 mt-1 uppercase tracking-wide">
                       @{username || user?.email?.split('@')[0]}
                     </p>
+                    {bio ? (
+                      <p className="mt-2 text-sm text-black/65 max-w-md leading-relaxed normal-case tracking-normal">
+                        {bio}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <button
