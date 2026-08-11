@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments'
 import { PostStats } from '@/components/post-stats'
@@ -10,6 +11,7 @@ import { callRpc } from '@/lib/rpc'
 import { useUserHistory } from '@/hooks/use-user-history'
 import AddToSpotlightButton from '@/components/add-to-spotlight-button'
 import { isPitchMode } from '@/lib/pitch-mode'
+import { takePostSeed } from '@/lib/pitch-nav'
 
 interface PostData {
   id: string
@@ -47,7 +49,29 @@ export default function PostDetailPage() {
   const canComment = isAuthenticated || pitchMode
 
   useEffect(() => {
-    loadPost()
+    // Instant paint from navigation seed (web / grid), then refresh from DB
+    const seed = takePostSeed(postId)
+    if (seed) {
+      setPost({
+        id: seed.id,
+        title: seed.title || 'Untitled',
+        description: seed.description || '',
+        content_type: seed.content_type || 'image',
+        media_url: seed.media_url || '',
+        audio_url: seed.audio_url || '',
+        video_url: seed.video_url || '',
+        created_at: seed.created_at || new Date().toISOString(),
+        views: seed.views || 0,
+        creator_id: seed.creator_id || '',
+        creator_username: seed.creator_username || 'anonymous',
+        subgroup_id: seed.subgroup_id || null,
+        subgroup_name: seed.subgroup_name || null,
+        subgroup_slug: seed.subgroup_slug || null,
+      })
+      setLoading(false)
+    }
+    void loadPost()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId])
 
   const loadPost = async () => {
@@ -121,35 +145,32 @@ export default function PostDetailPage() {
         trackAction('view', postId, 'post')
       }
 
-      // Track view in Supabase (for view count)
       try {
         await callRpc('track_view', {
           post_id_param: postId,
-          user_id_param: user?.id || null
+          user_id_param: user?.id || null,
         })
-      } catch (error) {
-        console.warn('Failed to track view in Supabase:', error)
+      } catch {
+        /* ignore view tracking failures */
       }
 
-      // Check if current user owns this post
+      // Check ownership
       if (user?.id && postWithProfile.creator_id) {
         try {
-          const { data: profileData, error: profileError } = await supabase
+          const { data: profile } = await supabase
             .from('profiles')
             .select('id')
             .eq('external_id', user.id)
             .maybeSingle()
-          
-          if (!profileError && profileData?.id === postWithProfile.creator_id) {
-            setIsOwner(true)
-          }
-        } catch (ownerError) {
-          console.warn('Failed to check post ownership:', ownerError)
+          setIsOwner(Boolean(profile?.id && profile.id === postWithProfile.creator_id))
+        } catch {
+          setIsOwner(false)
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading post:', error)
-      alert('Failed to load post: ' + (error.message || 'Please try again'))
+      // Keep seed paint if we already have one
+      setPost((prev) => prev)
     } finally {
       setLoading(false)
     }
@@ -224,19 +245,23 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center py-8">
-          <div className="text-gray-500">Loading post...</div>
-        </div>
+      <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono'] flex items-center justify-center">
+        <p className="text-[10px] uppercase tracking-wide text-black/40">Loading…</p>
       </div>
     )
   }
 
   if (!post) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center py-8">
-          <div className="text-gray-500">Post not found</div>
+      <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono'] flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-sm text-black/50 mb-4">Post not found</p>
+          <Link
+            href={pitchMode ? '/' : '/feed'}
+            className="text-[10px] uppercase tracking-wide underline underline-offset-4"
+          >
+            {pitchMode ? '← Creative web' : '← Feed'}
+          </Link>
         </div>
       </div>
     )
@@ -253,176 +278,163 @@ export default function PostDetailPage() {
     return date.toLocaleDateString()
   }
 
+  const backHref = post.subgroup_slug
+    ? `/subgroup/${post.subgroup_slug}`
+    : pitchMode
+      ? '/'
+      : '/feed'
+
   return (
-    <div className="w-full min-h-screen bg-white" style={{ margin: 0, padding: 0 }}>
-      <div className="max-w-4xl mx-auto p-6 bg-white" style={{ margin: '0 auto' }}>
-      {/* Header */}
-      <div className="mb-6">
-        <button 
-          onClick={() => {
-            if (post.subgroup_slug) {
-              router.push(`/subgroup/${post.subgroup_slug}`)
-            } else if (pitchMode) {
-              router.push('/')
-            } else {
-              router.back()
-            }
-          }}
-          className="text-sm text-gray-500 hover:text-black mb-4"
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono']">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-16">
+        <Link
+          href={backHref}
+          className="inline-block text-[10px] uppercase tracking-wide text-black/45 hover:text-black mb-6"
         >
-          ← Back
-        </button>
-        
-        {/* Post Header - Reddit Style */}
-        <div className="border border-gray-200 rounded-lg p-6">
-          <h1 className="text-2xl font-['Space_Mono'] font-normal text-black mb-4">
+          {post.subgroup_name
+            ? `← ${post.subgroup_name}`
+            : pitchMode
+              ? '← Creative web'
+              : '← Back'}
+        </Link>
+
+        <header className="border-b border-black pb-6 mb-8">
+          <p className="text-[10px] uppercase tracking-wide text-black/40 mb-2">
+            Post
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-normal tracking-tight">
             {post.title}
           </h1>
-          
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-4">
-            <span>Posted by {post.creator_username || 'Unknown'}</span>
-            <span>•</span>
+          <p className="mt-3 text-[10px] uppercase tracking-wide text-black/45 flex flex-wrap gap-x-2 gap-y-1">
+            <span>{post.creator_username || 'anonymous'}</span>
+            <span>·</span>
             <span>{getTimeAgo(post.created_at)}</span>
-            <span>•</span>
+            <span>·</span>
             <span>{post.views} views</span>
             {post.subgroup_slug && post.subgroup_name ? (
               <>
-                <span>•</span>
-                <button
-                  type="button"
-                  onClick={() => router.push(`/subgroup/${post.subgroup_slug}`)}
-                  className="text-black underline underline-offset-2 hover:no-underline"
+                <span>·</span>
+                <Link
+                  href={`/subgroup/${post.subgroup_slug}`}
+                  className="text-black underline underline-offset-4 hover:no-underline"
+                  onMouseEnter={() => router.prefetch(`/subgroup/${post.subgroup_slug}`)}
                 >
                   in {post.subgroup_name}
-                </button>
+                </Link>
               </>
             ) : null}
-          </div>
+          </p>
+        </header>
 
-          {post.description && (
-            <div className="prose max-w-none">
-              <p className="text-gray-800 whitespace-pre-wrap font-['Space_Mono']">
-                {post.description}
-              </p>
-            </div>
-          )}
+        {post.description ? (
+          <p className="text-sm text-black/70 whitespace-pre-wrap leading-relaxed mb-8">
+            {post.description}
+          </p>
+        ) : null}
 
-          {/* Media Display */}
-          {post.media_url || post.audio_url || post.video_url ? (
-            <div className="my-6">
-              {post.content_type === 'music' && post.audio_url ? (
-                <div className="relative">
-                  {/* Show cover image if available */}
-                  {post.media_url ? (
-                    <div className="relative">
-                      <img
-                        src={post.media_url}
-                        alt={post.title}
-                        className="w-full max-h-96 object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                        <audio controls className="w-full max-w-md">
-                          <source src={post.audio_url} type="audio/mpeg" />
-                          Your browser does not support the audio element.
-                        </audio>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-64 bg-gradient-to-br from-purple-400 to-pink-400 rounded-lg flex items-center justify-center">
-                      <audio controls>
-                        <source src={post.audio_url} type="audio/mpeg" />
-                        Your browser does not support the audio element.
-                      </audio>
-                    </div>
-                  )}
+        {post.media_url || post.audio_url || post.video_url ? (
+          <div className="mb-8 border border-black">
+            {post.content_type === 'music' && post.audio_url ? (
+              <div className="relative bg-black/[0.02]">
+                {post.media_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={post.media_url}
+                    alt={post.title}
+                    className="w-full max-h-[28rem] object-cover"
+                  />
+                ) : null}
+                <div className="p-4 border-t border-black">
+                  <audio controls className="w-full">
+                    <source src={post.audio_url} type="audio/mpeg" />
+                  </audio>
                 </div>
-              ) : ['video', 'film'].includes(post.content_type) && post.video_url ? (
-                <video 
-                  src={post.video_url} 
-                  controls 
-                  className="w-full max-h-96 rounded-lg"
-                  poster={post.media_url}
-                />
-              ) : post.media_url ? (
-                <img 
-                  src={post.media_url} 
-                  alt={post.title} 
-                  className="w-full max-h-96 object-contain rounded-lg bg-gray-100" 
-                />
-              ) : null}
-            </div>
-          ) : null}
+              </div>
+            ) : ['video', 'film'].includes(post.content_type) && post.video_url ? (
+              <video
+                src={post.video_url}
+                controls
+                className="w-full max-h-[32rem] bg-black"
+                poster={post.media_url}
+              />
+            ) : post.media_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.media_url}
+                alt={post.title}
+                className="w-full max-h-[36rem] object-contain bg-white"
+              />
+            ) : null}
+          </div>
+        ) : null}
 
-          <div className="mt-6 flex items-center justify-between flex-wrap gap-2">
-            <PostStats postId={post.id} initialViews={post.views} showDetailed />
-            <div className="flex items-center gap-2">
-              {!pitchMode && <AddToSpotlightButton postId={post.id} />}
-              {isOwner && (
-                <button
-                  onClick={handleDeletePost}
-                  disabled={deleting}
-                  className="px-3 py-2 text-sm border border-red-500 text-red-600 hover:bg-red-50 disabled:opacity-50 rounded-lg transition-colors"
-                >
-                  {deleting ? 'Deleting...' : 'Delete Post'}
-                </button>
-              )}
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black pb-6 mb-10">
+          <PostStats postId={post.id} initialViews={post.views} showDetailed />
+          <div className="flex items-center gap-2">
+            {!pitchMode && <AddToSpotlightButton postId={post.id} />}
+            {isOwner && (
+              <button
+                type="button"
+                onClick={handleDeletePost}
+                disabled={deleting}
+                className="border border-black px-4 py-2 text-[10px] uppercase tracking-wide hover:bg-black hover:text-white disabled:opacity-40"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Comments Section */}
-      <div className="border border-gray-200 rounded-lg p-6">
-        <h2 className="text-lg font-['Space_Mono'] font-normal text-black mb-4">
-          Comments
-        </h2>
+        <section>
+          <h2 className="text-[10px] uppercase tracking-wide text-black/45 mb-4">
+            Comments
+          </h2>
 
-        {/* Comment Input */}
-        {canComment ? (
-          <div className="mb-6">
-            {pitchMode && !isAuthenticated && (
-              <input
-                type="text"
-                value={guestUsername}
-                onChange={(e) => setGuestUsername(e.target.value)}
-                placeholder="username (optional)"
-                className="w-full mb-2 p-3 border border-gray-300 rounded-lg text-black bg-white font-['Space_Mono'] text-sm"
-                maxLength={24}
+          {canComment ? (
+            <div className="mb-8 space-y-3">
+              {pitchMode && !isAuthenticated && (
+                <input
+                  type="text"
+                  value={guestUsername}
+                  onChange={(e) => setGuestUsername(e.target.value)}
+                  placeholder="Username (optional)"
+                  className="w-full border border-black px-3 py-2.5 text-sm bg-white outline-none"
+                  maxLength={24}
+                />
+              )}
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Add a comment…"
+                className="w-full border border-black px-3 py-2.5 text-sm bg-white outline-none resize-none"
+                rows={3}
               />
-            )}
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment..."
-              className="w-full p-3 border border-gray-300 rounded-lg resize-none text-black bg-white"
-              rows={3}
-            />
-            <div className="flex justify-end mt-2">
-              <button
-                onClick={handleCommentSubmit}
-                disabled={!newComment.trim()}
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Comment
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleCommentSubmit}
+                  disabled={!newComment.trim()}
+                  className="border border-black bg-black text-white px-5 py-2 text-xs uppercase tracking-wide hover:bg-white hover:text-black disabled:opacity-40"
+                >
+                  Comment
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="mb-6 p-4 border border-gray-200 rounded-lg text-center text-gray-500">
-            Please sign in to comment
-          </div>
-        )}
+          ) : (
+            <p className="mb-8 text-sm text-black/50 border border-black px-4 py-3">
+              Sign in to comment
+            </p>
+          )}
 
-        {/* Comments List */}
-        <RedditStyleCommentsList 
-          postId={post.id}
-          refreshSignal={commentsRefreshSignal}
-          optimisticComments={optimisticComments}
-          guestUsername={guestUsername}
-          canReply={canComment}
-        />
-      </div>
-      </div>
+          <RedditStyleCommentsList
+            postId={post.id}
+            refreshSignal={commentsRefreshSignal}
+            optimisticComments={optimisticComments}
+            guestUsername={guestUsername}
+            canReply={canComment}
+          />
+        </section>
+      </main>
     </div>
   )
 }
@@ -579,10 +591,18 @@ function RedditStyleCommentsList({
   }
 
   if (loading && merged.length === 0) {
-    return <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">Loading comments...</div>
+    return (
+      <p className="text-[10px] uppercase tracking-wide text-black/40 py-4">
+        Loading comments…
+      </p>
+    )
   }
   if (merged.length === 0) {
-    return <div className="text-sm font-['Space_Mono'] text-gray-500 text-center py-4">No comments yet. Be the first to comment!</div>
+    return (
+      <p className="text-sm text-black/45 py-4">
+        No comments yet. Be the first.
+      </p>
+    )
   }
 
   const updateCommentVoteScore = (commentId: string, newVoteScore: number) => {
@@ -691,31 +711,27 @@ function RedditComment({
   }
 
   return (
-    <div className={`${depth > 0 ? 'ml-6 border-l-2 border-gray-100 pl-4' : ''}`}>
-      <div className="flex gap-3">
-        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-normal text-gray-600 flex-shrink-0">
-          {comment.username?.[0]?.toUpperCase() || '?'}
+    <div className={`${depth > 0 ? 'ml-4 sm:ml-6 border-l border-black/20 pl-4' : ''}`}>
+      <div className="py-3">
+        <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+          <span className="text-xs uppercase tracking-wide text-black">
+            {comment.username || 'anonymous'}
+          </span>
+          {(comment as any).replying_to_username && (
+            <span className="text-[10px] uppercase tracking-wide text-black/35">
+              → {(comment as any).replying_to_username}
+            </span>
+          )}
+          <span className="text-[10px] uppercase tracking-wide text-black/35">
+            {getTimeAgo(comment.created_at)}
+          </span>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-['Space_Mono'] font-normal text-sm text-black">
-              {comment.username || 'anonymous'}
-            </span>
-            {(comment as any).replying_to_username && (
-              <span className="font-['Space_Mono'] text-xs text-gray-400">
-                replying to {(comment as any).replying_to_username}
-              </span>
-            )}
-            <span className="font-['Space_Mono'] text-xs text-gray-500">
-              {getTimeAgo(comment.created_at)}
-            </span>
-          </div>
-          <p className="font-['Space_Mono'] text-sm text-gray-800 mb-2 break-words">
-            {comment.content}
-          </p>
+        <p className="text-sm text-black/80 mb-2 break-words leading-relaxed">
+          {comment.content}
+        </p>
           
           {/* Comment actions with likes */}
-          <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+          <div className="mt-2 flex items-center gap-3 text-[10px] uppercase tracking-wide text-black/45">
             {/* Delete button (owner only) - compare profile IDs */}
             {isCommentOwner && (
               <button
@@ -859,16 +875,17 @@ function RedditComment({
 
           {/* Reply input */}
           {openReplyFor === comment.id && canReply && (
-            <div className="mt-3 border border-gray-200 rounded-lg p-3">
+            <div className="mt-3 border border-black p-3 space-y-2">
               <textarea
                 value={replyText[comment.id] || ''}
                 onChange={(e) => setReplyText({ ...replyText, [comment.id]: e.target.value })}
-                placeholder="Write a reply..."
-                className="w-full p-2 text-sm border border-gray-300 rounded resize-none text-black bg-white"
+                placeholder="Write a reply…"
+                className="w-full px-3 py-2 text-sm border border-black outline-none resize-none bg-white"
                 rows={2}
               />
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={async () => {
                     const content = replyText[comment.id]?.trim()
                     if (!content) return
@@ -898,16 +915,17 @@ function RedditComment({
                       setReplyText({ ...replyText, [comment.id]: content })
                     }
                   }}
-                  className="px-3 py-1 text-xs bg-black text-white rounded hover:bg-gray-800"
+                  className="border border-black bg-black text-white px-3 py-1.5 text-[10px] uppercase tracking-wide hover:bg-white hover:text-black"
                 >
                   Reply
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setReplyText({ ...replyText, [comment.id]: '' })
                     setOpenReplyFor(null)
                   }}
-                  className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                  className="border border-black px-3 py-1.5 text-[10px] uppercase tracking-wide hover:bg-black hover:text-white"
                 >
                   Cancel
                 </button>
@@ -919,10 +937,12 @@ function RedditComment({
           {visibleReplies.has(comment.id) && (replies.length > 0 || loadingReplies) && (
             <div className="mt-3">
               {loadingReplies ? (
-                <div className="text-xs text-gray-500">Loading replies...</div>
+                <p className="text-[10px] uppercase tracking-wide text-black/40">
+                  Loading replies…
+                </p>
               ) : (
-                <div className="space-y-3">
-                  {replies.map(reply => (
+                <div className="space-y-1">
+                  {replies.map((reply) => (
                     <RedditComment
                       key={reply.id}
                       comment={reply}
@@ -950,7 +970,6 @@ function RedditComment({
               )}
             </div>
           )}
-        </div>
       </div>
     </div>
   )

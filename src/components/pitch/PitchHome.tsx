@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { PitchGraphLink, PitchGraphNode } from '@/app/api/pitch/graph/route'
 import { PITCH_TOUR_PARENT_ID, type PitchTourStage } from '@/lib/pitch-copy'
 import { getPitchHub } from '@/lib/pitch-taxonomy'
+import { postIdFromGraphNodeId, seedPostOpen } from '@/lib/pitch-nav'
 import PitchWeb from '@/components/pitch/PitchWeb'
 import PitchOnboarding from '@/components/pitch/PitchOnboarding'
 import type {
@@ -280,6 +281,7 @@ export default function PitchHome() {
 
   const onEnterHub = useCallback(
     (slug: string) => {
+      router.prefetch(`/subgroup/${slug}`)
       router.push(`/subgroup/${slug}`)
     },
     [router]
@@ -420,6 +422,17 @@ export default function PitchHome() {
     }
   }, [applyOptimistic, applyCommit, applyFail])
 
+  useEffect(() => {
+    // Prefetch enterable routes when a hub/post is selected
+    if (!selected) return
+    if (selected.kind === 'hub' && selected.slug) {
+      router.prefetch(`/subgroup/${selected.slug}`)
+    }
+    if (selected.kind === 'post') {
+      router.prefetch(`/post/${postIdFromGraphNodeId(selected.id)}`)
+    }
+  }, [selected, router])
+
   const selectedMeta = useMemo(() => {
     if (!selected || selected.kind !== 'hub') return null
     const hub = selected.hubId ? getPitchHub(selected.hubId) : null
@@ -500,6 +513,7 @@ export default function PitchHome() {
               <button
                 type="button"
                 className="text-sm border border-black bg-black text-white px-4 py-2 uppercase hover:bg-white hover:text-black"
+                onMouseEnter={() => router.prefetch(`/subgroup/${selected.slug}`)}
                 onClick={() => onEnterHub(selected.slug!)}
               >
                 Enter group
@@ -559,17 +573,47 @@ export default function PitchHome() {
             />
           ) : null}
           <div className="p-5 space-y-3">
+            <p className="text-[10px] uppercase tracking-wide text-black/40">
+              Post
+            </p>
             <h3 className="text-base font-normal">{selected.label}</h3>
             <p className="text-sm text-black/60">
               by {displayUsername(selected.username)}
             </p>
-            <button
-              type="button"
-              className="text-sm underline"
-              onClick={() => setSelected(null)}
-            >
-              Close
-            </button>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                className="text-sm border border-black bg-black text-white px-4 py-2 uppercase hover:bg-white hover:text-black"
+                onMouseEnter={() => {
+                  const id = postIdFromGraphNodeId(selected.id)
+                  router.prefetch(`/post/${id}`)
+                }}
+                onClick={() => {
+                  const id = postIdFromGraphNodeId(selected.id)
+                  seedPostOpen({
+                    id,
+                    title: selected.label,
+                    media_url: selected.imageUrl,
+                    audio_url: selected.audioUrl,
+                    video_url: selected.videoUrl,
+                    content_type: selected.contentType || 'image',
+                    creator_username: selected.username,
+                    subgroup_id: selected.subgroupId,
+                    subgroup_slug: selected.slug,
+                  })
+                  router.push(`/post/${id}`)
+                }}
+              >
+                Open post
+              </button>
+              <button
+                type="button"
+                className="text-sm underline px-1"
+                onClick={() => setSelected(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
