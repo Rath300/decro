@@ -665,6 +665,18 @@ function RedditStyleCommentsList({
           replyText={replyText}
           setReplyText={setReplyText}
           refetch={refetch}
+          onDeleted={(id) => {
+            setMerged((prev) => prev.filter((c) => c.id !== id))
+            setReplies((prev) => {
+              const next = { ...prev }
+              delete next[id]
+              for (const key of Object.keys(next)) {
+                next[key] = next[key].filter((r) => r.id !== id)
+              }
+              return next
+            })
+            void refetch()
+          }}
           updateVoteScore={updateCommentVoteScore}
           visibleReplies={visibleReplies}
           setVisibleReplies={setVisibleReplies}
@@ -691,6 +703,7 @@ function RedditComment({
   replyText,
   setReplyText,
   refetch,
+  onDeleted,
   updateVoteScore,
   visibleReplies,
   setVisibleReplies,
@@ -711,6 +724,7 @@ function RedditComment({
   replyText: Record<string, string>
   setReplyText: (text: Record<string, string>) => void
   refetch?: () => void
+  onDeleted?: (commentId: string) => void
   updateVoteScore?: (commentId: string, newVoteScore: number) => void
   visibleReplies: Set<string>
   setVisibleReplies: (setter: (prev: Set<string>) => Set<string>) => void
@@ -765,23 +779,33 @@ function RedditComment({
                 className="text-red-500 hover:text-red-700 font-['Space_Mono'] transition-colors font-medium"
                 onClick={async () => {
                   if (!user?.id) {
-                    alert('You must be logged in');
-                    return;
+                    alert('You must be logged in')
+                    return
                   }
-                  if (!confirm('Delete this comment?')) return;
+                  if (!confirm('Delete this comment?')) return
+                  // Optimistic remove — don't wait on refetch/realtime
+                  onDeleted?.(comment.id)
                   try {
                     const { data, error } = await callRpc('delete_comment_ext', {
                       comment_id_param: comment.id,
-                    });
-                    if (error) throw error;
-                    if (data && data.success) {
-                      if (refetch) refetch();
-                    } else {
-                      alert(data?.error || 'Failed to delete');
+                    })
+                    if (error) throw error
+                    let result = data as any
+                    if (typeof result === 'string') {
+                      try {
+                        result = JSON.parse(result)
+                      } catch {
+                        /* keep string */
+                      }
+                    }
+                    if (result && result.success === false) {
+                      alert(result.error || 'Failed to delete')
+                      if (refetch) void refetch()
                     }
                   } catch (error) {
-                    console.error('Delete failed:', error);
-                    alert('Failed to delete comment');
+                    console.error('Delete failed:', error)
+                    alert('Failed to delete comment')
+                    if (refetch) void refetch()
                   }
                 }}
               >
@@ -983,6 +1007,7 @@ function RedditComment({
                       replyText={replyText}
                       setReplyText={setReplyText}
                       refetch={refetch}
+                      onDeleted={onDeleted}
                       updateVoteScore={updateVoteScore}
                       visibleReplies={visibleReplies}
                       setVisibleReplies={setVisibleReplies}

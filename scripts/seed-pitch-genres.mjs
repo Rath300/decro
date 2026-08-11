@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 /**
- * Idempotent seed of ~100 artistic genre subgroups used as pitch-mode hubs.
+ * Idempotent seed of pitch-mode subgroup rooms.
+ *
+ * Seeds the classic genre list plus every curated taxonomy hub id (bridges,
+ * mains, niches) so Enter/Upload works on every connection on the web.
  *
  * Usage:
  *   node scripts/seed-pitch-genres.mjs
@@ -175,12 +178,82 @@ async function main() {
     process.exit(1)
   }
 
+  // Taxonomy hub ids (bridges/mains/niches) — unique rooms for every connection.
+  const TAXONOMY_HUBS = [
+    ['Visual Art', 'visual-art'],
+    ['Photography', 'photography'],
+    ['Music', 'music'],
+    ['Film', 'film'],
+    ['Writing', 'writing'],
+    ['Design', 'design'],
+    ['Craft', 'craft'],
+    ['Games', 'games'],
+    ['Street Photo', 'street-photo'],
+    ['Portraiture', 'portraiture'],
+    ['Analog Film', 'analog-film'],
+    ['Documentary Photo', 'documentary-photo'],
+    ['Night Photography', 'night-photography'],
+    ['Night Street', 'night-street'],
+    ['Oil Painting', 'oil-painting'],
+    ['Watercolor', 'watercolor'],
+    ['Collage', 'collage'],
+    ['Illustration', 'illustration'],
+    ['Street Art', 'street-art'],
+    ['Glitch', 'glitch'],
+    ['Generative', 'generative'],
+    ['Electronic', 'electronic'],
+    ['Hip Hop', 'hip-hop'],
+    ['Ambient', 'ambient'],
+    ['Jazz', 'jazz'],
+    ['Score', 'score'],
+    ['Sound Design', 'sound-design'],
+    ['Short Film', 'short-film'],
+    ['Experimental Film', 'experimental-film'],
+    ['Animation', 'animation'],
+    ['Video Art', 'video-art'],
+    ['Documentary Film', 'documentary-film'],
+    ['Poetry', 'poetry'],
+    ['Fiction', 'fiction'],
+    ['Essay', 'essay'],
+    ['Comics', 'comics'],
+    ['Zine', 'zine'],
+    ['Typography', 'typography'],
+    ['Poster Design', 'poster-design'],
+    ['Brutalist Web', 'brutalist-web'],
+    ['UI Specimens', 'ui-specimens'],
+    ['3D Render', '3d-render'],
+    ['Ceramics', 'ceramics'],
+    ['Textile Art', 'textile-art'],
+    ['Sculpture', 'sculpture'],
+    ['Woodworking', 'woodworking'],
+    ['Video Games', 'video-games'],
+    ['Indie Games', 'indie-games'],
+    ['Triple-A', 'triple-a'],
+    ['Game Art', 'game-art'],
+    ['Pixel Art', 'pixel-art'],
+    ['Character Design', 'character-design'],
+    ['Album Cover', 'album-cover'],
+    ['Music Video', 'music-video'],
+    ['Photo Essay', 'photo-essay'],
+    ['Fashion Film', 'fashion-film'],
+    ['Sound Sculpture', 'sound-sculpture'],
+    ['Game Soundtrack', 'game-soundtrack'],
+    ['Graphic Novel', 'graphic-novel'],
+  ]
+
+  const toSeed = new Map()
+  for (const name of GENRES) {
+    toSeed.set(slugify(name), name)
+  }
+  for (const [name, slug] of TAXONOMY_HUBS) {
+    if (!toSeed.has(slug)) toSeed.set(slug, name)
+  }
+
   let created = 0
   let skipped = 0
   let failed = 0
 
-  for (const name of GENRES) {
-    const slug = slugify(name)
+  for (const [slug, name] of toSeed) {
     const { data: existing } = await admin
       .from('subgroups')
       .select('id')
@@ -221,7 +294,7 @@ async function main() {
 
   console.log('')
   console.log(
-    `Done. created=${created} skipped=${skipped} failed=${failed} total=${GENRES.length}`
+    `Done. created=${created} skipped=${skipped} failed=${failed} total=${toSeed.size}`
   )
 }
 

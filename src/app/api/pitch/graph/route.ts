@@ -102,7 +102,61 @@ export async function GET(request: Request) {
     console.warn('[pitch/graph] parent edges:', edgesRes.error.message)
   }
 
-  const bySlug = new Map((groupsRes.data || []).map((g) => [g.slug, g]))
+  const bySlug = new Map(
+    (groupsRes.data || []).map((g) => [g.slug, g as {
+      id: string
+      name: string
+      slug: string
+      post_count: number | null
+    }])
+  )
+
+  // Every taxonomy hub (except Decro center) is a real room. Create any
+  // missing subgroups so bridges/mains like Night Street get Enter/Upload.
+  const missingHubs = PITCH_HUBS.filter((h) => {
+    const slug = hubSlug(h)
+    return Boolean(slug) && !bySlug.has(slug!)
+  })
+  if (missingHubs.length > 0) {
+    await admin.rpc('upsert_profile_from_external', {
+      external_id_param: 'pitch:seed',
+      username_param: 'decro_seed',
+      full_name_param: 'Decro Seed',
+    })
+    for (const h of missingHubs) {
+      const slug = hubSlug(h)
+      if (!slug) continue
+      const { data, error } = await admin.rpc('create_subgroup_ext', {
+        external_id_param: 'pitch:seed',
+        name_param: h.label,
+        slug_param: slug,
+        description_param: null,
+        cover_image_url_param: null,
+      })
+      if (error) {
+        console.warn(`[pitch/graph] ensure ${slug}:`, error.message)
+        continue
+      }
+      const result = data as { success?: boolean; id?: string; slug?: string } | null
+      if (result?.success && result.id) {
+        bySlug.set(result.slug || slug, {
+          id: result.id,
+          name: h.label,
+          slug: result.slug || slug,
+          post_count: 0,
+        })
+      } else {
+        // Race / already taken — re-read
+        const { data: existing } = await admin
+          .from('subgroups')
+          .select('id,name,slug,post_count')
+          .eq('slug', slug)
+          .maybeSingle()
+        if (existing) bySlug.set(slug, existing)
+      }
+    }
+  }
+
   const taxonomyChildIds = new Map<string, string[]>()
   for (const h of PITCH_HUBS) {
     taxonomyChildIds.set(
@@ -148,7 +202,8 @@ export async function GET(request: Request) {
       depth: h.depth,
       parentIds: h.parents,
       childIds: kids,
-      enterable: Boolean(row),
+      // Center is not a room; everything else is enterable once slug resolves.
+      enterable: Boolean(slug && row),
       isBridge: h.parents.length >= 2,
       startVisible: Boolean(
         h.startVisible || h.depth <= 1 || h.parents.length === 0
@@ -158,7 +213,7 @@ export async function GET(request: Request) {
       postCount:
         typeof row?.post_count === 'number'
           ? row.post_count
-          : kids.length || 0,
+          : 0,
     }
   })
 

@@ -43,8 +43,11 @@ function slugify(name: string): string {
 }
 
 export function hubSlug(hub: PitchHub): string | null {
-  if (hub.genreName) return slugify(hub.genreName)
-  return null
+  // Center is the web root, not a room. Every other hub is enterable.
+  if (hub.depth === 0) return null
+  // Prefer dedicated room slug from the hub id so bridges/mains are unique
+  // even when genreName points at a shared seed genre.
+  return slugify(hub.id || hub.genreName || hub.label)
 }
 
 /** Full curated DAG */
