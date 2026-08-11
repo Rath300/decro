@@ -1,7 +1,6 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { usePosts } from '@/context/post-context'
 import type { MediaCard } from '@/context/post-context'
 import CardGrid from '@/components/card-grid'
 import DetailModal from '@/components/detail-modal'
@@ -17,15 +16,23 @@ import { isPitchMode } from '@/lib/pitch-mode'
 
 type Tab = 'posts' | 'chat'
 
+function cleanGroupDescription(raw: string | null | undefined): string | null {
+  if (!raw?.trim()) return null
+  const cleaned = raw
+    .replace(/\s*[—\-]\s*seeded for pitch mode\s*/gi, '')
+    .trim()
+  return cleaned || null
+}
+
 export default function SubgroupDetail() {
   const params = useParams() as { slug: string }
-  const { posts } = usePosts()
   const { user } = useAuth()
   const toast = useToast()
   const { trackAction } = useUserHistory()
   const pitchMode = isPitchMode()
   const [subgroupId, setSubgroupId] = useState<string | null>(null)
   const [subgroupData, setSubgroupData] = useState<any>(null)
+  const [roomPosts, setRoomPosts] = useState<MediaCard[]>([])
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [followerCount, setFollowerCount] = useState(0)
@@ -77,7 +84,53 @@ export default function SubgroupDetail() {
           }
         }
 
-        setSubgroupData({ ...data, creator_username })
+        setSubgroupData({
+          ...data,
+          description: cleanGroupDescription(data.description),
+          creator_username,
+        })
+
+        // Load this room’s posts directly — the global feed is capped and
+        // often misses older posts that still belong here.
+        try {
+          const { data: postsData, error: postsError } = await supabase.rpc(
+            'get_feed_posts',
+            {
+              page_size: 100,
+              page_offset: 0,
+              subgroup_filter: data.id,
+              content_type_filter: null,
+              sort_by: 'created_at',
+            }
+          )
+          if (postsError) throw postsError
+          const mapped: MediaCard[] = (postsData || [])
+            .filter((post: any) => post?.id)
+            .map((post: any) => ({
+              id: String(post.id),
+              type: post.content_type || 'image',
+              title: post.title || 'Untitled',
+              description: post.description ?? undefined,
+              imageUrl: post.media_url || '',
+              aspectRatio: 'square' as const,
+              audioUrl: post.audio_url ?? undefined,
+              videoUrl: post.video_url ?? undefined,
+              creator: post.creator_username || 'Anonymous',
+              date: post.created_at || new Date().toISOString(),
+              isCurated: post.is_curated ?? false,
+              views: post.views ?? 0,
+              subgroupId: post.subgroup_id ?? data.id,
+              subgroupName: post.subgroup_name || data.name,
+              subgroupSlug: post.subgroup_slug || data.slug,
+              tags: Array.isArray(post.tags)
+                ? post.tags.filter((t: any) => t != null)
+                : [],
+            }))
+          setRoomPosts(mapped)
+        } catch (postsLoadError) {
+          console.error('Failed to load subgroup posts:', postsLoadError)
+          setRoomPosts([])
+        }
 
         if (user?.id) {
           trackAction('view', params.slug, 'subgroup')
@@ -179,9 +232,7 @@ export default function SubgroupDetail() {
     }
   }
 
-  const cards: MediaCard[] = subgroupId
-    ? getSortedCards(posts.filter((p) => p.subgroupId === subgroupId))
-    : []
+  const cards: MediaCard[] = getSortedCards(roomPosts)
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
@@ -244,7 +295,7 @@ export default function SubgroupDetail() {
               </p>
             )}
             <p className="mt-4 text-[10px] uppercase tracking-wide text-black/40">
-              {subgroupData.post_count ?? cards.length} posts
+              {cards.length} post{cards.length === 1 ? '' : 's'}
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">

@@ -3,7 +3,7 @@
  * Subscribes to live comment events on a post
  */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import supabase from '@/lib/supabase-client'
 
 export interface Comment {
@@ -17,121 +17,78 @@ export interface Comment {
   avatar_url: string | null
   vote_score?: number
   reply_count?: number
+  parent_id?: string | null
+}
+
+function dedupeById(list: Comment[]): Comment[] {
+  const seen = new Set<string>()
+  const out: Comment[] = []
+  for (const c of list) {
+    if (!c?.id || seen.has(c.id)) continue
+    seen.add(c.id)
+    out.push(c)
+  }
+  return out
 }
 
 export function useRealtimeComments(postId: string) {
   const [comments, setComments] = useState<Comment[]>([])
   const [commentCount, setCommentCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const postIdRef = useRef(postId)
+  postIdRef.current = postId
+
+  const fetchComments = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!postId) return
+    if (!opts?.silent) setLoading(true)
+    try {
+      const { data, error } = await supabase.rpc('get_post_comments', {
+        post_id_param: postId,
+        page_size: 20,
+        page_offset: 0,
+      })
+
+      if (error) {
+        console.error('Failed to fetch comments RPC error:', error)
+        setComments([])
+        setCommentCount(0)
+      } else if (data) {
+        const next = dedupeById(data as Comment[])
+        setComments(next)
+        setCommentCount(next.length)
+      } else {
+        setComments([])
+        setCommentCount(0)
+      }
+    } catch (error) {
+      console.error('Failed to fetch comments:', error)
+      setComments([])
+      setCommentCount(0)
+    } finally {
+      if (!opts?.silent) setLoading(false)
+    }
+  }, [postId])
 
   useEffect(() => {
     if (!postId) return
 
-    // Fetch initial comments
-    const fetchComments = async () => {
-      setLoading(true)
-      try {
-        const { data, error } = await supabase.rpc('get_post_comments', {
-          post_id_param: postId,
-          page_size: 20,
-          page_offset: 0
-        })
+    void fetchComments()
 
-        if (error) {
-          console.error('Failed to fetch comments RPC error:', error)
-          setComments([])
-          setCommentCount(0)
-        } else if (data) {
-          setComments(data)
-          setCommentCount(data.length)
-        } else {
-          setComments([])
-          setCommentCount(0)
-        }
-      } catch (error) {
-        console.error('Failed to fetch comments:', error)
-        setComments([])
-        setCommentCount(0)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchComments()
-
-    // Subscribe to new comments
+    // On any change, refetch once — avoids duplicate prepend races with
+    // refreshSignal + postgres_changes both firing after submit.
     const channel = supabase
       .channel(`post-${postId}-comments`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'comments',
-          filter: `post_id=eq.${postId}`
+          filter: `post_id=eq.${postId}`,
         },
-        async (payload) => {
-          // Only add top-level comments (not replies)
-          // Replies have parent_id set, top-level comments have parent_id = null
-          if (payload.new.parent_id) {
-            // This is a reply, don't add to top-level comments
-            // Just refetch to update reply counts
-            const { data, error } = await supabase.rpc('get_post_comments', {
-              post_id_param: postId,
-              page_size: 20,
-              page_offset: 0
-            })
-            if (!error && data) {
-              setComments(data)
-            }
-            return
-          }
-          
-          // Fetch full comment data with user info for top-level comments
-          const { data, error } = await supabase.rpc('get_post_comments', {
-            post_id_param: postId,
-            page_size: 1,
-            page_offset: 0
-          })
-
-          if (!error && data && data.length > 0) {
-            const newComment = data[0]
-            setComments(prev => [newComment, ...prev])
-            setCommentCount(prev => prev + 1)
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'comments',
-          filter: `post_id=eq.${postId}`
-        },
-        (payload) => {
-          setComments(prev => prev.filter(c => c.id !== payload.old.id))
-          setCommentCount(prev => Math.max(0, prev - 1))
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'comments',
-          filter: `post_id=eq.${postId}`
-        },
-        (payload) => {
-          setComments(prev => 
-            prev.map(c => c.id === payload.new.id ? {
-              ...c,
-              content: payload.new.content,
-              updated_at: payload.new.updated_at,
-              vote_score: payload.new.vote_score ?? c.vote_score,
-              reply_count: payload.new.reply_count ?? c.reply_count,
-            } : c)
-          )
+        () => {
+          if (postIdRef.current !== postId) return
+          void fetchComments({ silent: true })
         }
       )
       .subscribe()
@@ -139,35 +96,16 @@ export function useRealtimeComments(postId: string) {
     return () => {
       channel.unsubscribe()
     }
-  }, [postId])
+  }, [postId, fetchComments])
 
   const refetch = useCallback(async () => {
-    if (!postId) return
-    
-    try {
-      const { data, error } = await supabase.rpc('get_post_comments', {
-        post_id_param: postId,
-        page_size: 20,
-        page_offset: 0
-      })
-      
-      if (error) {
-        console.error('Failed to refetch comments RPC error:', error)
-      } else if (data) {
-        setComments(data)
-        setCommentCount(data.length)
-      }
-    } catch (error) {
-      console.error('Failed to refetch comments:', error)
-    }
-  }, [postId])
+    await fetchComments({ silent: true })
+  }, [fetchComments])
 
   return {
     comments,
     commentCount,
     loading,
-    refetch
+    refetch,
   }
 }
-
-

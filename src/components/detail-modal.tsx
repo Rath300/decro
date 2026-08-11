@@ -689,7 +689,7 @@ function RedditComment({
           <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-1">
             <span className="font-['Space_Mono'] font-normal text-sm text-black">
-              {comment.username || 'anonymous'}
+              {comment.full_name?.trim() || comment.username || 'anonymous'}
             </span>
             {(comment as any).replying_to_username && (
               <span className="font-['Space_Mono'] text-xs text-gray-400">

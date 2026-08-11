@@ -509,32 +509,44 @@ function RedditStyleCommentsList({
   useEffect(() => {
     const server = comments || []
     const optimistic = optimisticComments || []
-    
+
     // Drop empty / garbage rows; keep guest and anonymous display names.
     const filterValidComments = (commentsList: RealtimeComment[]) => {
-      return commentsList.filter(comment => {
+      return commentsList.filter((comment) => {
         // Top-level only — replies load under Show replies
         if ((comment as any).parent_id) return false
-        if (!comment.username?.trim()) return false
+        if (!comment.username?.trim() && !comment.full_name?.trim()) return false
         if (comment.created_at < '2020-01-01') return false
         return true
       })
     }
-    
-    const validServerComments = filterValidComments(server);
-    const validOptimisticComments = filterValidComments(optimistic);
-    
-    if (validOptimisticComments.length === 0) {
-      setMerged(validServerComments)
-      return
-    }
-    const filteredOptimistic = validOptimisticComments.filter(o => 
-      !validServerComments.some(s => 
-        s.content === o.content && 
-        Math.abs(new Date(s.created_at).getTime() - new Date(o.created_at).getTime()) < 60000
-      )
+
+    const validServerComments = filterValidComments(server)
+    const validOptimisticComments = filterValidComments(optimistic)
+    const serverIds = new Set(validServerComments.map((c) => c.id))
+
+    // Prefer server rows; keep optimistic only until the real row lands.
+    const filteredOptimistic = validOptimisticComments.filter(
+      (o) =>
+        !serverIds.has(o.id) &&
+        !validServerComments.some(
+          (s) =>
+            s.content === o.content &&
+            Math.abs(
+              new Date(s.created_at).getTime() - new Date(o.created_at).getTime()
+            ) < 60_000
+        )
     )
-    setMerged([...filteredOptimistic, ...validServerComments])
+
+    const mergedList = [...filteredOptimistic, ...validServerComments]
+    const seen = new Set<string>()
+    setMerged(
+      mergedList.filter((c) => {
+        if (!c.id || seen.has(c.id)) return false
+        seen.add(c.id)
+        return true
+      })
+    )
   }, [comments, optimisticComments])
 
   // Initialize liked comments state when comments change and user is authenticated
@@ -730,7 +742,7 @@ function RedditComment({
       <div className="py-3">
         <div className="flex items-baseline gap-2 mb-1 flex-wrap">
           <span className="text-xs uppercase tracking-wide text-black">
-            {comment.username || 'anonymous'}
+            {comment.full_name?.trim() || comment.username || 'anonymous'}
           </span>
           {(comment as any).replying_to_username && (
             <span className="text-[10px] uppercase tracking-wide text-black/35">

@@ -196,7 +196,7 @@ async function main() {
       external_id_param: seedExternalId,
       name_param: name,
       slug_param: slug,
-      description_param: `${name} — seeded for pitch mode`,
+      description_param: null,
       cover_image_url_param: null,
     })
 

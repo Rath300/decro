@@ -128,7 +128,10 @@ export function PostStats({
         >
           {displayedLikes.toLocaleString()} {liked ? 'liked' : 'likes'}
         </button>
-        <span>{commentCount.toLocaleString()} comments</span>
+        <span>
+          {commentCount.toLocaleString()}{' '}
+          {commentCount === 1 ? 'comment' : 'comments'}
+        </span>
       </div>
     )
   }
