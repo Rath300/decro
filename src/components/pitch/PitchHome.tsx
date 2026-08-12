@@ -346,18 +346,21 @@ export default function PitchHome() {
   }
 
   const onTourMainOpened = (hubId: string) => {
-    if (tourStage === 'click-main') {
-      onRevealChildren(hubId)
-      setTourStage('click-niche')
-    }
+    // Step 1 only: zoom into the main. Do not skip ahead.
+    if (tourStage !== 'click-main') return
+    onRevealChildren(hubId)
+    setTourStage('click-niche')
   }
 
   const onTourNicheOpened = (slug: string) => {
+    // Step 2 only: acknowledge the room, then continue the tour in order.
+    // Never jump to the end / leave the map mid-tutorial.
     if (tourStage === 'click-niche') {
       setPendingNicheSlug(slug)
-      setTourStage('guest')
+      setTourStage('upload')
       return
     }
+    if (tourStage && tourStage !== 'done') return
     onEnterHub(slug)
   }
 
@@ -553,8 +556,20 @@ export default function PitchHome() {
               <button
                 type="button"
                 className="text-sm border border-black bg-black text-white px-4 py-2 uppercase hover:bg-white hover:text-black"
-                onMouseEnter={() => router.prefetch(`/subgroup/${selected.slug}`)}
-                onClick={() => onEnterHub(selected.slug!)}
+                onMouseEnter={() => {
+                  if (tourStage === 'done' || !tourStage) {
+                    router.prefetch(`/subgroup/${selected.slug}`)
+                  }
+                }}
+                onClick={() => {
+                  // During the tour, Enter advances one step — don't leave the map.
+                  if (tourStage === 'click-niche') {
+                    onTourNicheOpened(selected.slug!)
+                    return
+                  }
+                  if (tourStage && tourStage !== 'done') return
+                  onEnterHub(selected.slug!)
+                }}
               >
                 Enter group
               </button>

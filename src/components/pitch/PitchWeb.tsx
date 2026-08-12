@@ -647,6 +647,10 @@ export default function PitchWeb({
     [tourStage, tourParentId, pulse]
   )
 
+  const tourActive = Boolean(
+    tourStage && tourStage !== 'done' && tourStage !== 'welcome'
+  )
+
   const runSingleClick = useCallback(
     (n: GraphNode, hid: string) => {
       const unrevealedKids = (n.childIds || []).some(
@@ -654,18 +658,27 @@ export default function PitchWeb({
       )
       const kidsOpen = (n.childIds || []).some((cid) => revealedIds.has(cid))
 
+      // Tutorial step 1: only mains advance the tour (once).
       if (tourStage === 'click-main') {
         if ((n.depth ?? 0) !== 1) return
         onTourMainOpened?.(hid)
         return
       }
 
+      // Tutorial step 2: allow zoom/select only. Advance happens on double-tap
+      // / Enter — never skip ahead from a casual click.
       if (tourStage === 'click-niche') {
-        if (unrevealedKids) {
-          onRevealChildren?.(hid)
-          return
-        }
-        if (n.enterable && n.slug) onTourNicheOpened?.(n.slug)
+        if (unrevealedKids) onRevealChildren?.(hid)
+        return
+      }
+
+      // Later tutorial steps: don't drive the map — Next button owns progress.
+      if (
+        tourStage === 'upload' ||
+        tourStage === 'search' ||
+        tourStage === 'create' ||
+        tourStage === 'guest'
+      ) {
         return
       }
 
@@ -685,7 +698,6 @@ export default function PitchWeb({
       onRevealChildren,
       onCollapseChildren,
       onTourMainOpened,
-      onTourNicheOpened,
     ]
   )
 
@@ -706,6 +718,7 @@ export default function PitchWeb({
 
       // Center Decro — collapse everything back to main groups
       if ((n.depth ?? 0) === 0) {
+        if (tourActive) return
         if (clickTimerRef.current) {
           window.clearTimeout(clickTimerRef.current)
           clickTimerRef.current = null
@@ -724,11 +737,14 @@ export default function PitchWeb({
         clickTimerRef.current = null
       }
 
-      // Double-click / second tap enters the room (cancel pending expand)
+      // Double-tap enters — during step 2 that advances the tour one step;
+      // during the rest of the tour it does not leave the map.
       if (isDouble && n.enterable && n.slug) {
         if (tourStage === 'click-niche') {
           onTourNicheOpened?.(n.slug)
-        } else if (!tourStage || tourStage === 'done') {
+          return
+        }
+        if (!tourStage || tourStage === 'done') {
           onEnterHub?.(n.slug)
         }
         return
@@ -742,6 +758,7 @@ export default function PitchWeb({
     },
     [
       tourStage,
+      tourActive,
       onNodeSelect,
       onResetView,
       onEnterHub,
