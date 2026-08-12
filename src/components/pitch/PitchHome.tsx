@@ -491,7 +491,9 @@ export default function PitchHome() {
     return <div className="min-h-[100dvh] bg-white" />
   }
 
-  const hidePanels = tourStage === 'click-main' || tourStage === 'click-niche'
+  // Hide the side panel only while learning to zoom mains — during the
+  // niche step we want Enter group visible so the tour can advance in order.
+  const hidePanels = tourStage === 'click-main'
 
   return (
     <div className="relative bg-white">
@@ -509,7 +511,9 @@ export default function PitchHome() {
         onNodeSelect={hidePanels ? undefined : setSelected}
         onRevealChildren={onRevealChildren}
         onCollapseChildren={onCollapseChildren}
-        onEnterHub={onEnterHub}
+        onEnterHub={
+          tourStage && tourStage !== 'done' ? undefined : onEnterHub
+        }
         onResetView={onResetView}
         onTourMainOpened={onTourMainOpened}
         onTourNicheOpened={onTourNicheOpened}
