@@ -61,8 +61,14 @@ function hubFontPx(n: PitchGraphNode, globalScale: number, focused: boolean) {
   const bridge = n.isBridge ? 1.5 : 0
   let base = depth === 0 ? 20 : depth === 1 ? 15 : 12 + bridge
   if (focused) base += 3
-  // Keep labels readable when zoomed out
-  return Math.max(base / Math.sqrt(Math.max(globalScale, 0.35)), 7)
+  return Math.max(base / Math.sqrt(Math.max(globalScale, 0.45)), 8)
+}
+
+/** When zoomed out, niches become dots instead of vanishing. */
+function labelMode(depth: number, globalScale: number): 'label' | 'dot' {
+  if (depth <= 1) return globalScale < 0.55 ? 'dot' : 'label'
+  if (depth === 2) return globalScale < 0.95 ? 'dot' : 'label'
+  return globalScale < 1.1 ? 'dot' : 'label'
 }
 
 export default function PitchWeb({
@@ -89,15 +95,19 @@ export default function PitchWeb({
   const [ForceGraph2D, setForceGraph2D] = useState<ForceGraphComponent | null>(null)
   const [graphReady, setGraphReady] = useState(false)
   const [dims, setDims] = useState({ w: 800, h: 600 })
-  const [hoverId, setHoverId] = useState<string | null>(null)
   const hoverIdRef = useRef<string | null>(null)
+  const selectedIdRef = useRef<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  selectedIdRef.current = selectedId
   const [pulse, setPulse] = useState(0)
   const [viewZoom, setViewZoom] = useState(1)
+  const viewZoomRef = useRef(1)
+  viewZoomRef.current = viewZoom
   const posCache = useRef(
     new Map<string, { x: number; y: number; vx?: number; vy?: number }>()
   )
   const lastClickRef = useRef<{ id: string; at: number } | null>(null)
+  const clickTimerRef = useRef<number | null>(null)
   const fittedRef = useRef(false)
   const cameraLockUntil = useRef(0)
   const lastFocusRef = useRef<string | null>(null)
@@ -107,6 +117,9 @@ export default function PitchWeb({
   const focusHubIdRef = useRef<string | null>(focusHubId)
   focusHubIdRef.current = focusHubId
   const pendingReheatRef = useRef<number | null>(null)
+  const tickCountRef = useRef(0)
+  const focusHubIdPaintRef = useRef(focusHubId)
+  focusHubIdPaintRef.current = focusHubId
 
   useEffect(() => {
     let alive = true
@@ -232,26 +245,28 @@ export default function PitchWeb({
     const fg = fgRef.current
     if (!fg) return
 
+    const count = graphData.nodes.length
+    const busy = count > 36
+
     fg.d3Force?.('charge')?.strength((node: GraphNode) => {
-      if (node.depth === 0) return -120
-      if (node.depth === 1) return -180
-      if (node.isBridge) return -140
-      return -110
+      if (node.depth === 0) return busy ? -70 : -120
+      if (node.depth === 1) return busy ? -110 : -180
+      if (node.isBridge) return busy ? -90 : -140
+      return busy ? -70 : -110
     })
-    fg.d3Force?.('charge')?.distanceMax?.(520)
+    fg.d3Force?.('charge')?.distanceMax?.(busy ? 260 : 480)
     fg.d3Force?.('link')?.distance((link: any) => {
       const s = typeof link.source === 'object' ? link.source : null
       const t = typeof link.target === 'object' ? link.target : null
-      if (s?.depth === 0 || t?.depth === 0) return 120
-      if (s?.isBridge || t?.isBridge) return 100
-      return 88
+      if (s?.depth === 0 || t?.depth === 0) return busy ? 96 : 120
+      if (s?.isBridge || t?.isBridge) return busy ? 78 : 100
+      return busy ? 70 : 88
     })
-    fg.d3Force?.('link')?.strength?.(0.35)
-    fg.d3Force?.('center')?.strength?.(0.035)
+    fg.d3Force?.('link')?.strength?.(busy ? 0.45 : 0.35)
+    fg.d3Force?.('center')?.strength?.(busy ? 0.02 : 0.035)
 
     // Only reheat when the visible set grows. Defer while the camera is
     // focusing so nodes don't fly apart mid zoom-in (feels like zoom-out).
-    const count = graphData.nodes.length
     const grew = count > prevNodeCountRef.current
     prevNodeCountRef.current = count
     if (!grew) return
@@ -266,13 +281,18 @@ export default function PitchWeb({
     const run = () => {
       pendingReheatRef.current = null
       try {
-        fg.d3ReheatSimulation?.()
+        // Short reheat — long cooldowns with many nodes freeze the tab
+        fg.d3ReheatSimulation?.(busy ? 0.35 : 0.55)
       } catch {
-        /* ignore */
+        try {
+          fg.d3ReheatSimulation?.()
+        } catch {
+          /* ignore */
+        }
       }
     }
     if (cameraBusy) {
-      const delay = Math.max(450, cameraLockUntil.current - Date.now() + 80)
+      const delay = Math.max(380, cameraLockUntil.current - Date.now() + 60)
       pendingReheatRef.current = window.setTimeout(run, delay)
     } else {
       run()
@@ -397,10 +417,20 @@ export default function PitchWeb({
       if (!fg) return
       const z = Math.min(4, Math.max(0.4, next))
       fg.zoom(z, ms)
+      viewZoomRef.current = z
       setViewZoom(z)
     },
     [getFg]
   )
+
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current) {
+        window.clearTimeout(clickTimerRef.current)
+        clickTimerRef.current = null
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!graphReady) return
@@ -533,12 +563,13 @@ export default function PitchWeb({
       const n = node as GraphNode
       if (n.kind !== 'hub') return
       const depth = n.depth ?? 1
-      // LOD: when zoomed out, hide deep labels so mains stay readable
-      if (globalScale < 0.85 && depth >= 2) return
-      if (globalScale < 1.15 && depth >= 3) return
+      const mode = labelMode(depth, globalScale)
 
-      const active = n.id === hoverId || n.id === selectedId
-      const focused = Boolean(focusHubId && n.hubId === focusHubId)
+      const active =
+        n.id === hoverIdRef.current || n.id === selectedIdRef.current
+      const focused = Boolean(
+        focusHubIdPaintRef.current && n.hubId === focusHubIdPaintRef.current
+      )
       const x = n.x || 0
       const y = n.y || 0
       const hid = n.hubId
@@ -548,9 +579,21 @@ export default function PitchWeb({
           (!tourParentId || hid === tourParentId)) ||
         (tourStage === 'click-niche' && depth >= 2)
 
+      // Zoomed-out LOD: niches become dots (still hoverable/clickable)
+      if (mode === 'dot' && !active && !focused && !tourPulse) {
+        const r =
+          (depth === 0 ? 4.5 : depth === 1 ? 3.2 : n.isBridge ? 2.8 : 2.2) /
+          Math.max(globalScale, 0.4)
+        ctx.beginPath()
+        ctx.arc(x, y, r, 0, Math.PI * 2)
+        ctx.fillStyle = depth <= 1 ? '#000' : 'rgba(0,0,0,0.55)'
+        ctx.fill()
+        return
+      }
+
       const fontPx = hubFontPx(n, globalScale, focused || active)
       ctx.save()
-      if (!focused && focusHubId && depth >= 2 && !active) {
+      if (!focused && focusHubIdPaintRef.current && depth >= 2 && !active) {
         ctx.globalAlpha = 0.55
       }
       ctx.font = `400 ${fontPx}px "Space Mono", monospace`
@@ -601,7 +644,49 @@ export default function PitchWeb({
       ctx.fillText(label, x, y)
       ctx.restore()
     },
-    [hoverId, selectedId, tourStage, tourParentId, pulse, focusHubId]
+    [tourStage, tourParentId, pulse]
+  )
+
+  const runSingleClick = useCallback(
+    (n: GraphNode, hid: string) => {
+      const unrevealedKids = (n.childIds || []).some(
+        (cid) => !revealedIds.has(cid)
+      )
+      const kidsOpen = (n.childIds || []).some((cid) => revealedIds.has(cid))
+
+      if (tourStage === 'click-main') {
+        if ((n.depth ?? 0) !== 1) return
+        onTourMainOpened?.(hid)
+        return
+      }
+
+      if (tourStage === 'click-niche') {
+        if (unrevealedKids) {
+          onRevealChildren?.(hid)
+          return
+        }
+        if (n.enterable && n.slug) onTourNicheOpened?.(n.slug)
+        return
+      }
+
+      if (unrevealedKids) {
+        onRevealChildren?.(hid)
+        return
+      }
+      if (kidsOpen) {
+        onCollapseChildren?.(hid)
+        return
+      }
+      onRevealChildren?.(hid)
+    },
+    [
+      tourStage,
+      revealedIds,
+      onRevealChildren,
+      onCollapseChildren,
+      onTourMainOpened,
+      onTourNicheOpened,
+    ]
   )
 
   const handleClick = useCallback(
@@ -613,7 +698,7 @@ export default function PitchWeb({
 
       const now = Date.now()
       const prev = lastClickRef.current
-      const isDouble = Boolean(prev && prev.id === n.id && now - prev.at < 350)
+      const isDouble = Boolean(prev && prev.id === n.id && now - prev.at < 420)
       lastClickRef.current = { id: n.id, at: now }
 
       const hid = n.hubId || parseHubNodeId(n.id)
@@ -621,6 +706,10 @@ export default function PitchWeb({
 
       // Center Decro — collapse everything back to main groups
       if ((n.depth ?? 0) === 0) {
+        if (clickTimerRef.current) {
+          window.clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+        }
         setSelectedId(null)
         onNodeSelect?.(null)
         onResetView?.()
@@ -630,58 +719,34 @@ export default function PitchWeb({
       setSelectedId(n.id)
       onNodeSelect?.(n)
 
-      const unrevealedKids = (n.childIds || []).some((cid) => !revealedIds.has(cid))
-      const kidsOpen = (n.childIds || []).some((cid) => revealedIds.has(cid))
-
-      if (tourStage === 'click-main') {
-        if ((n.depth ?? 0) !== 1) return
-        // onTourMainOpened also reveals — don't double-zoom
-        onTourMainOpened?.(hid)
-        return
+      if (clickTimerRef.current) {
+        window.clearTimeout(clickTimerRef.current)
+        clickTimerRef.current = null
       }
 
-      if (tourStage === 'click-niche') {
-        if (isDouble && n.enterable && n.slug) {
-          onTourNicheOpened?.(n.slug)
-          return
-        }
-        if (unrevealedKids) {
-          onRevealChildren?.(hid)
-          return
-        }
-        if (n.enterable && n.slug) {
-          onTourNicheOpened?.(n.slug)
-        }
-        return
-      }
-
-      // Normal: double-click enters; single-click expands / collapses / focuses
+      // Double-click / second tap enters the room (cancel pending expand)
       if (isDouble && n.enterable && n.slug) {
-        onEnterHub?.(n.slug)
+        if (tourStage === 'click-niche') {
+          onTourNicheOpened?.(n.slug)
+        } else if (!tourStage || tourStage === 'done') {
+          onEnterHub?.(n.slug)
+        }
         return
       }
-      if (unrevealedKids) {
-        onRevealChildren?.(hid)
-        return
-      }
-      if (kidsOpen) {
-        // Second click closes niches — keep camera still
-        onCollapseChildren?.(hid)
-        return
-      }
-      // Expand kids, or frame a leaf group in place (no zoom bounce)
-      onRevealChildren?.(hid)
+
+      // Defer single-click so a quick second click can become enter
+      clickTimerRef.current = window.setTimeout(() => {
+        clickTimerRef.current = null
+        runSingleClick(n, hid)
+      }, 260)
     },
     [
       tourStage,
       onNodeSelect,
-      onRevealChildren,
-      onCollapseChildren,
       onResetView,
       onEnterHub,
-      onTourMainOpened,
       onTourNicheOpened,
-      revealedIds,
+      runSingleClick,
     ]
   )
 
@@ -699,8 +764,20 @@ export default function PitchWeb({
     }
   }, [graphData.nodes])
 
+  const onEngineTick = useCallback(() => {
+    // Persist sparsely — every-tick Map writes freeze the tab with many hubs
+    tickCountRef.current += 1
+    if (tickCountRef.current % 24 !== 0) return
+    for (const n of graphData.nodes) {
+      if (n.x == null || n.y == null || n.depth === 0) continue
+      posCache.current.set(n.id, { x: n.x, y: n.y })
+    }
+  }, [graphData.nodes])
+
   const showHint = !tourStage || tourStage === 'done'
   const canReset = revealedIds.size > startHubIds.length
+  const nodeCount = graphData.nodes.length
+  const simBusy = nodeCount > 36
 
   return (
     <div
@@ -724,8 +801,18 @@ export default function PitchWeb({
           linkSource="source"
           linkTarget="target"
           backgroundColor="#ffffff"
-          linkColor={() => 'rgba(0,0,0,0.18)'}
+          linkColor={() => 'rgba(0,0,0,0.16)'}
           linkWidth={1}
+          linkVisibility={(link: any) => {
+            const z = viewZoomRef.current
+            const s = typeof link.source === 'object' ? link.source : null
+            const t = typeof link.target === 'object' ? link.target : null
+            const depth = Math.max(s?.depth ?? 0, t?.depth ?? 0)
+            // Zoomed out: drop deep edges so the web stays light
+            if (z < 0.65 && depth >= 2) return false
+            if (z < 0.85 && depth >= 3) return false
+            return true
+          }}
           nodeCanvasObject={paintNode}
           nodePointerAreaPaint={(
             node: any,
@@ -736,20 +823,34 @@ export default function PitchWeb({
             const n = node as GraphNode
             if (n.kind !== 'hub') return
             const depth = n.depth ?? 1
-            if (globalScale < 0.85 && depth >= 2) return
-            if (globalScale < 1.15 && depth >= 3) return
+            const mode = labelMode(depth, globalScale)
+            const x = n.x || 0
+            const y = n.y || 0
+            ctx.fillStyle = color
+            if (mode === 'dot') {
+              const r = 10 / Math.max(globalScale, 0.4)
+              ctx.beginPath()
+              ctx.arc(x, y, r, 0, Math.PI * 2)
+              ctx.fill()
+              return
+            }
             const fontPx = hubFontPx(n, globalScale, false)
             const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
             const h = fontPx * 1.4
-            ctx.fillStyle = color
-            ctx.fillRect((n.x || 0) - w / 2, (n.y || 0) - h / 2, w, h)
+            ctx.fillRect(x - w / 2, y - h / 2, w, h)
           }}
           onNodeHover={(node: any) => {
             const id = node?.id ?? null
+            if (hoverIdRef.current === id) return
             hoverIdRef.current = id
-            setHoverId(id)
             if (containerRef.current) {
               containerRef.current.style.cursor = node ? 'pointer' : 'grab'
+            }
+            // Refresh canvas only — setState on hover was janking the sim
+            try {
+              fgRef.current?.refresh?.()
+            } catch {
+              /* ignore */
             }
           }}
           onNodeClick={handleClick}
@@ -769,11 +870,11 @@ export default function PitchWeb({
             node.fy = undefined
             persistPositions()
           }}
-          onEngineTick={persistPositions}
-          cooldownTicks={160}
-          d3AlphaDecay={0.02}
-          d3VelocityDecay={0.28}
-          warmupTicks={50}
+          onEngineTick={onEngineTick}
+          cooldownTicks={simBusy ? 60 : 100}
+          d3AlphaDecay={simBusy ? 0.06 : 0.028}
+          d3VelocityDecay={simBusy ? 0.4 : 0.3}
+          warmupTicks={simBusy ? 20 : 36}
           enableNodeDrag={tourStage !== 'welcome'}
           enableZoomInteraction={false}
           enablePanInteraction={false}

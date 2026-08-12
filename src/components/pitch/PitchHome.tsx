@@ -39,6 +39,8 @@ export default function PitchHome() {
   const focusRetryRef = useRef<string | null>(null)
 
   useEffect(() => {
+    // Land on the creative web immediately. Tutorial only when the user
+    // explicitly restarts it (chrome Tutorial → pitch:show-overlay).
     try {
       const restart = sessionStorage.getItem('decro_pitch_restart_tour') === '1'
       if (restart) {
@@ -46,11 +48,13 @@ export default function PitchHome() {
         sessionStorage.removeItem(ENTERED_KEY)
         setTourStage('welcome')
       } else {
-        const done = sessionStorage.getItem(ENTERED_KEY) === '1'
-        setTourStage(done ? 'done' : 'welcome')
+        try {
+          sessionStorage.setItem(ENTERED_KEY, '1')
+        } catch {}
+        setTourStage('done')
       }
     } catch {
-      setTourStage('welcome')
+      setTourStage('done')
     }
     setReady(true)
   }, [])

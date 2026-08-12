@@ -79,7 +79,7 @@ export const PITCH_TOUR_TOTAL = 7
 export const PITCH_ENTER_CTA = 'Enter the groups'
 
 export const PITCH_HINT =
-  'search · tap to zoom · tap again to close niches · duck = mains · Tutorial for the walkthrough'
+  'search · tap to open · double-tap to enter · duck = mains · Tutorial for the walkthrough'
 
 export const PITCH_EMAIL = 'helpdecro.net@gmail.com'
 export const PITCH_DISCORD_HANDLES = ['rath6053', 'existsneel'] as const

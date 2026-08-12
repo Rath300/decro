@@ -19,6 +19,7 @@ export default function Home() {
     }
   }, [pitch, isAuthenticated, loading, router])
 
+  // Pitch product surface is the creative web — never the old login landing.
   if (pitch) {
     return <PitchHome />
   }
