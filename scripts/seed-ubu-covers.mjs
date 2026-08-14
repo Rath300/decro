@@ -1,139 +1,58 @@
 #!/usr/bin/env node
 /**
- * Attach niche CC0/PDM cover photos to UbuWeb archive posts via Openverse.
+ * Attach work-related covers to Ubu archive posts.
  *
- * Strategy: Flickr-first, CC0/PDM only, obscure material/texture queries —
- * NOT artist portraits, museum paintings, or famous artworks.
+ * 1) Openverse search for the artist name (CC0/PDM/BY/BY-SA)
+ *    — require the surname in the result title
+ *    — exclude museums / insects / celebrity / news junk
+ * 2) If nothing usable: generate a plain name+medium cover (no fake buttons)
  *
  * Usage:
  *   npm run seed:ubu-covers
- *   npm run seed:ubu-covers -- --limit=20 --dry-run
- *
- * Needs NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+ *   npm run seed:ubu-covers -- --limit=50 --dry-run
  */
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { randomUUID, createHash } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
+import sharp from 'sharp'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const STATE_PATH = resolve(__dirname, '.seed-ubu-covers-state.json')
 const BUCKET = 'media'
 
-/** Prefer indie photo dumps over institutional collections */
-const SOURCE = 'flickr'
-const LICENSE = 'cc0,pdm'
+const LICENSE = 'cc0,pdm,by,by-sa'
 
-/** Niche / lowkey queries — textures, tools, ephemera (not famous works) */
-const QUERIES = {
-  'avant-garde-film': [
-    'super 8 film',
-    '16mm film reel',
-    'film sprocket',
-    'broken projector',
-    'film strip',
-    'dirty film',
-    'old movie camera',
-    'film leader',
-    'darkroom negatives',
-    'celluloid',
-    '8mm camera',
-    'projector bulb',
-    'film canister',
-    'editing splicer',
-    'light leak film',
-  ],
-  'avant-garde-video': [
-    'crt television',
-    'vhs tape',
-    'camcorder',
-    'glitch screen',
-    'broken tv',
-    'video cassette',
-    'scan lines',
-    'old monitor',
-    'analog mixer',
-    'tracking error',
-    'static noise tv',
-    'portable tv',
-    'video head',
-    'rf modulator',
-    'closed circuit camera',
-  ],
-  'avant-garde-sound': [
-    'reel to reel',
-    'cassette tape',
-    'modular synth',
-    'oscilloscope',
-    'contact mic',
-    'tape loop',
-    'field recorder',
-    'patch cables',
-    'speaker cone',
-    'magnetic tape',
-    'minidisc',
-    'guitar pedalboard',
-    'mixing desk knobs',
-    'ribbon microphone',
-    'shortwave radio',
-  ],
-  'sound-poetry': [
-    'microphone closeup',
-    'dictaphone',
-    'sound booth',
-    'megaphone',
-    'mic stand',
-    'handheld recorder',
-    'loudspeaker',
-    'pa system',
-    'voice memo',
-    'throat mic',
-    'studio pop filter',
-    'broadcast mic',
-    'cassette walkman',
-    'answering machine',
-    'telephone handset',
-  ],
-  'avant-garde-poetry': [
-    'typewriter keys',
-    'manuscript page',
-    'notebook scribble',
-    'carbon paper',
-    'mimeograph',
-    'handwritten draft',
-    'ink blot',
-    'old notebook',
-    'pencil shavings',
-    'stapled pages',
-    'fountain pen',
-    'index cards',
-    'legal pad',
-    'erased writing',
-    'desk clutter papers',
-  ],
-  'concrete-poetry': [
-    'letterpress',
-    'scattered letters',
-    'xerox texture',
-    'typography scraps',
-    'rubber stamp',
-    'cut newspaper',
-    'stencil letters',
-    'printer trash',
-    'paper scraps',
-    'movable type',
-    'linotype',
-    'ink roller',
-    'proof sheet',
-    'wood type',
-    'screen print mesh',
-  ],
+const EXCLUDED_SOURCES = [
+  'metropolitan_museum_of_art',
+  'museum_of_new_zealand_te_papa_tongarewa',
+  'smithsonian_institution',
+  'smithsonian_cooper_hewitt_national_design_museum',
+  'smithsonian_freer_gallery_of_art_and_arthur_m_sackler_gallery',
+  'smithsonian_national_museum_of_african_art',
+  'smithsonian_national_museum_of_american_history',
+  'smithsonian_national_museum_of_natural_history',
+  'cleveland_museum_of_art',
+  'rijksmuseum',
+  'art_institute_of_chicago',
+  'brooklyn_museum',
+  'walters_art_museum',
+  'national_gallery_of_art',
+].join(',')
+
+const BLOCK =
+  /\b(bug|bugs|insect|beetle|spider|mosquito|wasp|hornet|ant|ants|moth|butterfly|worm|larva|cockroach|cicada|dragonfly|grasshopper|bee|caterpillar|aphid|cricket|bioblitz|christina[\s-]?aguilera|celebrity|wall drug|windows 7|metro train|lego|bambi|nara|internment|kennedy|nguyen van thieu|maga|picket|sailor|hike|timetable|oer18|slumming|schwinn|sprocket day|bondage|scepter|drug|smoking)\b/i
+
+const MEDIUM_LABEL = {
+  'avant-garde-film': 'Film',
+  'avant-garde-video': 'Video',
+  'avant-garde-sound': 'Sound',
+  'sound-poetry': 'Sound poetry',
+  'avant-garde-poetry': 'Poetry',
+  'concrete-poetry': 'Concrete poetry',
 }
-
-const FAMOUS_BLOCK =
-  /\b(mona lisa|van gogh|picasso|warhol|rembrandt|monet|met museum|louvre|tate|guggenheim|moma|smithsonian|rijksmuseum|starry night|guernica|marilyn)\b/i
 
 function loadEnv() {
   for (const name of ['.env.local', '.env']) {
@@ -160,9 +79,10 @@ function loadEnv() {
 loadEnv()
 
 function parseArgs(argv) {
-  const out = { limit: 400, dryRun: false }
+  const out = { limit: 400, dryRun: false, resetState: false }
   for (const arg of argv) {
     if (arg === '--dry-run') out.dryRun = true
+    else if (arg === '--reset-state') out.resetState = true
     else if (arg.startsWith('--limit=')) {
       out.limit = Math.max(1, Number(arg.slice(8)) || 400)
     }
@@ -187,81 +107,91 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms))
 }
 
-function hashPick(key, n) {
-  if (n <= 0) return 0
-  const h = createHash('sha256').update(String(key)).digest()
-  return h.readUInt32BE(0) % n
+function escapeXml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
-async function openverseSearch(q, page = 1) {
+function surnames(artist) {
+  const cleaned = String(artist || '')
+    .replace(/&[a-z]+;/gi, ' ')
+    .replace(/[^a-zA-Z\s'-]/g, ' ')
+    .trim()
+  const parts = cleaned.split(/\s+/).filter((p) => p.length > 2)
+  if (!parts.length) return []
+  // Prefer last token(s); keep multi-word last names
+  return [parts[parts.length - 1], parts.slice(-2).join(' ')].filter(
+    (v, i, a) => a.indexOf(v) === i
+  )
+}
+
+function nameMatches(artist, title) {
+  const t = String(title || '').toLowerCase()
+  return surnames(artist).some((s) => t.includes(s.toLowerCase()))
+}
+
+async function openverseArtist(artist) {
   const params = new URLSearchParams({
-    q,
+    q: artist.replace(/&[a-z]+;/gi, ' ').slice(0, 80),
     license: LICENSE,
-    source: SOURCE,
-    page_size: '20',
-    page: String(page),
+    excluded_source: EXCLUDED_SOURCES,
+    page_size: '12',
     mature: 'false',
   })
   const res = await fetch(`https://api.openverse.org/v1/images/?${params}`, {
     headers: {
       Accept: 'application/json',
-      'User-Agent': 'DecroCoverSeeder/1.0 (niche CC0 covers; helpdecro.net@gmail.com)',
+      'User-Agent': 'DecroCoverSeeder/1.1 (work-related covers; helpdecro.net@gmail.com)',
     },
   })
-  if (!res.ok) throw new Error(`Openverse ${res.status} for ${q}`)
+  if (!res.ok) throw new Error(`Openverse ${res.status}`)
   return res.json()
 }
 
-function acceptResult(r) {
-  if (!r?.id || !r?.url) return false
-  if (!['cc0', 'pdm'].includes(String(r.license || '').toLowerCase())) return false
-  if (String(r.source || '').toLowerCase() !== 'flickr') return false
-  const blob = `${r.title || ''} ${r.creator || ''} ${r.attribution || ''}`
-  if (FAMOUS_BLOCK.test(blob)) return false
-  // Skip huge panoramic / tiny icons
-  if (r.width && r.width < 400) return false
-  return true
-}
-
-async function gatherPool(slug, want) {
-  const queries = QUERIES[slug] || QUERIES['avant-garde-film']
-  const pool = []
-  const seen = new Set()
-
-  for (const q of queries) {
-    if (pool.length >= want) break
-    for (const page of [1, 2, 3]) {
-      if (pool.length >= want) break
-      try {
-        const data = await openverseSearch(q, page)
-        for (const r of data.results || []) {
-          if (!acceptResult(r) || seen.has(r.id)) continue
-          seen.add(r.id)
-          pool.push({
-            id: r.id,
-            url: r.url,
-            title: r.title || 'Untitled',
-            creator: r.creator || 'Unknown',
-            license: r.license,
-            foreign: r.foreign_landing_url || r.url,
-            query: q,
-          })
-          if (pool.length >= want) break
-        }
-      } catch (e) {
-        console.error(`  search fail [${slug}] ${q}:`, e.message || e)
-      }
-      await sleep(350)
+function pickArtistImage(artist, results, usedIds) {
+  for (const r of results || []) {
+    if (!r?.id || !r?.url || usedIds[r.id]) continue
+    if (!nameMatches(artist, r.title)) continue
+    const blob = `${r.title || ''} ${r.creator || ''} ${r.attribution || ''}`
+    if (BLOCK.test(blob)) continue
+    if (/\bmuseum\b/i.test(blob) && !nameMatches(artist, r.title)) continue
+    if (r.width && r.width < 350) continue
+    const url = String(r.url || '')
+    if (/\.svg(\?|$)/i.test(url) || /image\/svg/i.test(r.filetype || '')) continue
+    if (/\.(tiff?|tif)(\?|$)/i.test(url) || /image\/tiff/i.test(r.filetype || '')) continue
+    return {
+      id: r.id,
+      url: r.url,
+      title: r.title || 'Untitled',
+      creator: r.creator || 'Unknown',
+      license: r.license,
+      foreign: r.foreign_landing_url || r.url,
+      kind: 'photo',
     }
   }
-  return pool
+  return null
+}
+
+async function buildNameCoverPng(artist, medium) {
+  const title = escapeXml(String(artist).toUpperCase().slice(0, 48))
+  const med = escapeXml(String(medium || 'Archive').toUpperCase())
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <rect width="1200" height="900" fill="#111"/>
+  <rect x="36" y="36" width="1128" height="828" fill="none" stroke="#f5f5f5" stroke-width="2"/>
+  <text x="80" y="140" fill="#888" font-family="ui-monospace, Space Mono, monospace" font-size="22" letter-spacing="0.16em">${med}</text>
+  <text x="80" y="420" fill="#f5f5f5" font-family="ui-monospace, Space Mono, monospace" font-size="54" font-weight="700">${title}</text>
+  <text x="80" y="820" fill="#666" font-family="ui-monospace, Space Mono, monospace" font-size="18" letter-spacing="0.1em">DECRO ARCHIVE LINK</text>
+</svg>`
+  return sharp(Buffer.from(svg)).png().toBuffer()
 }
 
 async function downloadImage(url) {
   const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'DecroCoverSeeder/1.0 (helpdecro.net@gmail.com)',
-    },
+    headers: { 'User-Agent': 'DecroCoverSeeder/1.1 (helpdecro.net@gmail.com)' },
   })
   if (!res.ok) throw new Error(`download ${res.status}`)
   const buf = Buffer.from(await res.arrayBuffer())
@@ -269,7 +199,6 @@ async function downloadImage(url) {
   let ext = 'jpg'
   if (ct.includes('png')) ext = 'png'
   else if (ct.includes('webp')) ext = 'webp'
-  else if (ct.includes('gif')) ext = 'gif'
   return { buf, contentType: ct.startsWith('image/') ? ct : 'image/jpeg', ext }
 }
 
@@ -287,6 +216,12 @@ async function upload(admin, buf, contentType, ext) {
   return publicUrl
 }
 
+function stripOldCredit(description) {
+  return String(description || '')
+    .replace(/\n\nCover:[\s\S]*$/i, '')
+    .trim()
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -300,6 +235,10 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
+  if (args.resetState) {
+    writeFileSync(STATE_PATH, JSON.stringify({ covered: {}, usedIds: {} }, null, 2) + '\n')
+  }
+
   const state = loadState()
   state.covered = state.covered || {}
   state.usedIds = state.usedIds || {}
@@ -307,7 +246,7 @@ async function main() {
   const { data: posts, error } = await admin
     .from('posts')
     .select(
-      'id, title, media_url, content_type, subgroup_id, subgroups!inner(slug), profiles!inner(username)'
+      'id, title, description, media_url, content_type, subgroups!inner(slug), profiles!inner(username)'
     )
     .eq('profiles.username', 'ubuweb_archive')
     .order('created_at', { ascending: true })
@@ -317,73 +256,71 @@ async function main() {
     process.exit(1)
   }
 
-  const list = (posts || []).filter((p) => {
-    const slug = p.subgroups?.slug
-    return slug && QUERIES[slug]
-  })
-
+  const list = posts || []
   console.log(
-    `Ubu covers — candidates=${list.length} target=${args.limit}${args.dryRun ? ' dry-run' : ''}`
+    `Work-related covers — posts=${list.length} target=${args.limit}${args.dryRun ? ' dry-run' : ''}`
   )
 
-  /** @type {Record<string, any[]>} */
-  const pools = {}
-  for (const slug of Object.keys(QUERIES)) {
-    const need = list.filter((p) => p.subgroups?.slug === slug).length + 20
-    console.log(`\n# pool ${slug} (need ~${need})`)
-    pools[slug] = await gatherPool(slug, Math.min(Math.max(need, 40), 180))
-    console.log(`  got ${pools[slug].length}`)
-  }
-
-  let created = 0
+  let photoHits = 0
+  let generated = 0
   let skipped = 0
   let failed = 0
+  let done = 0
 
   for (const post of list) {
-    if (created >= args.limit) break
-    if (state.covered[post.id]) {
-      skipped += 1
-      continue
-    }
-    if (post.media_url) {
+    if (done >= args.limit) break
+    if (state.covered[post.id] && post.media_url) {
       skipped += 1
       continue
     }
 
-    const slug = post.subgroups.slug
-    const pool = (pools[slug] || []).filter((img) => !state.usedIds[img.id])
-    if (!pool.length) {
-      failed += 1
-      console.error(`  x ${post.title}: empty pool for ${slug}`)
-      continue
-    }
+    const artist = post.title || 'Untitled'
+    const slug = post.subgroups?.slug || 'avant-garde-film'
+    const medium = MEDIUM_LABEL[slug] || 'Archive'
 
-    const img = pool[hashPick(post.id, pool.length)]
     try {
+      let img = null
+      try {
+        const data = await openverseArtist(artist)
+        img = pickArtistImage(artist, data.results || [], state.usedIds)
+        await sleep(280)
+      } catch (e) {
+        console.error(`  search fail ${artist}:`, e.message || e)
+      }
+
       if (args.dryRun) {
-        console.log(`  [dry] ${slug} · ${post.title} ← ${img.title} (${img.query})`)
-        state.usedIds[img.id] = true
-        created += 1
+        console.log(
+          `  [dry] ${artist} ← ${img ? `photo:${img.title}` : `generated:${medium}`}`
+        )
+        if (img) state.usedIds[img.id] = true
+        done += 1
+        if (img) photoHits += 1
+        else generated += 1
         continue
       }
 
-      const { buf, contentType, ext } = await downloadImage(img.url)
-      const mediaUrl = await upload(admin, buf, contentType, ext)
-
-      const credit = `Cover: ${img.title} by ${img.creator} (${String(img.license).toUpperCase()}). ${img.foreign}`
-
-      // Keep archive body; append credit quietly
-      const { data: full } = await admin
-        .from('posts')
-        .select('description')
-        .eq('id', post.id)
-        .maybeSingle()
-
-      let description = full?.description || ''
-      if (!/Cover:/i.test(description)) {
-        description = `${description}\n\n${credit}`.slice(0, 2000)
+      let mediaUrl
+      let credit
+      if (img) {
+        try {
+          const { buf, contentType, ext } = await downloadImage(img.url)
+          mediaUrl = await upload(admin, buf, contentType, ext)
+          credit = `Cover: ${img.title} by ${img.creator} (${String(img.license).toUpperCase()}). ${img.foreign}`
+          state.usedIds[img.id] = true
+          photoHits += 1
+        } catch (dlErr) {
+          console.error(`  photo fail ${artist}:`, dlErr.message || dlErr)
+          img = null
+        }
+      }
+      if (!img) {
+        const png = await buildNameCoverPng(artist, medium)
+        mediaUrl = await upload(admin, png, 'image/png', 'png')
+        credit = `Cover: Decro name card for ${artist}.`
+        generated += 1
       }
 
+      const description = `${stripOldCredit(post.description)}\n\n${credit}`.slice(0, 2000)
       const { error: upErr } = await admin
         .from('posts')
         .update({
@@ -392,30 +329,27 @@ async function main() {
           description,
         })
         .eq('id', post.id)
-
       if (upErr) throw upErr
 
       state.covered[post.id] = {
-        openverseId: img.id,
+        kind: img ? 'photo' : 'generated',
+        openverseId: img?.id || null,
         mediaUrl,
-        query: img.query,
         at: new Date().toISOString(),
       }
-      state.usedIds[img.id] = true
       saveState(state)
-      created += 1
-      console.log(`  + ${post.title} ← ${img.query}`)
-      await sleep(120)
+      done += 1
+      console.log(`  + ${artist} ← ${img ? 'photo' : 'name-card'}`)
+      await sleep(80)
     } catch (e) {
       failed += 1
-      console.error(`  x ${post.title}:`, e.message || e)
+      console.error(`  x ${artist}:`, e.message || e)
     }
   }
 
   console.log(
-    `\nDone. covered=${created} skipped=${skipped} failed=${failed} total_state=${Object.keys(state.covered).length}`
+    `\nDone. assigned=${done} photos=${photoHits} name-cards=${generated} skipped=${skipped} failed=${failed}`
   )
-  console.log(`State: ${STATE_PATH}`)
 }
 
 main().catch((e) => {
