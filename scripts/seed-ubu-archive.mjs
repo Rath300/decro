@@ -35,33 +35,27 @@ const NICHE_SLUGS = [
 const NICHE_META = {
   'avant-garde-film': {
     name: 'Avant-Garde Film',
-    description:
-      'Experimental and underground film indexes. Text posts link out to UbuWeb. Decro does not host the works.',
+    description: null,
   },
   'avant-garde-video': {
     name: 'Avant-Garde Video',
-    description:
-      'Video art and early video indexes. Text posts link out to UbuWeb. Decro does not host the works.',
+    description: null,
   },
   'avant-garde-sound': {
     name: 'Avant-Garde Sound',
-    description:
-      'Experimental sound and audio indexes. Text posts link out to UbuWeb. Decro does not host the works.',
+    description: null,
   },
   'sound-poetry': {
     name: 'Sound Poetry',
-    description:
-      'Sound poetry and text-sound works. Text posts link out to UbuWeb. Decro does not host the works.',
+    description: null,
   },
   'avant-garde-poetry': {
     name: 'Avant-Garde Poetry',
-    description:
-      'Experimental poetry and writing indexes. Text posts link out to UbuWeb. Decro does not host the works.',
+    description: null,
   },
   'concrete-poetry': {
     name: 'Concrete Poetry',
-    description:
-      'Visual and concrete poetry indexes. Text posts link out to UbuWeb. Decro does not host the works.',
+    description: null,
   },
 }
 
