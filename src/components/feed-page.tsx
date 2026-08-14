@@ -491,29 +491,6 @@ export default function FeedPage() {
                                 </Link>
                               )}
                             </div>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleLikeClick(card.id);
-                              }}
-                              className={`p-1 rounded-full transition-all duration-200 ${
-                                likedCards.has(card.id)
-                                  ? 'bg-red-50 text-red-500'
-                                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                              }`}
-                            >
-                              <svg 
-                                width="12" 
-                                height="12" 
-                                viewBox="0 0 24 24" 
-                                fill={likedCards.has(card.id) ? "currentColor" : "none"}
-                                stroke="currentColor" 
-                                strokeWidth="2"
-                                className="transition-all duration-200"
-                              >
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                              </svg>
-                            </button>
                           </div>
                           
                           <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-between">
@@ -626,7 +603,7 @@ export default function FeedPage() {
                     by {selectedCard.creator}
                   </button>
                   <div className="text-sm font-['Space_Mono'] text-gray-600 mt-1">
-                    {new Date(selectedCard.date).toLocaleDateString()} • {selectedCard.views} views
+                    {selectedCard.creator ? `Posted by ${selectedCard.creator}` : 'Post'}
                   </div>
                 </div>
                 {/* Description */}
@@ -655,30 +632,6 @@ export default function FeedPage() {
                 
                 {/* Action Buttons - BOTTOM LEFT on desktop */}
                 <div className="border-t border-gray-200 pt-4 mt-4 flex items-center gap-3">
-                  <button 
-                    onClick={() => selectedCard && handleLikeClick(selectedCard.id)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                      selectedCard && likedCards.has(selectedCard.id)
-                        ? 'bg-red-50 text-red-500'
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <svg 
-                      width="20" 
-                      height="20" 
-                      viewBox="0 0 24 24" 
-                      fill={selectedCard && likedCards.has(selectedCard.id) ? "currentColor" : "none"}
-                      stroke="currentColor" 
-                      strokeWidth="2"
-                      className="transition-all duration-200"
-                    >
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                    <span className="font-['Space_Mono'] text-sm">
-                      {selectedCard && likedCards.has(selectedCard.id) ? 'Liked' : 'Like'}
-                    </span>
-                  </button>
-                  
                   <AddToSpotlightButton postId={selectedCard.id} />
                   <EditPostButton postId={selectedCard.id} />
                   <DeletePostButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={refetchPosts} />
@@ -908,9 +861,6 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
               <span className="font-['Space_Mono'] font-bold text-sm text-black">
                 {comment.username || 'Anonymous'}
               </span>
-              <span className="font-['Space_Mono'] text-xs text-gray-500">
-                {getTimeAgo(comment.created_at)}
-              </span>
             </div>
             <p className="font-['Space_Mono'] text-sm text-gray-800 mt-1 break-words">
               {comment.content}
@@ -985,77 +935,6 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                 }}
               >
                 Reply
-              </button>
-              {/* Like button with heart icon */}
-              <button
-                className={`flex items-center gap-1 transition-all duration-200 ${
-                  likedComments.has(comment.id)
-                    ? 'text-red-500'
-                    : 'text-gray-500 hover:text-red-500'
-                }`}
-                onClick={async () => {
-                  if (!isAuthenticated || !user?.id) return;
-                  try {
-                    const { data, error: rpcError } = await callRpc('toggle_comment_vote_ext', { 
-                      comment_id_param: comment.id, 
-                      direction: 1 
-                    });
-                    
-                    if (rpcError) {
-                      console.error('RPC error:', rpcError);
-                      return;
-                    }
-                    
-                    console.log('Comment vote response:', data);
-                    
-                    // Parse the JSON response if it's a string
-                    let responseData = data;
-                    if (typeof data === 'string') {
-                      try {
-                        responseData = JSON.parse(data);
-                      } catch (e) {
-                        console.error('Failed to parse response:', e);
-                        refetch();
-                        return;
-                      }
-                    }
-                    
-                    // Update both the vote score and liked status from the response
-                    if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
-                      setMerged(prev => prev.map(c => 
-                        c.id === comment.id ? { ...c, vote_score: responseData.vote_score } : c
-                      ));
-                      
-                      // Update liked comments state
-                      setLikedComments(prev => {
-                        const next = new Set(prev);
-                        if (responseData.liked) {
-                          next.add(comment.id);
-                        } else {
-                          next.delete(comment.id);
-                        }
-                        return next;
-                      });
-                    } else {
-                      console.log('No vote_score or liked in response, refetching...');
-                      // Fallback: refetch if response doesn't have expected fields
-                      refetch();
-                    }
-                  } catch (error) {
-                    console.error('Error toggling comment vote:', error);
-                  }
-                }}
-              >
-                <svg 
-                  className={`w-4 h-4 ${likedComments.has(comment.id) ? 'text-red-500' : 'text-gray-600'}`} 
-                  fill={likedComments.has(comment.id) ? 'currentColor' : 'none'} 
-                  stroke={likedComments.has(comment.id) ? 'currentColor' : 'currentColor'} 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                {/* Only show count if > 0 */}
-                {(comment.vote_score && comment.vote_score > 0) && <span>{comment.vote_score}</span>}
               </button>
             </div>
             {openReplyFor === comment.id && (
@@ -1156,7 +1035,6 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                                   replying to {(r as any).replying_to_username}
                                 </span>
                               )}
-                              <span className="font-['Space_Mono'] text-[10px] text-gray-500">{getTimeAgo(r.created_at)}</span>
                             </div>
                             <p className="font-['Space_Mono'] text-xs text-gray-800 mt-1 break-words">{r.content}</p>
                             
@@ -1211,72 +1089,6 @@ function CommentsList({ postId, refreshSignal, optimisticComments }: { postId: s
                                 }}
                               >
                                 Reply
-                              </button>
-                              
-                              {/* Like button for reply */}
-                              <button
-                                className={`flex items-center gap-1 transition-all duration-200 ${
-                                  likedComments.has(r.id)
-                                    ? 'text-red-500'
-                                    : 'text-gray-500 hover:text-red-500'
-                                }`}
-                                onClick={async () => {
-                                  if (!isAuthenticated || !user?.id) return;
-                                  try {
-                                    const { data, error: rpcError } = await callRpc('toggle_comment_vote_ext', { 
-                                      comment_id_param: r.id, 
-                                      direction: 1 
-                                    });
-                                    
-                                    if (rpcError) {
-                                      console.error('RPC error:', rpcError);
-                                      return;
-                                    }
-                                    
-                                    let responseData = data;
-                                    if (typeof data === 'string') {
-                                      try {
-                                        responseData = JSON.parse(data);
-                                      } catch (e) {
-                                        console.error('Failed to parse response:', e);
-                                        return;
-                                      }
-                                    }
-                                    
-                                    if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
-                                      // Update reply vote score in local state
-                                      setReplies(prev => ({
-                                        ...prev,
-                                        [comment.id]: (prev[comment.id] || []).map(reply => 
-                                          reply.id === r.id ? { ...reply, vote_score: responseData.vote_score } : reply
-                                        )
-                                      }));
-                                      
-                                      // Update liked state
-                                      setLikedComments(prev => {
-                                        const next = new Set(prev);
-                                        if (responseData.liked) {
-                                          next.add(r.id);
-                                        } else {
-                                          next.delete(r.id);
-                                        }
-                                        return next;
-                                      });
-                                    }
-                                  } catch (error) {
-                                    console.error('Error toggling reply vote:', error);
-                                  }
-                                }}
-                              >
-                                <svg 
-                                  className={`w-3 h-3 ${likedComments.has(r.id) ? 'text-red-500' : 'text-gray-600'}`} 
-                                  fill={likedComments.has(r.id) ? 'currentColor' : 'none'} 
-                                  stroke={likedComments.has(r.id) ? 'currentColor' : 'currentColor'} 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                                {(r.vote_score && r.vote_score > 0) && <span>{r.vote_score}</span>}
                               </button>
                             </div>
                             

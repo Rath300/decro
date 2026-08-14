@@ -158,10 +158,6 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
                 >
                   Posted by {selectedCard.creator}
                 </button>
-                <span>•</span>
-                <span>{getTimeAgo(selectedCard.date)}</span>
-                <span>•</span>
-                <span>{selectedCard.views} views</span>
                 {selectedCard.subgroupName && selectedCard.subgroupSlug && (
                   <>
                     <span>•</span>
@@ -200,26 +196,6 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
 
               {/* Actions - Bottom Left on Desktop */}
               <div className="flex items-center gap-4 border-t border-gray-200 pt-4">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (!isAuthenticated) {
-                      alert('Please sign in to like posts')
-                      return
-                    }
-                    toggleLike(selectedCard.id)
-                  }}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                    likedCards.has(selectedCard.id)
-                      ? 'bg-red-50 text-red-500'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill={likedCards.has(selectedCard.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" className="transition-all duration-200">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                  <span className="font-['Space_Mono'] text-sm">{likedCards.has(selectedCard.id) ? 'Liked' : 'Like'}</span>
-                </button>
                 <PostStats postId={selectedCard.id} initialViews={selectedCard.views} showDetailed />
                 <OwnerDeleteButton postId={selectedCard.id} onDeleted={() => setShowDetailModal(false)} refetchPosts={effectiveRefetchPosts} />
               </div>

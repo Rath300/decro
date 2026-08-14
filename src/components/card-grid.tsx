@@ -15,8 +15,6 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
     trackView,
     playingAudio,
     setPlayingAudio,
-    likedCards,
-    toggleLike,
   } = usePosts()
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
   const router = useRouter()
@@ -191,25 +189,8 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
                 {card.subgroupName ? ` · ${card.subgroupName}` : ''}
               </p>
             )}
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  toggleLike(card.id)
-                }}
-                className={`text-[10px] uppercase tracking-wide ${
-                  likedCards.has(card.id)
-                    ? 'text-black underline'
-                    : 'text-black/40 hover:text-black'
-                }`}
-                aria-label="Like"
-              >
-                {likedCards.has(card.id) ? 'Liked' : 'Like'}
-              </button>
-              <div onClick={(e) => e.stopPropagation()}>
-                <PostStats postId={card.id} initialViews={card.views} />
-              </div>
+            <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+              <PostStats postId={card.id} initialViews={card.views} />
             </div>
           </div>
         ))}

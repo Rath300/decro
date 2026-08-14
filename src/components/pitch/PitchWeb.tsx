@@ -172,7 +172,15 @@ export default function PitchWeb({
 
     const gNodes: GraphNode[] = visible.map((n) => {
       const cached = posCache.current.get(n.id)
-      if (cached) return { ...n, ...cached }
+      const heavyBridge =
+        (n.parentIds || []).length >= 3 || n.hubId === 'avant-garde-archive'
+      if (cached) {
+        const dist = Math.hypot(cached.x || 0, cached.y || 0)
+        // Don't keep multi-parent bridges stuck near Decro from old seeds
+        if (!(heavyBridge && dist < 240)) {
+          return { ...n, ...cached }
+        }
+      }
 
       if (n.kind === 'hub' && n.depth === 0) {
         return { ...n, x: 0, y: 0, fx: 0, fy: 0 }
@@ -206,7 +214,23 @@ export default function PitchWeb({
         }
         const cx = count ? ax / count : px
         const cy = count ? ay / count : py
-        const radius = n.isBridge ? 100 + (seed % 50) : 90 + (seed % 70)
+        // Multi-parent bridges sit near the graph centroid unless we push them out.
+        if (heavyBridge) {
+          const outward =
+            ((hashSeed(n.hubId || n.id) % 360) / 360) * Math.PI * 2
+          const r = 300 + (seed % 70)
+          return {
+            ...n,
+            x: Math.cos(outward) * r,
+            y: Math.sin(outward) * r,
+          }
+        }
+        const underArchive = (n.parentIds || []).includes('avant-garde-archive')
+        const radius = underArchive
+          ? 150 + (seed % 90)
+          : n.isBridge
+            ? 170 + (seed % 55)
+            : 100 + (seed % 70)
         return {
           ...n,
           x: cx + Math.cos(angle) * radius,
@@ -251,21 +275,49 @@ export default function PitchWeb({
     const busy = count > 36
 
     fg.d3Force?.('charge')?.strength((node: GraphNode) => {
+      const parents = node.parentIds?.length || 0
+      const underArchive = (node.parentIds || []).includes('avant-garde-archive')
       if (node.depth === 0) return busy ? -70 : -120
+      if (node.hubId === 'avant-garde-archive' || parents >= 3) {
+        return busy ? -240 : -300
+      }
+      if (underArchive || (node.depth ?? 0) >= 3) return busy ? -160 : -210
       if (node.depth === 1) return busy ? -110 : -180
-      if (node.isBridge) return busy ? -90 : -140
-      return busy ? -70 : -110
+      if (node.isBridge) return busy ? -150 : -190
+      return busy ? -80 : -120
     })
-    fg.d3Force?.('charge')?.distanceMax?.(busy ? 260 : 480)
+    fg.d3Force?.('charge')?.distanceMax?.(busy ? 420 : 640)
     fg.d3Force?.('link')?.distance((link: any) => {
       const s = typeof link.source === 'object' ? link.source : null
       const t = typeof link.target === 'object' ? link.target : null
-      if (s?.depth === 0 || t?.depth === 0) return busy ? 96 : 120
-      if (s?.isBridge || t?.isBridge) return busy ? 78 : 100
-      return busy ? 70 : 88
+      const parents = Math.max(
+        s?.parentIds?.length || 0,
+        t?.parentIds?.length || 0
+      )
+      const archiveTouch =
+        s?.hubId === 'avant-garde-archive' ||
+        t?.hubId === 'avant-garde-archive' ||
+        (s?.parentIds || []).includes('avant-garde-archive') ||
+        (t?.parentIds || []).includes('avant-garde-archive')
+      if (s?.depth === 0 || t?.depth === 0) return busy ? 110 : 140
+      if (archiveTouch || parents >= 3) return busy ? 170 : 210
+      if (s?.isBridge || t?.isBridge) return busy ? 130 : 160
+      if ((s?.depth ?? 0) >= 3 || (t?.depth ?? 0) >= 3) return busy ? 110 : 140
+      return busy ? 80 : 100
     })
-    fg.d3Force?.('link')?.strength?.(busy ? 0.45 : 0.35)
-    fg.d3Force?.('center')?.strength?.(busy ? 0.02 : 0.035)
+    fg.d3Force?.('link')?.strength?.((link: any) => {
+      const s = typeof link.source === 'object' ? link.source : null
+      const t = typeof link.target === 'object' ? link.target : null
+      const parents = Math.max(
+        s?.parentIds?.length || 0,
+        t?.parentIds?.length || 0
+      )
+      if (parents >= 3 || s?.hubId === 'avant-garde-archive' || t?.hubId === 'avant-garde-archive') {
+        return busy ? 0.18 : 0.14
+      }
+      return busy ? 0.4 : 0.32
+    })
+    fg.d3Force?.('center')?.strength?.(busy ? 0.008 : 0.015)
 
     // Only reheat when the visible set grows. Defer while the camera is
     // focusing so nodes don't fly apart mid zoom-in (feels like zoom-out).
@@ -367,9 +419,16 @@ export default function PitchWeb({
           n.hubId !== hubId &&
           (n.parentIds || []).includes(hubId)
       ).length
-      const expectedSpan = Math.max(240, 140 + kidCount * 32)
+      const archive = hubId === 'avant-garde-archive'
+      const expectedSpan = Math.max(
+        archive ? 360 : 240,
+        (archive ? 200 : 140) + kidCount * (archive ? 48 : 32)
+      )
       const short = Math.min(dims.w, dims.h)
-      const zoom = Math.min(2.05, Math.max(1.15, (short * 0.52) / expectedSpan))
+      const zoom = Math.min(
+        archive ? 1.55 : 2.05,
+        Math.max(archive ? 0.95 : 1.15, (short * 0.52) / expectedSpan)
+      )
       cameraLockUntil.current = Date.now() + ms + 220
       fg.centerAt(parent.x, parent.y, ms)
       fg.zoom(zoom, ms)

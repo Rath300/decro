@@ -272,17 +272,6 @@ export default function PostDetailPage() {
     )
   }
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-    if (seconds < 60) return 'just now'
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
-    return date.toLocaleDateString()
-  }
-
   const backHref = post.subgroup_slug
     ? `/subgroup/${post.subgroup_slug}`
     : pitchMode
@@ -337,10 +326,6 @@ export default function PostDetailPage() {
                 <span>{name}</span>
               )
             })()}
-            <span>·</span>
-            <span>{getTimeAgo(post.created_at)}</span>
-            <span>·</span>
-            <span>{post.views} views</span>
             {post.subgroup_slug && post.subgroup_name ? (
               <>
                 <span>·</span>
@@ -799,9 +784,6 @@ function RedditComment({
               → {(comment as any).replying_to_username}
             </span>
           )}
-          <span className="text-[10px] uppercase tracking-wide text-black/35">
-            {getTimeAgo(comment.created_at)}
-          </span>
         </div>
         <p className="text-sm text-black/80 mb-2 break-words leading-relaxed">
           {comment.content}
@@ -884,79 +866,6 @@ function RedditComment({
               }}
             >
               Reply
-            </button>
-            
-            {/* Like button */}
-            <button
-              className={`flex items-center gap-1 transition-all duration-200 ${
-                likedComments.has(comment.id)
-                  ? 'text-red-500'
-                  : 'hover:text-red-500'
-              }`}
-              onClick={async () => {
-                if (!canVote) return;
-                try {
-                  const { data, error: rpcError } = await callRpc('toggle_comment_vote_ext', { 
-                    comment_id_param: comment.id, 
-                    direction: 1 
-                  });
-                  
-                  if (rpcError) {
-                    console.error('RPC error:', rpcError);
-                    return;
-                  }
-                  
-                  console.log('Comment vote response:', data);
-                  
-                  // Parse the JSON response if it's a string
-                  let responseData = data;
-                  if (typeof data === 'string') {
-                    try {
-                      responseData = JSON.parse(data);
-                    } catch (e) {
-                      console.error('Failed to parse response:', e);
-                      if (refetch) refetch();
-                      return;
-                    }
-                  }
-                  
-                  // Update both the vote score and liked status from the response
-                  if (responseData && typeof responseData.vote_score === 'number' && typeof responseData.liked === 'boolean') {
-                    if (updateVoteScore) {
-                      updateVoteScore(comment.id, responseData.vote_score);
-                    }
-                    
-                    // Update liked comments state
-                    setLikedComments(prev => {
-                      const next = new Set(prev);
-                      if (responseData.liked) {
-                        next.add(comment.id);
-                      } else {
-                        next.delete(comment.id);
-                      }
-                      return next;
-                    });
-                  } else {
-                    console.log('No vote_score or liked in response, refetching...');
-                    if (refetch) {
-                      // Fallback: refetch if response doesn't have expected fields
-                      refetch();
-                    }
-                  }
-                } catch (error) {
-                  console.error('Error toggling comment vote:', error);
-                }
-              }}
-            >
-              <svg 
-                className={`w-4 h-4 ${likedComments.has(comment.id) ? 'text-red-500' : 'text-gray-600'}`} 
-                fill={likedComments.has(comment.id) ? 'currentColor' : 'none'} 
-                stroke={likedComments.has(comment.id) ? 'currentColor' : 'currentColor'} 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span>{comment.vote_score || 0}</span>
             </button>
           </div>
 
