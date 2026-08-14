@@ -12,6 +12,8 @@
     "db:password": "node scripts/set-db-password.mjs",
     "seed:genres": "node scripts/seed-pitch-genres.mjs",
     "seed:public-domain": "node scripts/seed-public-domain.mjs",
+    "seed:ubu-archive": "node scripts/seed-ubu-archive.mjs",
+    "build:ubu-catalog": "node scripts/build-ubu-catalog.mjs",
     "place:subgroups": "node scripts/place-existing-subgroups.mjs"
   },
   "dependencies": {
@@ -40,6 +42,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^13.5.11",
     "postcss": "^8.4.0",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.3.0",
     "typescript": "^5.0.0"
   },

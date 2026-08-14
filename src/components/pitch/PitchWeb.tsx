@@ -99,6 +99,8 @@ export default function PitchWeb({
   const selectedIdRef = useRef<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   selectedIdRef.current = selectedId
+  // Bump to force a canvas repaint — fg.refresh() often no-ops when the sim is cool
+  const [, setHoverTick] = useState(0)
   const [pulse, setPulse] = useState(0)
   const [viewZoom, setViewZoom] = useState(1)
   const viewZoomRef = useRef(1)
@@ -565,8 +567,9 @@ export default function PitchWeb({
       const depth = n.depth ?? 1
       const mode = labelMode(depth, globalScale)
 
-      const active =
-        n.id === hoverIdRef.current || n.id === selectedIdRef.current
+      const hovered = n.id === hoverIdRef.current
+      const selected = n.id === selectedIdRef.current
+      const active = hovered || selected
       const focused = Boolean(
         focusHubIdPaintRef.current && n.hubId === focusHubIdPaintRef.current
       )
@@ -591,18 +594,29 @@ export default function PitchWeb({
         return
       }
 
-      const fontPx = hubFontPx(n, globalScale, focused || active)
+      const fontPx =
+        hubFontPx(n, globalScale, focused || active) * (hovered ? 1.08 : 1)
       ctx.save()
       if (!focused && focusHubIdPaintRef.current && depth >= 2 && !active) {
         ctx.globalAlpha = 0.55
+      }
+      // Dim siblings while hovering a niche so the target pops
+      if (
+        hoverIdRef.current &&
+        !hovered &&
+        !selected &&
+        !focused &&
+        depth >= 2
+      ) {
+        ctx.globalAlpha = Math.min(ctx.globalAlpha, 0.4)
       }
       ctx.font = `400 ${fontPx}px "Space Mono", monospace`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       const label = (n.label || '').toUpperCase()
       const metrics = ctx.measureText(label)
-      const padX = 7 / globalScale
-      const padY = 5 / globalScale
+      const padX = (7 + (hovered ? 3 : 0)) / globalScale
+      const padY = (5 + (hovered ? 2 : 0)) / globalScale
       const tw = metrics.width + padX * 2
       const th = fontPx + padY * 2
 
@@ -845,15 +859,18 @@ export default function PitchWeb({
             const y = n.y || 0
             ctx.fillStyle = color
             if (mode === 'dot') {
-              const r = 10 / Math.max(globalScale, 0.4)
+              const r = 14 / Math.max(globalScale, 0.4)
               ctx.beginPath()
               ctx.arc(x, y, r, 0, Math.PI * 2)
               ctx.fill()
               return
             }
+            // Generous hit box — niches sit close together and need easy aiming
             const fontPx = hubFontPx(n, globalScale, false)
-            const w = Math.max((n.label?.length || 4) * fontPx * 0.55, fontPx * 2)
-            const h = fontPx * 1.4
+            const w =
+              Math.max((n.label?.length || 4) * fontPx * 0.62, fontPx * 2.4) +
+              16 / globalScale
+            const h = fontPx * 1.85 + 8 / globalScale
             ctx.fillRect(x - w / 2, y - h / 2, w, h)
           }}
           onNodeHover={(node: any) => {
@@ -863,7 +880,8 @@ export default function PitchWeb({
             if (containerRef.current) {
               containerRef.current.style.cursor = node ? 'pointer' : 'grab'
             }
-            // Refresh canvas only — setState on hover was janking the sim
+            // Force React → ForceGraph repaint (refresh() often no-ops when cool)
+            setHoverTick((t) => t + 1)
             try {
               fgRef.current?.refresh?.()
             } catch {

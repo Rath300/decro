@@ -250,6 +250,22 @@ export const PITCH_HUBS: PitchHub[] = [
     parents: ['writing', 'visual-art'],
     genreName: 'Graphic Novel',
   },
+  {
+    id: 'avant-garde-archive',
+    label: 'Avant-Garde Archive',
+    depth: 2,
+    parents: ['film', 'music', 'writing', 'visual-art'],
+    genreName: 'Avant-Garde Archive',
+    aliases: [
+      'ubu',
+      'ubuweb',
+      'experimental archive',
+      'web history',
+      'avant garde',
+      'sound poetry',
+      'concrete poetry',
+    ],
+  },
 ]
 
 const hubById = new Map(PITCH_HUBS.map((h) => [h.id, h]))

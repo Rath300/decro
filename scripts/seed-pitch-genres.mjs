@@ -239,6 +239,7 @@ async function main() {
     ['Sound Sculpture', 'sound-sculpture'],
     ['Game Soundtrack', 'game-soundtrack'],
     ['Graphic Novel', 'graphic-novel'],
+    ['Avant-Garde Archive', 'avant-garde-archive'],
   ]
 
   const toSeed = new Map()

@@ -1,0 +1,4007 @@
+{
+  "generatedAt": "2026-08-14T04:42:17.951Z",
+  "source": "ubu.com public indexes (titles+urls only)",
+  "count": 400,
+  "entries": [
+    {
+      "key": "ubu:film:aalto",
+      "title": "Alvar Aalto",
+      "artist": "Alvar Aalto",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/aalto.html",
+      "blurb": "Alvar Aalto. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:abdoh",
+      "title": "Reza Abdoh",
+      "artist": "Reza Abdoh",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/abdoh.html",
+      "blurb": "Reza Abdoh. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:agee",
+      "title": "James Agee",
+      "artist": "James Agee",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/agee.html",
+      "blurb": "James Agee. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:akomfrah",
+      "title": "John Akomfrah",
+      "artist": "John Akomfrah",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/akomfrah.html",
+      "blurb": "John Akomfrah. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:abu-ali",
+      "title": "Mustafa Abu Ali",
+      "artist": "Mustafa Abu Ali",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/abu-ali.html",
+      "blurb": "Mustafa Abu Ali. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:amado",
+      "title": "Raymundo Amado",
+      "artist": "Raymundo Amado",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/amado.html",
+      "blurb": "Raymundo Amado. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:anand",
+      "title": "Shaina Anand",
+      "artist": "Shaina Anand",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/anand.html",
+      "blurb": "Shaina Anand. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:ant_farm",
+      "title": "Ant Farm",
+      "artist": "Ant Farm",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/ant_farm.html",
+      "blurb": "Ant Farm. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:arbid",
+      "title": "Danielle Arbid",
+      "artist": "Danielle Arbid",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/arbid.html",
+      "blurb": "Danielle Arbid. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:artensemble",
+      "title": "Art Ensemble of Chicago",
+      "artist": "Art Ensemble of Chicago",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/artensemble.html",
+      "blurb": "Art Ensemble of Chicago. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:astore",
+      "title": "Mireille & Fabian Astore",
+      "artist": "Mireille & Fabian Astore",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/astore.html",
+      "blurb": "Mireille & Fabian Astore. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:autant",
+      "title": "Claude Autant-Lara",
+      "artist": "Claude Autant-Lara",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/autant.html",
+      "blurb": "Claude Autant-Lara. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:bahri",
+      "title": "Ismail Bahri",
+      "artist": "Ismail Bahri",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/bahri.html",
+      "blurb": "Ismail Bahri. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:baldessari",
+      "title": "John Baldessari",
+      "artist": "John Baldessari",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/baldessari.html",
+      "blurb": "John Baldessari. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:bargellini",
+      "title": "Piero Bargellini",
+      "artist": "Piero Bargellini",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/bargellini.html",
+      "blurb": "Piero Bargellini. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:barthes",
+      "title": "Roland Barthes",
+      "artist": "Roland Barthes",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/barthes.html",
+      "blurb": "Roland Barthes. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:batniji",
+      "title": "Taysir Batniji",
+      "artist": "Taysir Batniji",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/batniji.html",
+      "blurb": "Taysir Batniji. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:alchemists",
+      "title": "BBC Radiophonic Workshop",
+      "artist": "BBC Radiophonic Workshop",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/alchemists.html",
+      "blurb": "BBC Radiophonic Workshop. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:beavers",
+      "title": "Roert Beavers",
+      "artist": "Roert Beavers",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/beavers.html",
+      "blurb": "Roert Beavers. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:beckett",
+      "title": "Samuel Beckett",
+      "artist": "Samuel Beckett",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/beckett.html",
+      "blurb": "Samuel Beckett. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:beloufa",
+      "title": "Neil Beloufa",
+      "artist": "Neil Beloufa",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/beloufa.html",
+      "blurb": "Neil Beloufa. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:benning_j",
+      "title": "James Benning",
+      "artist": "James Benning",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/benning_j.html",
+      "blurb": "James Benning. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:bernadette",
+      "title": "Bernadette Corporation",
+      "artist": "Bernadette Corporation",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/bernadette.html",
+      "blurb": "Bernadette Corporation. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:bey",
+      "title": "Gay Abel-Bey",
+      "artist": "Gay Abel-Bey",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/bey.html",
+      "blurb": "Gay Abel-Bey. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:black-panthers",
+      "title": "Black Panthers",
+      "artist": "Black Panthers",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/black-panthers.html",
+      "blurb": "Black Panthers. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:bordowitz",
+      "title": "Gregg Bordowitz",
+      "artist": "Gregg Bordowitz",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/bordowitz.html",
+      "blurb": "Gregg Bordowitz. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:bourdin",
+      "title": "Guy Bourdin",
+      "artist": "Guy Bourdin",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/bourdin.html",
+      "blurb": "Guy Bourdin. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:branca_glenn",
+      "title": "Glenn Branca",
+      "artist": "Glenn Branca",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/branca_glenn.html",
+      "blurb": "Glenn Branca. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:brecht",
+      "title": "George Brecht",
+      "artist": "George Brecht",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/brecht.html",
+      "blurb": "George Brecht. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:broodthaers",
+      "title": "Marcel Broodthaers",
+      "artist": "Marcel Broodthaers",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/broodthaers.html",
+      "blurb": "Marcel Broodthaers. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:bruch",
+      "title": "Klaus vom Bruch",
+      "artist": "Klaus vom Bruch",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/bruch.html",
+      "blurb": "Klaus vom Bruch. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:burian",
+      "title": "E.F. Burian",
+      "artist": "E.F. Burian",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/burian.html",
+      "blurb": "E.F. Burian. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:byrne",
+      "title": "David Byrne",
+      "artist": "David Byrne",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/byrne.html",
+      "blurb": "David Byrne. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:celan",
+      "title": "Paul Celan",
+      "artist": "Paul Celan",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/celan.html",
+      "blurb": "Paul Celan. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:cardiff",
+      "title": "Janet Cardiff",
+      "artist": "Janet Cardiff",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/cardiff.html",
+      "blurb": "Janet Cardiff. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:cendrars",
+      "title": "Blaise Cendrars",
+      "artist": "Blaise Cendrars",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/cendrars.html",
+      "blurb": "Blaise Cendrars. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:chamberlain_wynn",
+      "title": "Wynn Chamberlain",
+      "artist": "Wynn Chamberlain",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/chamberlain_wynn.html",
+      "blurb": "Wynn Chamberlain. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:chen",
+      "title": "Yin-Ju Chen & James T. Hong",
+      "artist": "Yin-Ju Chen & James T. Hong",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/chen.html",
+      "blurb": "Yin-Ju Chen & James T. Hong. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:chomon",
+      "title": "Segundo de Chomón",
+      "artist": "Segundo de Chomón",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/chomon.html",
+      "blurb": "Segundo de Chomón. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:cc",
+      "title": "Chris & Cosey",
+      "artist": "Chris & Cosey",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/cc.html",
+      "blurb": "Chris & Cosey. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:clarke",
+      "title": "Shirley Clarke",
+      "artist": "Shirley Clarke",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/clarke.html",
+      "blurb": "Shirley Clarke. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:cohen",
+      "title": "Ira Cohen",
+      "artist": "Ira Cohen",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/cohen.html",
+      "blurb": "Ira Cohen. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:coleman",
+      "title": "Joe Coleman",
+      "artist": "Joe Coleman",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/coleman.html",
+      "blurb": "Joe Coleman. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:cooper",
+      "title": "Julian Cooper",
+      "artist": "Julian Cooper",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/cooper.html",
+      "blurb": "Julian Cooper. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:cortazar",
+      "title": "Julio Cortázar",
+      "artist": "Julio Cortázar",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/cortazar.html",
+      "blurb": "Julio Cortázar. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:crosswaite",
+      "title": "David Crosswaite",
+      "artist": "David Crosswaite",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/crosswaite.html",
+      "blurb": "David Crosswaite. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:dahlberg",
+      "title": "Jonas Dahlberg",
+      "artist": "Jonas Dahlberg",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/dahlberg.html",
+      "blurb": "Jonas Dahlberg. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:davis_d",
+      "title": "Douglas Davis",
+      "artist": "Douglas Davis",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/davis_d.html",
+      "blurb": "Douglas Davis. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:demaria",
+      "title": "Walter De Maria",
+      "artist": "Walter De Maria",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/demaria.html",
+      "blurb": "Walter De Maria. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:desfons",
+      "title": "Pierre Desfons",
+      "artist": "Pierre Desfons",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/desfons.html",
+      "blurb": "Pierre Desfons. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:demy",
+      "title": "Jacques Demy",
+      "artist": "Jacques Demy",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/demy.html",
+      "blurb": "Jacques Demy. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:dam",
+      "title": "Destroy All Monsters",
+      "artist": "Destroy All Monsters",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/dam.html",
+      "blurb": "Destroy All Monsters. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:djemai",
+      "title": "Nazim Djemai",
+      "artist": "Nazim Djemai",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/djemai.html",
+      "blurb": "Nazim Djemai. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:douglas",
+      "title": "Stan Douglas",
+      "artist": "Stan Douglas",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/douglas.html",
+      "blurb": "Stan Douglas. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:duncan",
+      "title": "John Duncan",
+      "artist": "John Duncan",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/duncan.html",
+      "blurb": "John Duncan. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:dzama",
+      "title": "Marcel Dzama",
+      "artist": "Marcel Dzama",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/dzama.html",
+      "blurb": "Marcel Dzama. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:emin",
+      "title": "Tracey Emin",
+      "artist": "Tracey Emin",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/emin.html",
+      "blurb": "Tracey Emin. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:ernst",
+      "title": "Max Ernst",
+      "artist": "Max Ernst",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/ernst.html",
+      "blurb": "Max Ernst. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:fadhil",
+      "title": "Al Fadhil",
+      "artist": "Al Fadhil",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/fadhil.html",
+      "blurb": "Al Fadhil. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:farocki_gefangnisbilder",
+      "title": "Haroun Farocki",
+      "artist": "Haroun Farocki",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/farocki_gefangnisbilder.html",
+      "blurb": "Haroun Farocki. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:feldman",
+      "title": "Morton Feldman",
+      "artist": "Morton Feldman",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/feldman.html",
+      "blurb": "Morton Feldman. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:finley",
+      "title": "Karen Finley",
+      "artist": "Karen Finley",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/finley.html",
+      "blurb": "Karen Finley. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:flanagan",
+      "title": "Bob Flanagan",
+      "artist": "Bob Flanagan",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/flanagan.html",
+      "blurb": "Bob Flanagan. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:fontaine",
+      "title": "Claire Fontaine",
+      "artist": "Claire Fontaine",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/fontaine.html",
+      "blurb": "Claire Fontaine. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:lenteng",
+      "title": "Forum Lenteng",
+      "artist": "Forum Lenteng",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/lenteng.html",
+      "blurb": "Forum Lenteng. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:fraser",
+      "title": "Andrea Fraser",
+      "artist": "Andrea Fraser",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/fraser.html",
+      "blurb": "Andrea Fraser. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:friedman",
+      "title": "Dara Friedman",
+      "artist": "Dara Friedman",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/friedman.html",
+      "blurb": "Dara Friedman. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:averty_gainsbourg",
+      "title": "Serge Gainsbourg",
+      "artist": "Serge Gainsbourg",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/averty_gainsbourg.html",
+      "blurb": "Serge Gainsbourg. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:gates",
+      "title": "Theaster Gates",
+      "artist": "Theaster Gates",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/gates.html",
+      "blurb": "Theaster Gates. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:herbst",
+      "title": "German Dada",
+      "artist": "German Dada",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/herbst.html",
+      "blurb": "German Dada. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:gillick",
+      "title": "Liam Gillick",
+      "artist": "Liam Gillick",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/gillick.html",
+      "blurb": "Liam Gillick. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:glabicki",
+      "title": "Paul Glabicki",
+      "artist": "Paul Glabicki",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/glabicki.html",
+      "blurb": "Paul Glabicki. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:goldin",
+      "title": "Nan Goldin",
+      "artist": "Nan Goldin",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/goldin.html",
+      "blurb": "Nan Goldin. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:gordon_d",
+      "title": "Douglas Gordon",
+      "artist": "Douglas Gordon",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/gordon_d.html",
+      "blurb": "Douglas Gordon. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:gray",
+      "title": "Spalding Gray",
+      "artist": "Spalding Gray",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/gray.html",
+      "blurb": "Spalding Gray. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:gropius",
+      "title": "Walter Gropius",
+      "artist": "Walter Gropius",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/gropius.html",
+      "blurb": "Walter Gropius. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:guattari",
+      "title": "Félix Guattari",
+      "artist": "Félix Guattari",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/guattari.html",
+      "blurb": "Félix Guattari. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:gysin",
+      "title": "Brion Gysin",
+      "artist": "Brion Gysin",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/gysin.html",
+      "blurb": "Brion Gysin. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:hall",
+      "title": "David Hall",
+      "artist": "David Hall",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/hall.html",
+      "blurb": "David Hall. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:hanak",
+      "title": "Du&scaron;an Hanák",
+      "artist": "Du&scaron;an Hanák",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/hanak.html",
+      "blurb": "Du&scaron;an Hanák. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:hatoum",
+      "title": "Mona Hatoum",
+      "artist": "Mona Hatoum",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/hatoum.html",
+      "blurb": "Mona Hatoum. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:hebert",
+      "title": "Pierre Hébert",
+      "artist": "Pierre Hébert",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/hebert.html",
+      "blurb": "Pierre Hébert. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:hiredcenter",
+      "title": "Hi-Red-Center",
+      "artist": "Hi-Red-Center",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/hiredcenter.html",
+      "blurb": "Hi-Red-Center. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:hirschhorn",
+      "title": "Thomas Hirschhorn",
+      "artist": "Thomas Hirschhorn",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/hirschhorn.html",
+      "blurb": "Thomas Hirschhorn. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:holmqvist",
+      "title": "Karl Holmqvist",
+      "artist": "Karl Holmqvist",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/holmqvist.html",
+      "blurb": "Karl Holmqvist. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:horn",
+      "title": "Rebecca Horn",
+      "artist": "Rebecca Horn",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/horn.html",
+      "blurb": "Rebecca Horn. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:hughes",
+      "title": "Robert Hughes",
+      "artist": "Robert Hughes",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/hughes.html",
+      "blurb": "Robert Hughes. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:hutton",
+      "title": "Peter Hutton",
+      "artist": "Peter Hutton",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/hutton.html",
+      "blurb": "Peter Hutton. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:irwin_group",
+      "title": "IRWIN",
+      "artist": "IRWIN",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/irwin_group.html",
+      "blurb": "IRWIN. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:jacobs",
+      "title": "Ken Jacobs",
+      "artist": "Ken Jacobs",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/jacobs.html",
+      "blurb": "Ken Jacobs. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:jarman",
+      "title": "Derek Jarman",
+      "artist": "Derek Jarman",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/jarman.html",
+      "blurb": "Derek Jarman. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:johnson_rashid",
+      "title": "Rashid Johnson",
+      "artist": "Rashid Johnson",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/johnson_rashid.html",
+      "blurb": "Rashid Johnson. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:jonouchi",
+      "title": "Motoharu J&ocirc;nouchi",
+      "artist": "Motoharu J&ocirc;nouchi",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/jonouchi.html",
+      "blurb": "Motoharu J&ocirc;nouchi. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:kac",
+      "title": "Eduardo Kac",
+      "artist": "Eduardo Kac",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/kac.html",
+      "blurb": "Eduardo Kac. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:kantor",
+      "title": "Tadeusz Kantor",
+      "artist": "Tadeusz Kantor",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/kantor.html",
+      "blurb": "Tadeusz Kantor. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:keller",
+      "title": "Marjorie Keller",
+      "artist": "Marjorie Keller",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/keller.html",
+      "blurb": "Marjorie Keller. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:khatibi",
+      "title": "Parviz Khatibi",
+      "artist": "Parviz Khatibi",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/khatibi.html",
+      "blurb": "Parviz Khatibi. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:kim",
+      "title": "Kyung-mook Kim",
+      "artist": "Kyung-mook Kim",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/kim.html",
+      "blurb": "Kyung-mook Kim. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:kirk",
+      "title": "Raashan Roland Kirk",
+      "artist": "Raashan Roland Kirk",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/kirk.html",
+      "blurb": "Raashan Roland Kirk. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:klopfenstein",
+      "title": "Clemens Klopfenstein",
+      "artist": "Clemens Klopfenstein",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/klopfenstein.html",
+      "blurb": "Clemens Klopfenstein. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:koester",
+      "title": "Joachim Koester",
+      "artist": "Joachim Koester",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/koester.html",
+      "blurb": "Joachim Koester. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:krocker",
+      "title": "Jon Krocker",
+      "artist": "Jon Krocker",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/krocker.html",
+      "blurb": "Jon Krocker. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:kucia",
+      "title": "Jerzy Kucia",
+      "artist": "Jerzy Kucia",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/kucia.html",
+      "blurb": "Jerzy Kucia. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:la_rebellion",
+      "title": "L.A. Rebellion: New Black Cinema",
+      "artist": "L.A. Rebellion: New Black Cinema",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/la_rebellion.html",
+      "blurb": "L.A. Rebellion: New Black Cinema. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:lamelas",
+      "title": "David Lamelas",
+      "artist": "David Lamelas",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/lamelas.html",
+      "blurb": "David Lamelas. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:larkin",
+      "title": "Alile Sharon Larkin",
+      "artist": "Alile Sharon Larkin",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/larkin.html",
+      "blurb": "Alile Sharon Larkin. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:laser",
+      "title": "Liz Magic Laser",
+      "artist": "Liz Magic Laser",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/laser.html",
+      "blurb": "Liz Magic Laser. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:lee",
+      "title": "Helen Lee",
+      "artist": "Helen Lee",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/lee.html",
+      "blurb": "Helen Lee. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:lelouch",
+      "title": "Claude LeLouch",
+      "artist": "Claude LeLouch",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/lelouch.html",
+      "blurb": "Claude LeLouch. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:leth",
+      "title": "J&oslash;rgen Leth",
+      "artist": "J&oslash;rgen Leth",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/leth.html",
+      "blurb": "J&oslash;rgen Leth. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:ligon",
+      "title": "Glen Ligon",
+      "artist": "Glen Ligon",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/ligon.html",
+      "blurb": "Glen Ligon. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:loktev",
+      "title": "Julia Loktev",
+      "artist": "Julia Loktev",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/loktev.html",
+      "blurb": "Julia Loktev. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:lumiere",
+      "title": "The Lumière Brothers",
+      "artist": "The Lumière Brothers",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/lumiere.html",
+      "blurb": "The Lumière Brothers. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:macuga",
+      "title": "Goshka Macuga",
+      "artist": "Goshka Macuga",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/macuga.html",
+      "blurb": "Goshka Macuga. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:maderna",
+      "title": "Bruno Maderna",
+      "artist": "Bruno Maderna",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/maderna.html",
+      "blurb": "Bruno Maderna. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:mambety",
+      "title": "Djibril Diop Mambéty",
+      "artist": "Djibril Diop Mambéty",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/mambety.html",
+      "blurb": "Djibril Diop Mambéty. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:manupelli",
+      "title": "George Manupelli",
+      "artist": "George Manupelli",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/manupelli.html",
+      "blurb": "George Manupelli. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:marker",
+      "title": "Chris Marker",
+      "artist": "Chris Marker",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/marker.html",
+      "blurb": "Chris Marker. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:matsui",
+      "title": "Shigeru Matsui",
+      "artist": "Shigeru Matsui",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/matsui.html",
+      "blurb": "Shigeru Matsui. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:mccaffery",
+      "title": "Steve McCaffery",
+      "artist": "Steve McCaffery",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/mccaffery.html",
+      "blurb": "Steve McCaffery. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:mckay",
+      "title": "Glen McKay",
+      "artist": "Glen McKay",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/mckay.html",
+      "blurb": "Glen McKay. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:mead",
+      "title": "Taylor Mead",
+      "artist": "Taylor Mead",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/mead.html",
+      "blurb": "Taylor Mead. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:melly",
+      "title": "George Melly",
+      "artist": "George Melly",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/melly.html",
+      "blurb": "George Melly. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:miller",
+      "title": "Henry Miller",
+      "artist": "Henry Miller",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/miller.html",
+      "blurb": "Henry Miller. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:mishima",
+      "title": "Yukio Mishima",
+      "artist": "Yukio Mishima",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/mishima.html",
+      "blurb": "Yukio Mishima. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:molska",
+      "title": "Anna Molksa",
+      "artist": "Anna Molksa",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/molska.html",
+      "blurb": "Anna Molksa. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:mori",
+      "title": "Ikue Mori",
+      "artist": "Ikue Mori",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/mori.html",
+      "blurb": "Ikue Mori. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:moulett",
+      "title": "Luc Moulet",
+      "artist": "Luc Moulet",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/moulett.html",
+      "blurb": "Luc Moulet. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:moullet",
+      "title": "Luc Moullet",
+      "artist": "Luc Moullet",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/moullet.html",
+      "blurb": "Luc Moullet. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:mulvey",
+      "title": "Laura Mulvey",
+      "artist": "Laura Mulvey",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/mulvey.html",
+      "blurb": "Laura Mulvey. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:aether",
+      "title": "Music with Roots in the Aether",
+      "artist": "Music with Roots in the Aether",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/aether.html",
+      "blurb": "Music with Roots in the Aether. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:namuth",
+      "title": "Hans Namuth",
+      "artist": "Hans Namuth",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/namuth.html",
+      "blurb": "Hans Namuth. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:nath",
+      "title": "Pandit Pran Nath",
+      "artist": "Pandit Pran Nath",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/nath.html",
+      "blurb": "Pandit Pran Nath. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:neuhaus",
+      "title": "Max Neuhaus",
+      "artist": "Max Neuhaus",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/neuhaus.html",
+      "blurb": "Max Neuhaus. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:nicolas",
+      "title": "Bernard Nicolas",
+      "artist": "Bernard Nicolas",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/nicolas.html",
+      "blurb": "Bernard Nicolas. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:nordine",
+      "title": "Ken Nordine",
+      "artist": "Ken Nordine",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/nordine.html",
+      "blurb": "Ken Nordine. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:odenbach",
+      "title": "Marcel Odenbach",
+      "artist": "Marcel Odenbach",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/odenbach.html",
+      "blurb": "Marcel Odenbach. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:oliveros",
+      "title": "Pauline Oliveros",
+      "artist": "Pauline Oliveros",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/oliveros.html",
+      "blurb": "Pauline Oliveros. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:ostertag",
+      "title": "Bob Ostertag",
+      "artist": "Bob Ostertag",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/ostertag.html",
+      "blurb": "Bob Ostertag. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:paik",
+      "title": "Nam June Paik",
+      "artist": "Nam June Paik",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/paik.html",
+      "blurb": "Nam June Paik. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:paperrad",
+      "title": "Paper Rad",
+      "artist": "Paper Rad",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/paperrad.html",
+      "blurb": "Paper Rad. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:pau",
+      "title": "Ellen Pau",
+      "artist": "Ellen Pau",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/pau.html",
+      "blurb": "Ellen Pau. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:plu",
+      "title": "People Like Us",
+      "artist": "People Like Us",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/plu.html",
+      "blurb": "People Like Us. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:pfeiffer",
+      "title": "Paul Pfeiffer",
+      "artist": "Paul Pfeiffer",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/pfeiffer.html",
+      "blurb": "Paul Pfeiffer. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:picasso",
+      "title": "Pablo Picasso",
+      "artist": "Pablo Picasso",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/picasso.html",
+      "blurb": "Pablo Picasso. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:polk",
+      "title": "Brigid Polk",
+      "artist": "Brigid Polk",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/polk.html",
+      "blurb": "Brigid Polk. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:gladsjo_pranks",
+      "title": "Pranks TV",
+      "artist": "Pranks TV",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/gladsjo_pranks.html",
+      "blurb": "Pranks TV. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:protazanov",
+      "title": "Yakov Protazanov",
+      "artist": "Yakov Protazanov",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/protazanov.html",
+      "blurb": "Yakov Protazanov. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:radigue",
+      "title": "Eliane Radigue",
+      "artist": "Eliane Radigue",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/radigue.html",
+      "blurb": "Eliane Radigue. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:rauschenberg",
+      "title": "Robert Rauschenberg",
+      "artist": "Robert Rauschenberg",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/rauschenberg.html",
+      "blurb": "Robert Rauschenberg. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:rebet",
+      "title": "Christine Rebet",
+      "artist": "Christine Rebet",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/rebet.html",
+      "blurb": "Christine Rebet. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:residents",
+      "title": "The Residents",
+      "artist": "The Residents",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/residents.html",
+      "blurb": "The Residents. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:rhodes",
+      "title": "Lis Rhodes",
+      "artist": "Lis Rhodes",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/rhodes.html",
+      "blurb": "Lis Rhodes. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:riggs",
+      "title": "Marlon Riggs",
+      "artist": "Marlon Riggs",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/riggs.html",
+      "blurb": "Marlon Riggs. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:robbe-grillet",
+      "title": "Alain Robbe-Grillet",
+      "artist": "Alain Robbe-Grillet",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/robbe-grillet.html",
+      "blurb": "Alain Robbe-Grillet. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:rose_rachel",
+      "title": "Rachel Rose",
+      "artist": "Rachel Rose",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/rose_rachel.html",
+      "blurb": "Rachel Rose. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:rondinone",
+      "title": "Ugo Rondinone",
+      "artist": "Ugo Rondinone",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/rondinone.html",
+      "blurb": "Ugo Rondinone. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:rubin",
+      "title": "Barbara Rubin",
+      "artist": "Barbara Rubin",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/rubin.html",
+      "blurb": "Barbara Rubin. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:ruiz",
+      "title": "Ra&uacute;l Ruiz",
+      "artist": "Ra&uacute;l Ruiz",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/ruiz.html",
+      "blurb": "Ra&uacute;l Ruiz. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:sachs",
+      "title": "Tom Sachs",
+      "artist": "Tom Sachs",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/sachs.html",
+      "blurb": "Tom Sachs. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:sala",
+      "title": "Anri Sala",
+      "artist": "Anri Sala",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/sala.html",
+      "blurb": "Anri Sala. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:sarmento",
+      "title": "Juli&atilde;o Sarmento",
+      "artist": "Juli&atilde;o Sarmento",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/sarmento.html",
+      "blurb": "Juli&atilde;o Sarmento. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:sawa",
+      "title": "Hiraki Sawa",
+      "artist": "Hiraki Sawa",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/sawa.html",
+      "blurb": "Hiraki Sawa. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:schneemann",
+      "title": "Carolee Schneemann",
+      "artist": "Carolee Schneemann",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/schneemann.html",
+      "blurb": "Carolee Schneemann. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:sedira",
+      "title": "Zineb Sedira",
+      "artist": "Zineb Sedira",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/sedira.html",
+      "blurb": "Zineb Sedira. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:shahbazi",
+      "title": "Solmaz Shahbazi",
+      "artist": "Solmaz Shahbazi",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/shahbazi.html",
+      "blurb": "Solmaz Shahbazi. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:shah",
+      "title": "Tejal Shah",
+      "artist": "Tejal Shah",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/shah.html",
+      "blurb": "Tejal Shah. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:sherman_stuart",
+      "title": "Stuart Sherman",
+      "artist": "Stuart Sherman",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/sherman_stuart.html",
+      "blurb": "Stuart Sherman. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:shrigley",
+      "title": "David Shrigley",
+      "artist": "David Shrigley",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/shrigley.html",
+      "blurb": "David Shrigley. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:simon_jason",
+      "title": "Jason Simon",
+      "artist": "Jason Simon",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/simon_jason.html",
+      "blurb": "Jason Simon. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:sjolander",
+      "title": "Ture Sjölander & Lars Weck",
+      "artist": "Ture Sjölander & Lars Weck",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/sjolander.html",
+      "blurb": "Ture Sjölander & Lars Weck. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:smith_kiki",
+      "title": "Kiki Smith",
+      "artist": "Kiki Smith",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/smith_kiki.html",
+      "blurb": "Kiki Smith. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:snow",
+      "title": "Michael Snow",
+      "artist": "Michael Snow",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/snow.html",
+      "blurb": "Michael Snow. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:sonicyouth",
+      "title": "Sonic Youth",
+      "artist": "Sonic Youth",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/sonicyouth.html",
+      "blurb": "Sonic Youth. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:soukaz",
+      "title": "Lionel Soukaz",
+      "artist": "Lionel Soukaz",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/soukaz.html",
+      "blurb": "Lionel Soukaz. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:stark",
+      "title": "Frances Stark",
+      "artist": "Frances Stark",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/stark.html",
+      "blurb": "Frances Stark. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:stidworthy",
+      "title": "Imogen Stidworthy",
+      "artist": "Imogen Stidworthy",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/stidworthy.html",
+      "blurb": "Imogen Stidworthy. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:strauss",
+      "title": "Claude Lévi-Strauss",
+      "artist": "Claude Lévi-Strauss",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/strauss.html",
+      "blurb": "Claude Lévi-Strauss. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:srl",
+      "title": "Survival Research Laboratories",
+      "artist": "Survival Research Laboratories",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/srl.html",
+      "blurb": "Survival Research Laboratories. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:tan",
+      "title": "Fiona Tan",
+      "artist": "Fiona Tan",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/tan.html",
+      "blurb": "Fiona Tan. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:terayama",
+      "title": "Shuji Terayama",
+      "artist": "Shuji Terayama",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/terayama.html",
+      "blurb": "Shuji Terayama. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:throbbing",
+      "title": "Throbbing Gristle",
+      "artist": "Throbbing Gristle",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/throbbing.html",
+      "blurb": "Throbbing Gristle. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:toop",
+      "title": "David Toop",
+      "artist": "David Toop",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/toop.html",
+      "blurb": "David Toop. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:trier",
+      "title": "Lars von Trier",
+      "artist": "Lars von Trier",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/trier.html",
+      "blurb": "Lars von Trier. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:tyranny",
+      "title": "&lsquo;Blue&rsquo; Gene Tyranny",
+      "artist": "&lsquo;Blue&rsquo; Gene Tyranny",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/tyranny.html",
+      "blurb": "&lsquo;Blue&rsquo; Gene Tyranny. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:varda",
+      "title": "Agnes Varda",
+      "artist": "Agnes Varda",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/varda.html",
+      "blurb": "Agnes Varda. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:vertov_dziga",
+      "title": "Dziga Vertov",
+      "artist": "Dziga Vertov",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/vertov_dziga.html",
+      "blurb": "Dziga Vertov. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:vierkant",
+      "title": "Artie Vierkant",
+      "artist": "Artie Vierkant",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/vierkant.html",
+      "blurb": "Artie Vierkant. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:walker",
+      "title": "Kara Walker",
+      "artist": "Kara Walker",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/walker.html",
+      "blurb": "Kara Walker. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:weibel",
+      "title": "Peter Weibel",
+      "artist": "Peter Weibel",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/weibel.html",
+      "blurb": "Peter Weibel. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:watson",
+      "title": "James Sibley Watson",
+      "artist": "James Sibley Watson",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/watson.html",
+      "blurb": "James Sibley Watson. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:wenders",
+      "title": "Wim Wenders",
+      "artist": "Wim Wenders",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/wenders.html",
+      "blurb": "Wim Wenders. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:weschler",
+      "title": "Judith Weschler",
+      "artist": "Judith Weschler",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/weschler.html",
+      "blurb": "Judith Weschler. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:wieland",
+      "title": "Joyce Wieland",
+      "artist": "Joyce Wieland",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/wieland.html",
+      "blurb": "Joyce Wieland. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:williamson",
+      "title": "Margaux Williamson",
+      "artist": "Margaux Williamson",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/williamson.html",
+      "blurb": "Margaux Williamson. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:wittgenstein",
+      "title": "Ludwig Wittgenstein",
+      "artist": "Ludwig Wittgenstein",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/wittgenstein.html",
+      "blurb": "Ludwig Wittgenstein. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:wood_harrison",
+      "title": "John Wood & Paul Harrison",
+      "artist": "John Wood & Paul Harrison",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/wood_harrison.html",
+      "blurb": "John Wood & Paul Harrison. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:wurm",
+      "title": "Erwin Wurm",
+      "artist": "Erwin Wurm",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/wurm.html",
+      "blurb": "Erwin Wurm. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:blackwave",
+      "title": "Yugoslav Black Wave Cinema",
+      "artist": "Yugoslav Black Wave Cinema",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/blackwave.html",
+      "blurb": "Yugoslav Black Wave Cinema. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:film:xeno",
+      "title": "Xeno & Oaklander",
+      "artist": "Xeno & Oaklander",
+      "medium": "Film & Video",
+      "section": "film",
+      "tag": "experimental-film",
+      "ubuUrl": "https://www.ubu.com/film/xeno.html",
+      "blurb": "Xeno & Oaklander. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:question",
+      "title": "? Concrete Poetry",
+      "artist": "? Concrete Poetry",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/question.html",
+      "blurb": "? Concrete Poetry. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:3vi-cal-italy",
+      "title": "3Vi: California-Italy",
+      "artist": "3Vi: California-Italy",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/3vi-cal-italy.html",
+      "blurb": "3Vi: California-Italy. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:acker",
+      "title": "Kathy Acker",
+      "artist": "Kathy Acker",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/acker.html",
+      "blurb": "Kathy Acker. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:airwaves",
+      "title": "Airwaves",
+      "artist": "Airwaves",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/airwaves.html",
+      "blurb": "Airwaves. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:ammer",
+      "title": "Maryanne Amacher",
+      "artist": "Maryanne Amacher",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/ammer.html",
+      "blurb": "Maryanne Amacher. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:andreyev",
+      "title": "Samuel Andreyev",
+      "artist": "Samuel Andreyev",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/andreyev.html",
+      "blurb": "Samuel Andreyev. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:antunes",
+      "title": "Jorge Antunes",
+      "artist": "Jorge Antunes",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/antunes.html",
+      "blurb": "Jorge Antunes. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:arcand",
+      "title": "Pierre Andr&eacute Arcand",
+      "artist": "Pierre Andr&eacute Arcand",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/arcand.html",
+      "blurb": "Pierre Andr&eacute Arcand. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:art_by_telephone",
+      "title": "Art By Telephone",
+      "artist": "Art By Telephone",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/art_by_telephone.html",
+      "blurb": "Art By Telephone. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:austin",
+      "title": "Larry Austin",
+      "artist": "Larry Austin",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/austin.html",
+      "blurb": "Larry Austin. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:bailey",
+      "title": "Derek Bailey",
+      "artist": "Derek Bailey",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/bailey.html",
+      "blurb": "Derek Bailey. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:baraka",
+      "title": "Amiri Baraka",
+      "artist": "Amiri Baraka",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/baraka.html",
+      "blurb": "Amiri Baraka. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:bartok",
+      "title": "Béla Bartók",
+      "artist": "Béla Bartók",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/bartok.html",
+      "blurb": "Béla Bartók. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:beausejour",
+      "title": "Mathieu Beauséjour",
+      "artist": "Mathieu Beauséjour",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/beausejour.html",
+      "blurb": "Mathieu Beauséjour. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:belgian",
+      "title": "Belgian Avant-Garde",
+      "artist": "Belgian Avant-Garde",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/belgian.html",
+      "blurb": "Belgian Avant-Garde. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:bergson",
+      "title": "Henri Bergson",
+      "artist": "Henri Bergson",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/bergson.html",
+      "blurb": "Henri Bergson. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:berrigan",
+      "title": "Ted Berrigan",
+      "artist": "Ted Berrigan",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/berrigan.html",
+      "blurb": "Ted Berrigan. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:bidoun",
+      "title": "Bidoun",
+      "artist": "Bidoun",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/bidoun.html",
+      "blurb": "Bidoun. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:nyoukis",
+      "title": "Blood Stereo",
+      "artist": "Blood Stereo",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/nyoukis.html",
+      "blurb": "Blood Stereo. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:bok",
+      "title": "Christian Bök",
+      "artist": "Christian Bök",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/bok.html",
+      "blurb": "Christian Bök. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:bory",
+      "title": "Jean François Bory",
+      "artist": "Jean François Bory",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/bory.html",
+      "blurb": "Jean François Bory. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:brant",
+      "title": "Henry Brant",
+      "artist": "Henry Brant",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/brant.html",
+      "blurb": "Henry Brant. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:breton",
+      "title": "Andre Breton",
+      "artist": "Andre Breton",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/breton.html",
+      "blurb": "Andre Breton. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:bryant",
+      "title": "Allan Bryant",
+      "artist": "Allan Bryant",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/bryant.html",
+      "blurb": "Allan Bryant. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:buren",
+      "title": "Daniel Buren",
+      "artist": "Daniel Buren",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/buren.html",
+      "blurb": "Daniel Buren. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:cage",
+      "title": "John Cage",
+      "artist": "John Cage",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/cage.html",
+      "blurb": "John Cage. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:masters",
+      "title": "Canntaireachd",
+      "artist": "Canntaireachd",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/masters.html",
+      "blurb": "Canntaireachd. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:capilano",
+      "title": "Capilano Review (Canadian Sound Poetry)",
+      "artist": "Capilano Review (Canadian Sound Poetry)",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/capilano.html",
+      "blurb": "Capilano Review (Canadian Sound Poetry). Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:chartsweep",
+      "title": "Chartsweep",
+      "artist": "Chartsweep",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/chartsweep.html",
+      "blurb": "Chartsweep. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:chlebnikov",
+      "title": "Velemir Chlebnikov",
+      "artist": "Velemir Chlebnikov",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/chlebnikov.html",
+      "blurb": "Velemir Chlebnikov. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:cioran",
+      "title": "Emil Cioran",
+      "artist": "Emil Cioran",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/cioran.html",
+      "blurb": "Emil Cioran. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:cobbing",
+      "title": "Bob Cobbing",
+      "artist": "Bob Cobbing",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/cobbing.html",
+      "blurb": "Bob Cobbing. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:concretemass",
+      "title": "Concrete Mass",
+      "artist": "Concrete Mass",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/concretemass.html",
+      "blurb": "Concrete Mass. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:cowws",
+      "title": "COWWS Quintet",
+      "artist": "COWWS Quintet",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/cowws.html",
+      "blurb": "COWWS Quintet. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:crowley",
+      "title": "Aleister Crowley",
+      "artist": "Aleister Crowley",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/crowley.html",
+      "blurb": "Aleister Crowley. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:pataphysique",
+      "title": "Cymbalum Pataphysicum",
+      "artist": "Cymbalum Pataphysicum",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/pataphysique.html",
+      "blurb": "Cymbalum Pataphysicum. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:darboven",
+      "title": "Hanne Darboven",
+      "artist": "Hanne Darboven",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/darboven.html",
+      "blurb": "Hanne Darboven. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:decerteau",
+      "title": "Michel de Certeau",
+      "artist": "Michel de Certeau",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/decerteau.html",
+      "blurb": "Michel de Certeau. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:derrida",
+      "title": "Jacques Derrida",
+      "artist": "Jacques Derrida",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/derrida.html",
+      "blurb": "Jacques Derrida. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:dial",
+      "title": "-- The Dial-A-Poem Poets",
+      "artist": "-- The Dial-A-Poem Poets",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/dial.html",
+      "blurb": "-- The Dial-A-Poem Poets. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:giorno_waldman",
+      "title": "-- John Giorno / Anne Waldman",
+      "artist": "-- John Giorno / Anne Waldman",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/giorno_waldman.html",
+      "blurb": "-- John Giorno / Anne Waldman. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:dillemuth",
+      "title": "Stephan Dillemuth",
+      "artist": "Stephan Dillemuth",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/dillemuth.html",
+      "blurb": "Stephan Dillemuth. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:dreyblatt",
+      "title": "Arnold Dreyblatt",
+      "artist": "Arnold Dreyblatt",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/dreyblatt.html",
+      "blurb": "Arnold Dreyblatt. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:dunaway",
+      "title": "Judy Dunaway",
+      "artist": "Judy Dunaway",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/dunaway.html",
+      "blurb": "Judy Dunaway. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:eastley",
+      "title": "Max Eastley",
+      "artist": "Max Eastley",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/eastley.html",
+      "blurb": "Max Eastley. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:electronic",
+      "title": "Electronic Music, History of",
+      "artist": "Electronic Music, History of",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/electronic.html",
+      "blurb": "Electronic Music, History of. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:ensemble_ordinature",
+      "title": "Ensemble Ordinature",
+      "artist": "Ensemble Ordinature",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/ensemble_ordinature.html",
+      "blurb": "Ensemble Ordinature. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:static",
+      "title": "Barbara Ess",
+      "artist": "Barbara Ess",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/static.html",
+      "blurb": "Barbara Ess. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:fassbinder",
+      "title": "Rainer Maria Fassbinder",
+      "artist": "Rainer Maria Fassbinder",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/fassbinder.html",
+      "blurb": "Rainer Maria Fassbinder. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:ferreyra",
+      "title": "Beatriz Ferreyra",
+      "artist": "Beatriz Ferreyra",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/ferreyra.html",
+      "blurb": "Beatriz Ferreyra. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:fitzgerald",
+      "title": "Ella Fitzgerald",
+      "artist": "Ella Fitzgerald",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/fitzgerald.html",
+      "blurb": "Ella Fitzgerald. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:fluxus",
+      "title": "Fluxus Anthology",
+      "artist": "Fluxus Anthology",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/fluxus.html",
+      "blurb": "Fluxus Anthology. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:fontana_b",
+      "title": "Bill Fontana",
+      "artist": "Bill Fontana",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/fontana_b.html",
+      "blurb": "Bill Fontana. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:fowler",
+      "title": "Luke Fowler",
+      "artist": "Luke Fowler",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/fowler.html",
+      "blurb": "Luke Fowler. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:fylkingen",
+      "title": "Fylkingen Anthology",
+      "artist": "Fylkingen Anthology",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/fylkingen.html",
+      "blurb": "Fylkingen Anthology. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:garnier_i",
+      "title": "Ilse Garnier",
+      "artist": "Ilse Garnier",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/garnier_i.html",
+      "blurb": "Ilse Garnier. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:gide",
+      "title": "André Gide",
+      "artist": "André Gide",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/gide.html",
+      "blurb": "André Gide. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:gloss",
+      "title": "Glossolalia: Speaking in Tongues",
+      "artist": "Glossolalia: Speaking in Tongues",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/gloss.html",
+      "blurb": "Glossolalia: Speaking in Tongues. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:gott",
+      "title": "Gott schütze &Ouml;sterreich",
+      "artist": "Gott schütze &Ouml;sterreich",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/gott.html",
+      "blurb": "Gott schütze &Ouml;sterreich. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:gray",
+      "title": "Spalding Gray",
+      "artist": "Spalding Gray",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/gray.html",
+      "blurb": "Spalding Gray. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:gunter",
+      "title": "Bernhard Günter",
+      "artist": "Bernhard Günter",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/gunter.html",
+      "blurb": "Bernhard Günter. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:hansen",
+      "title": "Al Hansen",
+      "artist": "Al Hansen",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/hansen.html",
+      "blurb": "Al Hansen. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:harrison",
+      "title": "Newton & Helen Mayer Harrison",
+      "artist": "Newton & Helen Mayer Harrison",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/harrison.html",
+      "blurb": "Newton & Helen Mayer Harrison. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:hehir",
+      "title": "Kevin Hehir",
+      "artist": "Kevin Hehir",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/hehir.html",
+      "blurb": "Kevin Hehir. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:higgins",
+      "title": "Dick Higgins",
+      "artist": "Dick Higgins",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/higgins.html",
+      "blurb": "Dick Higgins. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:holmqvist",
+      "title": "Karl Holmqvist",
+      "artist": "Karl Holmqvist",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/holmqvist.html",
+      "blurb": "Karl Holmqvist. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:hulsenbeck",
+      "title": "Richard Huelsenbeck",
+      "artist": "Richard Huelsenbeck",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/hulsenbeck.html",
+      "blurb": "Richard Huelsenbeck. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:iges",
+      "title": "José Iges",
+      "artist": "José Iges",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/iges.html",
+      "blurb": "José Iges. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:isou",
+      "title": "Isidore Isou",
+      "artist": "Isidore Isou",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/isou.html",
+      "blurb": "Isidore Isou. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:jennings",
+      "title": "Terry Jennings",
+      "artist": "Terry Jennings",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/jennings.html",
+      "blurb": "Terry Jennings. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:jones",
+      "title": "Joe Jones",
+      "artist": "Joe Jones",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/jones.html",
+      "blurb": "Joe Jones. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:kamenskij",
+      "title": "Vasilij Kamenskij",
+      "artist": "Vasilij Kamenskij",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/kamenskij.html",
+      "blurb": "Vasilij Kamenskij. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:kelley",
+      "title": "Mike Kelley",
+      "artist": "Mike Kelley",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/kelley.html",
+      "blurb": "Mike Kelley. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:kinski",
+      "title": "Klaus Kinski",
+      "artist": "Klaus Kinski",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/kinski.html",
+      "blurb": "Klaus Kinski. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:komar",
+      "title": "Komar & Melamid",
+      "artist": "Komar & Melamid",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/komar.html",
+      "blurb": "Komar & Melamid. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:kroker",
+      "title": "Arthur Kroker",
+      "artist": "Arthur Kroker",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/kroker.html",
+      "blurb": "Arthur Kroker. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:lacan",
+      "title": "Jacques Lacan",
+      "artist": "Jacques Lacan",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/lacan.html",
+      "blurb": "Jacques Lacan. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:lansky",
+      "title": "Paul Lansky",
+      "artist": "Paul Lansky",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/lansky.html",
+      "blurb": "Paul Lansky. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:lecaine",
+      "title": "Hugh Le Caine",
+      "artist": "Hugh Le Caine",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/lecaine.html",
+      "blurb": "Hugh Le Caine. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:leeuw",
+      "title": "Ton de Leeuw",
+      "artist": "Ton de Leeuw",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/leeuw.html",
+      "blurb": "Ton de Leeuw. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:lenin",
+      "title": "Vladimir Lenin",
+      "artist": "Vladimir Lenin",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/lenin.html",
+      "blurb": "Vladimir Lenin. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:ligeti",
+      "title": "György Ligeti",
+      "artist": "György Ligeti",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/ligeti.html",
+      "blurb": "György Ligeti. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:lissitzky",
+      "title": "El Lissitzky",
+      "artist": "El Lissitzky",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/lissitzky.html",
+      "blurb": "El Lissitzky. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:lovely",
+      "title": "Lovely Little Records",
+      "artist": "Lovely Little Records",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/lovely.html",
+      "blurb": "Lovely Little Records. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:lynch",
+      "title": "David Lynch",
+      "artist": "David Lynch",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/lynch.html",
+      "blurb": "David Lynch. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:maderna",
+      "title": "Bruno Maderna",
+      "artist": "Bruno Maderna",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/maderna.html",
+      "blurb": "Bruno Maderna. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:manoury",
+      "title": "Philippe Manoury",
+      "artist": "Philippe Manoury",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/manoury.html",
+      "blurb": "Philippe Manoury. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:marchetti_walter",
+      "title": "Walter Marchetti",
+      "artist": "Walter Marchetti",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/marchetti_walter.html",
+      "blurb": "Walter Marchetti. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:mayazumi",
+      "title": "Toshiro Mayuzumi",
+      "artist": "Toshiro Mayuzumi",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/mayazumi.html",
+      "blurb": "Toshiro Mayuzumi. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:mcgregor",
+      "title": "Dion McGregor",
+      "artist": "Dion McGregor",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/mcgregor.html",
+      "blurb": "Dion McGregor. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:mekas",
+      "title": "Jonas Mekas",
+      "artist": "Jonas Mekas",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/mekas.html",
+      "blurb": "Jonas Mekas. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:metzger",
+      "title": "Gustav Metzger",
+      "artist": "Gustav Metzger",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/metzger.html",
+      "blurb": "Gustav Metzger. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:mimaroglu",
+      "title": "Ilhan Mimaroglu",
+      "artist": "Ilhan Mimaroglu",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/mimaroglu.html",
+      "blurb": "Ilhan Mimaroglu. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:momus",
+      "title": "Momus",
+      "artist": "Momus",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/momus.html",
+      "blurb": "Momus. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:morales",
+      "title": "Taniel Morales",
+      "artist": "Taniel Morales",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/morales.html",
+      "blurb": "Taniel Morales. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:mossolov",
+      "title": "Alexander Mossolov",
+      "artist": "Alexander Mossolov",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/mossolov.html",
+      "blurb": "Alexander Mossolov. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:mur",
+      "title": "Murs du Son - Murmures",
+      "artist": "Murs du Son - Murmures",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/mur.html",
+      "blurb": "Murs du Son - Murmures. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:nakamura",
+      "title": "Toshimaru Nakamura",
+      "artist": "Toshimaru Nakamura",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/nakamura.html",
+      "blurb": "Toshimaru Nakamura. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:nath",
+      "title": "Pandit Pran Nath",
+      "artist": "Pandit Pran Nath",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/nath.html",
+      "blurb": "Pandit Pran Nath. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:new_humans",
+      "title": "New Humans",
+      "artist": "New Humans",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/new_humans.html",
+      "blurb": "New Humans. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:nitsch",
+      "title": "Hermann Nitsch",
+      "artist": "Hermann Nitsch",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/nitsch.html",
+      "blurb": "Hermann Nitsch. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:nordheim",
+      "title": "Arne Nordheim",
+      "artist": "Arne Nordheim",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/nordheim.html",
+      "blurb": "Arne Nordheim. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:occult",
+      "title": "Occult Voices",
+      "artist": "Occult Voices",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/occult.html",
+      "blurb": "Occult Voices. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:ono",
+      "title": "Yoko Ono",
+      "artist": "Yoko Ono",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/ono.html",
+      "blurb": "Yoko Ono. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:ornstein",
+      "title": "Leo Ornstein",
+      "artist": "Leo Ornstein",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/ornstein.html",
+      "blurb": "Leo Ornstein. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:palestine",
+      "title": "Charlemagne Palestine",
+      "artist": "Charlemagne Palestine",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/palestine.html",
+      "blurb": "Charlemagne Palestine. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:pasternak",
+      "title": "Boris Pasternak",
+      "artist": "Boris Pasternak",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/pasternak.html",
+      "blurb": "Boris Pasternak. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:penguin",
+      "title": "Penguin Café Orchestra",
+      "artist": "Penguin Café Orchestra",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/penguin.html",
+      "blurb": "Penguin Café Orchestra. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:performance_anxiety",
+      "title": "Performance Anxiety",
+      "artist": "Performance Anxiety",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/performance_anxiety.html",
+      "blurb": "Performance Anxiety. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:pick",
+      "title": "Anat Pick",
+      "artist": "Anat Pick",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/pick.html",
+      "blurb": "Anat Pick. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:tape_beatles_phono",
+      "title": "PhonoStatic Cassettes",
+      "artist": "PhonoStatic Cassettes",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/tape_beatles_phono.html",
+      "blurb": "PhonoStatic Cassettes. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:polish",
+      "title": "Polish Experimental Radio",
+      "artist": "Polish Experimental Radio",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/polish.html",
+      "blurb": "Polish Experimental Radio. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:pound",
+      "title": "Ezra Pound",
+      "artist": "Ezra Pound",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/pound.html",
+      "blurb": "Ezra Pound. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:queneau",
+      "title": "Raymond Queneau",
+      "artist": "Raymond Queneau",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/queneau.html",
+      "blurb": "Raymond Queneau. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:ranciere",
+      "title": "Jacques Rancière",
+      "artist": "Jacques Rancière",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/ranciere.html",
+      "blurb": "Jacques Rancière. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:rpm",
+      "title": "Revolutions Per Minute",
+      "artist": "Revolutions Per Minute",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/rpm.html",
+      "blurb": "Revolutions Per Minute. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:risset",
+      "title": "Jean-Claude Risset",
+      "artist": "Jean-Claude Risset",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/risset.html",
+      "blurb": "Jean-Claude Risset. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:rollins",
+      "title": "Henry Rollins",
+      "artist": "Henry Rollins",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/rollins.html",
+      "blurb": "Henry Rollins. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:rotella",
+      "title": "Mimmo Rotella",
+      "artist": "Mimmo Rotella",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/rotella.html",
+      "blurb": "Mimmo Rotella. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:runzelstirnandgurglestock",
+      "title": "Runzelstirn and Gurglestock",
+      "artist": "Runzelstirn and Gurglestock",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/runzelstirnandgurglestock.html",
+      "blurb": "Runzelstirn and Gurglestock. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:rzewski",
+      "title": "Frederic Rzewski",
+      "artist": "Frederic Rzewski",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/rzewski.html",
+      "blurb": "Frederic Rzewski. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:satie",
+      "title": "Erik Satie",
+      "artist": "Erik Satie",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/satie.html",
+      "blurb": "Erik Satie. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:scheerbart",
+      "title": "Paul Scheerbart",
+      "artist": "Paul Scheerbart",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/scheerbart.html",
+      "blurb": "Paul Scheerbart. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:scratch",
+      "title": "Scratch Orchestra",
+      "artist": "Scratch Orchestra",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/scratch.html",
+      "blurb": "Scratch Orchestra. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:shrigley",
+      "title": "David Shrigley",
+      "artist": "David Shrigley",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/shrigley.html",
+      "blurb": "David Shrigley. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:smith_h",
+      "title": "Harry Smith",
+      "artist": "Harry Smith",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/smith_h.html",
+      "blurb": "Harry Smith. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:sollers",
+      "title": "Philippe Sollers",
+      "artist": "Philippe Sollers",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/sollers.html",
+      "blurb": "Philippe Sollers. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:spt",
+      "title": "Sound Poetry Today",
+      "artist": "Sound Poetry Today",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/spt.html",
+      "blurb": "Sound Poetry Today. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:sprechbohrer",
+      "title": "Sprechbohrer",
+      "artist": "Sprechbohrer",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/sprechbohrer.html",
+      "blurb": "Sprechbohrer. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:sugimoto",
+      "title": "Taku Sugimoto",
+      "artist": "Taku Sugimoto",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/sugimoto.html",
+      "blurb": "Taku Sugimoto. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:stereolab",
+      "title": "Stereolab",
+      "artist": "Stereolab",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/stereolab.html",
+      "blurb": "Stereolab. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:river_run",
+      "title": "Studio Akustische Kunst, WDR",
+      "artist": "Studio Akustische Kunst, WDR",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/river_run.html",
+      "blurb": "Studio Akustische Kunst, WDR. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:taylor_michael",
+      "title": "Michael Taylor",
+      "artist": "Michael Taylor",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/taylor_michael.html",
+      "blurb": "Michael Taylor. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:tellus_5-6",
+      "title": "Tellus #5-6: Audio Visual Issue",
+      "artist": "Tellus #5-6: Audio Visual Issue",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/tellus_5-6.html",
+      "blurb": "Tellus #5-6: Audio Visual Issue. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:tellus_12",
+      "title": "Tellus #12 - Dance",
+      "artist": "Tellus #12 - Dance",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/tellus_12.html",
+      "blurb": "Tellus #12 - Dance. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:tellus_19",
+      "title": "Tellus #19 - New Music China",
+      "artist": "Tellus #19 - New Music China",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/tellus_19.html",
+      "blurb": "Tellus #19 - New Music China. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:tellus_25",
+      "title": "Tellus #25 - Site-less Sounds",
+      "artist": "Tellus #25 - Site-less Sounds",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/tellus_25.html",
+      "blurb": "Tellus #25 - Site-less Sounds. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:text-sound",
+      "title": "Text-Sound Compositions",
+      "artist": "Text-Sound Compositions",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/text-sound.html",
+      "blurb": "Text-Sound Compositions. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:tompkins",
+      "title": "Sue Tompkins",
+      "artist": "Sue Tompkins",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/tompkins.html",
+      "blurb": "Sue Tompkins. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:tuva",
+      "title": "Tuvan Throat Singing",
+      "artist": "Tuvan Throat Singing",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/tuva.html",
+      "blurb": "Tuvan Throat Singing. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:vagina_dentata",
+      "title": "Vagina Dentata Organ",
+      "artist": "Vagina Dentata Organ",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/vagina_dentata.html",
+      "blurb": "Vagina Dentata Organ. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:veloso",
+      "title": "Caetano Veloso",
+      "artist": "Caetano Veloso",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/veloso.html",
+      "blurb": "Caetano Veloso. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:vilh",
+      "title": "Hallgrímur Vilhjálmsson",
+      "artist": "Hallgrímur Vilhjálmsson",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/vilh.html",
+      "blurb": "Hallgrímur Vilhjálmsson. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:devree",
+      "title": "Paul de Vree",
+      "artist": "Paul de Vree",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/devree.html",
+      "blurb": "Paul de Vree. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:watt",
+      "title": "Mike Watt",
+      "artist": "Mike Watt",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/watt.html",
+      "blurb": "Mike Watt. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:whitehead",
+      "title": "Gregory Whitehead",
+      "artist": "Gregory Whitehead",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/whitehead.html",
+      "blurb": "Gregory Whitehead. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:williams_e",
+      "title": "Emmett Williams",
+      "artist": "Emmett Williams",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/williams_e.html",
+      "blurb": "Emmett Williams. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:wojnarowicz",
+      "title": "David Wojnarowicz",
+      "artist": "David Wojnarowicz",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/wojnarowicz.html",
+      "blurb": "David Wojnarowicz. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:wright",
+      "title": "Frank Lloyd Wright",
+      "artist": "Frank Lloyd Wright",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/wright.html",
+      "blurb": "Frank Lloyd Wright. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:sound:youngs",
+      "title": "Richard Youngs",
+      "artist": "Richard Youngs",
+      "medium": "Sound",
+      "section": "sound",
+      "tag": "sound-design",
+      "ubuUrl": "https://www.ubu.com/sound/youngs.html",
+      "blurb": "Richard Youngs. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive."
+    },
+    {
+      "key": "ubu:vp:Aylward",
+      "title": "David Aylward",
+      "artist": "David Aylward",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Aylward.html",
+      "blurb": "David Aylward. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Astronauts_of_Inner_Space",
+      "title": "Astronauts of Inner Space",
+      "artist": "Astronauts of Inner Space",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Astronauts_of_Inner_Space.html",
+      "blurb": "Astronauts of Inner Space. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Basmajian",
+      "title": "Shaunt Basmajian",
+      "artist": "Shaunt Basmajian",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Basmajian.html",
+      "blurb": "Shaunt Basmajian. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:bennett",
+      "title": "John M. Bennett",
+      "artist": "John M. Bennett",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/bennett.html",
+      "blurb": "John M. Bennett. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:BetweenPaintingAndPoetry",
+      "title": "Between Painting and Poetry",
+      "artist": "Between Painting and Poetry",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/BetweenPaintingAndPoetry.html",
+      "blurb": "Between Painting and Poetry. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Broudy",
+      "title": "Hart Broudy",
+      "artist": "Hart Broudy",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Broudy.html",
+      "blurb": "Hart Broudy. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Blonk",
+      "title": "Jaap Blonk",
+      "artist": "Jaap Blonk",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Blonk.html",
+      "blurb": "Jaap Blonk. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Broodthaers",
+      "title": "Marcel Broodthaers",
+      "artist": "Marcel Broodthaers",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Broodthaers.html",
+      "blurb": "Marcel Broodthaers. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Cobbing",
+      "title": "Bob Cobbing",
+      "artist": "Bob Cobbing",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Cobbing.html",
+      "blurb": "Bob Cobbing. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Copithorne",
+      "title": "Judith Copithorne",
+      "artist": "Judith Copithorne",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Copithorne.html",
+      "blurb": "Judith Copithorne. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Coupey",
+      "title": "Pierre Coupey",
+      "artist": "Pierre Coupey",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Coupey.html",
+      "blurb": "Pierre Coupey. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Dutton",
+      "title": "Paul Dutton",
+      "artist": "Paul Dutton",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Dutton.html",
+      "blurb": "Paul Dutton. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Drucker",
+      "title": "Johanna Drucker",
+      "artist": "Johanna Drucker",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Drucker.html",
+      "blurb": "Johanna Drucker. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:eckhoff",
+      "title": "kevin mcpherson eckhoff",
+      "artist": "kevin mcpherson eckhoff",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/eckhoff.html",
+      "blurb": "kevin mcpherson eckhoff. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Experimental_Writing",
+      "title": "Experimental Writing: a short talk",
+      "artist": "Experimental Writing: a short talk",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Experimental_Writing.html",
+      "blurb": "Experimental Writing: a short talk. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Ernst",
+      "title": "Max Ernst",
+      "artist": "Max Ernst",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Ernst.html",
+      "blurb": "Max Ernst. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:FuckYou",
+      "title": "Fuck You: a magazine of the arts",
+      "artist": "Fuck You: a magazine of the arts",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/FuckYou.html",
+      "blurb": "Fuck You: a magazine of the arts. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Garnier",
+      "title": "Pierre Garnier",
+      "artist": "Pierre Garnier",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Garnier.html",
+      "blurb": "Pierre Garnier. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Gloup_and_Woup",
+      "title": "Gloup and Woup",
+      "artist": "Gloup and Woup",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Gloup_and_Woup.html",
+      "blurb": "Gloup and Woup. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Henderson",
+      "title": "Brian Henderson",
+      "artist": "Brian Henderson",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Henderson.html",
+      "blurb": "Brian Henderson. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:houedard",
+      "title": "dom sylvester houédard",
+      "artist": "dom sylvester houédard",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/houedard.html",
+      "blurb": "dom sylvester houédard. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Jacobson",
+      "title": "Michael Jacobson",
+      "artist": "Michael Jacobson",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Jacobson.html",
+      "blurb": "Michael Jacobson. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Jordheim",
+      "title": "Cecilie Bjørgås Jordheim",
+      "artist": "Cecilie Bjørgås Jordheim",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Jordheim.html",
+      "blurb": "Cecilie Bjørgås Jordheim. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Johnston",
+      "title": "Brian David Johnston",
+      "artist": "Brian David Johnston",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Johnston.html",
+      "blurb": "Brian David Johnston. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Konkret",
+      "title": "Konkret magazine",
+      "artist": "Konkret magazine",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Konkret.html",
+      "blurb": "Konkret magazine. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Luthi",
+      "title": "Louis Luthi",
+      "artist": "Louis Luthi",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Luthi.html",
+      "blurb": "Louis Luthi. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Majzels",
+      "title": "Robert Majzels",
+      "artist": "Robert Majzels",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Majzels.html",
+      "blurb": "Robert Majzels. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Marrahwanna",
+      "title": "Marrahwanna Quarterly, The",
+      "artist": "Marrahwanna Quarterly, The",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Marrahwanna.html",
+      "blurb": "Marrahwanna Quarterly, The. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Molotiu",
+      "title": "Andrei Molotiu",
+      "artist": "Andrei Molotiu",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Molotiu.html",
+      "blurb": "Andrei Molotiu. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Neilson",
+      "title": "Heidi Neilson",
+      "artist": "Heidi Neilson",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Neilson.html",
+      "blurb": "Heidi Neilson. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:bpNichol",
+      "title": "bpNichol",
+      "artist": "bpNichol",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/bpNichol.html",
+      "blurb": "bpNichol. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:ormstad",
+      "title": "ottar ormstad",
+      "artist": "ottar ormstad",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/ormstad.html",
+      "blurb": "ottar ormstad. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Pipe",
+      "title": "Pipe, The",
+      "artist": "Pipe, The",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Pipe.html",
+      "blurb": "Pipe, The. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Piringer",
+      "title": "Jörg Piringer",
+      "artist": "Jörg Piringer",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Piringer.html",
+      "blurb": "Jörg Piringer. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Poor.Old.Tired.Horse",
+      "title": "Poor.Old.Tired.Horse",
+      "artist": "Poor.Old.Tired.Horse",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Poor.Old.Tired.Horse.html",
+      "blurb": "Poor.Old.Tired.Horse. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Reutersward",
+      "title": "Carl Fredrick Reutersward",
+      "artist": "Carl Fredrick Reutersward",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Reutersward.html",
+      "blurb": "Carl Fredrick Reutersward. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Rhodes",
+      "title": "Shane Rhodes",
+      "artist": "Shane Rhodes",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Rhodes.html",
+      "blurb": "Shane Rhodes. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:ARiddell",
+      "title": "Alan Riddell",
+      "artist": "Alan Riddell",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/ARiddell.html",
+      "blurb": "Alan Riddell. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:JRiddell",
+      "title": "John Riddell",
+      "artist": "John Riddell",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/JRiddell.html",
+      "blurb": "John Riddell. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Serafini",
+      "title": "Luigi Serafini",
+      "artist": "Luigi Serafini",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Serafini.html",
+      "blurb": "Luigi Serafini. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Spence",
+      "title": "Pete Spence",
+      "artist": "Pete Spence",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Spence.html",
+      "blurb": "Pete Spence. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Suknaski",
+      "title": "Andrew Suknaski",
+      "artist": "Andrew Suknaski",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Suknaski.html",
+      "blurb": "Andrew Suknaski. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Thibaudeau",
+      "title": "Colleen Thibaudeau",
+      "artist": "Colleen Thibaudeau",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Thibaudeau.html",
+      "blurb": "Colleen Thibaudeau. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:UU",
+      "title": "David UU",
+      "artist": "David UU",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/UU.html",
+      "blurb": "David UU. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Valoch",
+      "title": "Jiri Valoch",
+      "artist": "Jiri Valoch",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Valoch.html",
+      "blurb": "Jiri Valoch. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Vaughn-James",
+      "title": "Martin Vaughn-James",
+      "artist": "Martin Vaughn-James",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Vaughn-James.html",
+      "blurb": "Martin Vaughn-James. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Todorovic",
+      "title": "Olga Vicic and Miroljub Todorovic",
+      "artist": "Olga Vicic and Miroljub Todorovic",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Todorovic.html",
+      "blurb": "Olga Vicic and Miroljub Todorovic. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Wade",
+      "title": "Seth Wade",
+      "artist": "Seth Wade",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Wade.html",
+      "blurb": "Seth Wade. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Werkman",
+      "title": "H.N. Werkman",
+      "artist": "H.N. Werkman",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Werkman.html",
+      "blurb": "H.N. Werkman. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    },
+    {
+      "key": "ubu:vp:Weaver",
+      "title": "Mike Weaver",
+      "artist": "Mike Weaver",
+      "medium": "Visual Poetry",
+      "section": "vp",
+      "tag": "poetry",
+      "ubuUrl": "https://www.ubu.com/vp/Weaver.html",
+      "blurb": "Mike Weaver. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive."
+    }
+  ]
+}
