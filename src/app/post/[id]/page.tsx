@@ -12,6 +12,11 @@ import { useUserHistory } from '@/hooks/use-user-history'
 import AddToSpotlightButton from '@/components/add-to-spotlight-button'
 import { isPitchMode } from '@/lib/pitch-mode'
 import { takePostSeed } from '@/lib/pitch-nav'
+import {
+  extractUbuArchiveUrl,
+  isArchiveLinkPost,
+  stripArchiveUrlLines,
+} from '@/lib/archive-link'
 
 interface PostData {
   id: string
@@ -284,6 +289,18 @@ export default function PostDetailPage() {
       ? '/'
       : '/feed'
 
+  const archiveUrl = extractUbuArchiveUrl(post.description)
+  const archivePost = isArchiveLinkPost({
+    contentType: post.content_type,
+    description: post.description,
+    mediaUrl: post.media_url,
+  })
+  const bodyText = archivePost
+    ? stripArchiveUrlLines(post.description || '')
+    : post.description || ''
+  const showMedia =
+    !archivePost && Boolean(post.media_url || post.audio_url || post.video_url)
+
   return (
     <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono']">
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-16">
@@ -300,7 +317,7 @@ export default function PostDetailPage() {
 
         <header className="border-b border-black pb-6 mb-8">
           <p className="text-[10px] uppercase tracking-wide text-black/40 mb-2">
-            Post
+            {archivePost ? 'Archive link' : 'Post'}
           </p>
           <h1 className="text-2xl sm:text-3xl font-normal tracking-tight">
             {post.title}
@@ -339,13 +356,32 @@ export default function PostDetailPage() {
           </p>
         </header>
 
-        {post.description ? (
+        {bodyText ? (
           <p className="text-sm text-black/70 whitespace-pre-wrap leading-relaxed mb-8">
-            {post.description}
+            {bodyText}
           </p>
         ) : null}
 
-        {post.media_url || post.audio_url || post.video_url ? (
+        {archivePost && archiveUrl ? (
+          <div className="mb-8 border border-black p-5 sm:p-6 space-y-4">
+            <p className="text-[10px] uppercase tracking-wide text-black/45">
+              External archive
+            </p>
+            <p className="text-sm text-black/70">
+              Decro does not host this work. Open the original on UbuWeb.
+            </p>
+            <a
+              href={archiveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center border border-black bg-black text-white px-5 py-3 text-xs uppercase tracking-wide hover:bg-white hover:text-black"
+            >
+              Open on UbuWeb →
+            </a>
+          </div>
+        ) : null}
+
+        {showMedia ? (
           <div className="mb-8 border border-black">
             {post.content_type === 'music' && post.audio_url ? (
               <div className="relative bg-black/[0.02]">

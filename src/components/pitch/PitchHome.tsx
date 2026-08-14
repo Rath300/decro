@@ -535,7 +535,7 @@ export default function PitchHome() {
         <div className="absolute top-16 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 border border-black bg-white z-20 p-5 font-['Space_Mono']">
           <p className="text-xs uppercase text-black/50">
             {selected.isBridge
-              ? 'Bridge · two parents'
+              ? 'Bridge'
               : selected.depth === 0
                 ? 'Center'
                 : selected.depth === 1

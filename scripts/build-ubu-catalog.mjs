@@ -119,40 +119,52 @@ async function main() {
 
   /** @type {any[]} */
   const entries = []
+  let filmI = 0
   for (const a of pickSpread(film, filmN)) {
+    const hubSlug = filmI++ % 2 === 0 ? 'avant-garde-film' : 'avant-garde-video'
+    const medium = hubSlug === 'avant-garde-film' ? 'Film' : 'Video'
     entries.push({
       key: `ubu:film:${a.slug}`,
       title: a.name,
       artist: a.name,
-      medium: 'Film & Video',
+      medium,
       section: 'film',
-      tag: 'experimental-film',
+      hubSlug,
+      tag: hubSlug,
       ubuUrl: `https://www.ubu.com/film/${a.slug}.html`,
-      blurb: `${a.name}. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive.`,
+      blurb: `${a.name}. ${medium} index on UbuWeb. Open the original on the external archive.`,
     })
   }
+  let soundI = 0
   for (const a of pickSpread(sound, soundN)) {
+    const hubSlug = soundI++ % 2 === 0 ? 'avant-garde-sound' : 'sound-poetry'
+    const medium = hubSlug === 'sound-poetry' ? 'Sound poetry' : 'Sound'
     entries.push({
       key: `ubu:sound:${a.slug}`,
       title: a.name,
       artist: a.name,
-      medium: 'Sound',
+      medium,
       section: 'sound',
-      tag: 'sound-design',
+      hubSlug,
+      tag: hubSlug,
       ubuUrl: `https://www.ubu.com/sound/${a.slug}.html`,
-      blurb: `${a.name}. Sound index on UbuWeb. Text-card catalog entry. Audio opens on the external archive.`,
+      blurb: `${a.name}. ${medium} index on UbuWeb. Open the original on the external archive.`,
     })
   }
+  let vpI = 0
   for (const a of pickSpread(vp, vpN)) {
+    const hubSlug = vpI++ % 2 === 0 ? 'avant-garde-poetry' : 'concrete-poetry'
+    const medium = hubSlug === 'concrete-poetry' ? 'Concrete poetry' : 'Poetry'
     entries.push({
       key: `ubu:vp:${a.slug}`,
       title: a.name,
       artist: a.name,
-      medium: 'Visual Poetry',
+      medium,
       section: 'vp',
-      tag: 'poetry',
+      hubSlug,
+      tag: hubSlug,
       ubuUrl: `https://www.ubu.com/vp/${a.slug}.html`,
-      blurb: `${a.name}. Visual and concrete poetry on UbuWeb. Text-card catalog entry. Documents open on the external archive.`,
+      blurb: `${a.name}. ${medium} index on UbuWeb. Open the original on the external archive.`,
     })
   }
 
@@ -162,15 +174,18 @@ async function main() {
     const a = film[i++]
     const key = `ubu:film:${a.slug}`
     if (entries.some((e) => e.key === key)) continue
+    const hubSlug = filmI++ % 2 === 0 ? 'avant-garde-film' : 'avant-garde-video'
+    const medium = hubSlug === 'avant-garde-film' ? 'Film' : 'Video'
     entries.push({
       key,
       title: a.name,
       artist: a.name,
-      medium: 'Film & Video',
+      medium,
       section: 'film',
-      tag: 'experimental-film',
+      hubSlug,
+      tag: hubSlug,
       ubuUrl: `https://www.ubu.com/film/${a.slug}.html`,
-      blurb: `${a.name}. Film and video index on UbuWeb. Text-card catalog entry. Media opens on the external archive.`,
+      blurb: `${a.name}. ${medium} index on UbuWeb. Open the original on the external archive.`,
     })
   }
 

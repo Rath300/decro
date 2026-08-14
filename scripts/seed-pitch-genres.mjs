@@ -240,6 +240,12 @@ async function main() {
     ['Game Soundtrack', 'game-soundtrack'],
     ['Graphic Novel', 'graphic-novel'],
     ['Avant-Garde Archive', 'avant-garde-archive'],
+    ['Avant-Garde Film', 'avant-garde-film'],
+    ['Avant-Garde Video', 'avant-garde-video'],
+    ['Avant-Garde Sound', 'avant-garde-sound'],
+    ['Sound Poetry', 'sound-poetry'],
+    ['Avant-Garde Poetry', 'avant-garde-poetry'],
+    ['Concrete Poetry', 'concrete-poetry'],
   ]
 
   const toSeed = new Map()

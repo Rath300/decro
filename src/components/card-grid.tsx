@@ -130,18 +130,32 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
                   : 'relative aspect-square overflow-hidden'
               }
             >
-              {!card.imageUrl ? (
-                <div className="w-full h-full bg-white flex items-center justify-center p-4">
-                  <div className="text-center">
-                    <h4 className="text-sm font-['Space_Mono'] text-black line-clamp-2">
+              {!card.imageUrl || card.type === 'text' ? (
+                <div className="w-full h-full bg-white flex flex-col justify-between p-4 text-left">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-black/40">
+                      {card.description && /ubu\.com|ubuweb/i.test(card.description)
+                        ? 'Archive link'
+                        : 'Text'}
+                    </p>
+                    <h4 className="mt-2 text-sm font-['Space_Mono'] uppercase text-black line-clamp-3">
                       {card.title || 'Post'}
                     </h4>
                     {card.description && (
-                      <p className="mt-2 text-xs text-black/50 line-clamp-3">
-                        {card.description}
+                      <p className="mt-2 text-xs text-black/50 line-clamp-4 whitespace-pre-wrap">
+                        {card.description
+                          .split('\n')
+                          .filter((l) => !/^open on ubuweb:/i.test(l.trim()))
+                          .join('\n')
+                          .trim()}
                       </p>
                     )}
                   </div>
+                  {card.description && /ubu\.com|ubuweb/i.test(card.description) ? (
+                    <p className="mt-3 text-[10px] uppercase tracking-wide text-black">
+                      Open on UbuWeb →
+                    </p>
+                  ) : null}
                 </div>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
