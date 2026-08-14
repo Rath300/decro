@@ -21,6 +21,7 @@
 *.pem
 scripts/.seed-public-domain-state.json
 scripts/.seed-ubu-archive-state.json
+scripts/.seed-ubu-covers-state.json
 
 # debug
 npm-debug.log*

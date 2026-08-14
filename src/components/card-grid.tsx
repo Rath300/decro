@@ -128,7 +128,7 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
                   : 'relative aspect-square overflow-hidden'
               }
             >
-              {!card.imageUrl || card.type === 'text' ? (
+              {!card.imageUrl ? (
                 <div className="w-full h-full bg-white flex flex-col justify-between p-4 text-left">
                   <div>
                     <p className="text-[10px] uppercase tracking-wide text-black/40">

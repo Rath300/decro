@@ -287,8 +287,7 @@ export default function PostDetailPage() {
   const bodyText = archivePost
     ? stripArchiveUrlLines(post.description || '')
     : post.description || ''
-  const showMedia =
-    !archivePost && Boolean(post.media_url || post.audio_url || post.video_url)
+  const showMedia = Boolean(post.media_url || post.audio_url || post.video_url)
 
   return (
     <div className="min-h-[calc(100dvh-3.5rem)] bg-white font-['Space_Mono']">
