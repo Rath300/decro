@@ -68,7 +68,7 @@ export default function PitchHome() {
 
   const loadGraph = useCallback(async () => {
     try {
-      const res = await fetch('/api/pitch/graph', { cache: 'no-store' })
+      const res = await fetch('/api/pitch/graph')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load graph')
       const remote = (data.nodes || []) as PitchGraphNode[]

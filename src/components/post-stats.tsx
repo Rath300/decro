@@ -1,12 +1,10 @@
 /**
  * Post Statistics Component
  * Comments only — views and likes are hidden from the UI.
+ * Uses feed-provided counts; avoids per-card RPC N+1.
  */
 
 'use client'
-
-import { useEffect, useState } from 'react'
-import supabase from '@/lib/supabase-client'
 
 interface PostStatsProps {
   postId: string
@@ -17,34 +15,10 @@ interface PostStatsProps {
 }
 
 export function PostStats({
-  postId,
   initialComments = 0,
   showDetailed = false,
 }: PostStatsProps) {
-  const [commentCount, setCommentCount] = useState(initialComments)
-
-  useEffect(() => {
-    if (!postId) return
-
-    const fetchStats = async () => {
-      try {
-        const { data: commentsData, error: commentsError } = await supabase.rpc(
-          'get_comment_count',
-          { post_id_param: postId }
-        )
-
-        if (!commentsError && commentsData !== null && commentsData !== undefined) {
-          setCommentCount(commentsData)
-        } else {
-          setCommentCount(initialComments)
-        }
-      } catch {
-        setCommentCount(initialComments)
-      }
-    }
-
-    fetchStats()
-  }, [postId, initialComments])
+  const commentCount = initialComments
 
   const label =
     commentCount === 1

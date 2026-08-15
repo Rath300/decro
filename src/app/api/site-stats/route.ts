@@ -10,11 +10,43 @@ const USER_COUNT_BASE = 2256
 
 const VISITOR_COOKIE = 'decro_vid'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 400 // ~13 months
+const COUNTS_TTL_MS = 60_000
+const LAST_SEEN_MIN_MS = 24 * 60 * 60 * 1000
+
+type CachedCounts = {
+  posts: number
+  subgroups: number
+  visitors: number
+  at: number
+}
+
+let countsCache: CachedCounts | null = null
 
 function readVisitorId(request: Request): string | null {
   const raw = request.headers.get('cookie') || ''
   const match = raw.match(/(?:^|;\s*)decro_vid=([0-9a-f-]{36})/i)
   return match?.[1] ?? null
+}
+
+async function getCounts(admin: ReturnType<typeof getSupabaseAdmin>) {
+  const now = Date.now()
+  if (countsCache && now - countsCache.at < COUNTS_TTL_MS) {
+    return countsCache
+  }
+
+  const [postsRes, subgroupsRes, visitorsRes] = await Promise.all([
+    admin.from('posts').select('id', { count: 'exact', head: true }),
+    admin.from('subgroups').select('id', { count: 'exact', head: true }),
+    admin.from('site_visitors').select('id', { count: 'exact', head: true }),
+  ])
+
+  countsCache = {
+    posts: postsRes.count ?? 0,
+    subgroups: subgroupsRes.count ?? 0,
+    visitors: visitorsRes.count ?? 0,
+    at: now,
+  }
+  return countsCache
 }
 
 export async function GET(request: Request) {
@@ -34,43 +66,50 @@ export async function GET(request: Request) {
       setCookie = true
     }
 
-    const now = new Date().toISOString()
+    const nowIso = new Date().toISOString()
     const { data: existing } = await admin
       .from('site_visitors')
-      .select('id')
+      .select('id, last_seen_at')
       .eq('id', visitorId)
       .maybeSingle()
 
+    let visitorIncrement = 0
     if (!existing) {
       await admin.from('site_visitors').insert({
         id: visitorId,
-        first_seen_at: now,
-        last_seen_at: now,
+        first_seen_at: nowIso,
+        last_seen_at: nowIso,
       })
+      visitorIncrement = 1
+      // Invalidate so the new visitor is reflected soon
+      countsCache = null
     } else {
-      await admin
-        .from('site_visitors')
-        .update({ last_seen_at: now })
-        .eq('id', visitorId)
+      const last = existing.last_seen_at
+        ? new Date(existing.last_seen_at).getTime()
+        : 0
+      if (Date.now() - last > LAST_SEEN_MIN_MS) {
+        await admin
+          .from('site_visitors')
+          .update({ last_seen_at: nowIso })
+          .eq('id', visitorId)
+      }
     }
 
-    const [postsRes, subgroupsRes, visitorsRes] = await Promise.all([
-      admin.from('posts').select('id', { count: 'exact', head: true }),
-      admin.from('subgroups').select('id', { count: 'exact', head: true }),
-      admin.from('site_visitors').select('id', { count: 'exact', head: true }),
-    ])
-
-    const posts = postsRes.count ?? 0
-    const subgroups = subgroupsRes.count ?? 0
-    const visitors = visitorsRes.count ?? 0
+    const counts = await getCounts(admin)
+    const visitors = counts.visitors + visitorIncrement
     const users = USER_COUNT_BASE + visitors
 
     const res = NextResponse.json({
-      posts,
-      subgroups,
+      posts: counts.posts,
+      subgroups: counts.subgroups,
       users,
       visitors,
     })
+
+    res.headers.set(
+      'Cache-Control',
+      'private, max-age=30, stale-while-revalidate=60'
+    )
 
     if (setCookie) {
       res.cookies.set(VISITOR_COOKIE, visitorId, {
@@ -86,7 +125,12 @@ export async function GET(request: Request) {
   } catch (e: any) {
     console.error('[site-stats]', e?.message || e)
     return NextResponse.json(
-      { error: 'Stats unavailable', posts: 0, subgroups: 0, users: USER_COUNT_BASE },
+      {
+        error: 'Stats unavailable',
+        posts: countsCache?.posts ?? 0,
+        subgroups: countsCache?.subgroups ?? 0,
+        users: USER_COUNT_BASE + (countsCache?.visitors ?? 0),
+      },
       { status: 500 }
     )
   }

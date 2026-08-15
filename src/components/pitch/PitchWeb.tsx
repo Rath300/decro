@@ -100,7 +100,6 @@ export default function PitchWeb({
   const [selectedId, setSelectedId] = useState<string | null>(null)
   selectedIdRef.current = selectedId
   // Bump to force a canvas repaint — fg.refresh() often no-ops when the sim is cool
-  const [, setHoverTick] = useState(0)
   const [pulse, setPulse] = useState(0)
   const [viewZoom, setViewZoom] = useState(1)
   const viewZoomRef = useRef(1)
@@ -939,8 +938,7 @@ export default function PitchWeb({
             if (containerRef.current) {
               containerRef.current.style.cursor = node ? 'pointer' : 'grab'
             }
-            // Force React → ForceGraph repaint (refresh() often no-ops when cool)
-            setHoverTick((t) => t + 1)
+            // Canvas-only refresh — avoid React re-renders on every hover
             try {
               fgRef.current?.refresh?.()
             } catch {

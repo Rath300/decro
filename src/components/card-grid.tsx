@@ -162,6 +162,7 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
                   alt={card.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
+                  decoding="async"
                 />
               )}
               {card.type === 'music' && card.audioUrl && (
@@ -190,7 +191,11 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
               </p>
             )}
             <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-              <PostStats postId={card.id} initialViews={card.views} />
+              <PostStats
+                postId={card.id}
+                initialViews={card.views}
+                initialComments={card.commentCount ?? 0}
+              />
             </div>
           </div>
         ))}

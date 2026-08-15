@@ -5,6 +5,7 @@ import supabase from '@/lib/supabase-client'
 import { callRpc } from '@/lib/rpc'
 import { useAuth } from '@/context/auth-context'
 import db from '@/lib/db'
+import { isPitchMode } from '@/lib/pitch-mode'
 
 export interface MediaCard {
   id: string;
@@ -19,6 +20,7 @@ export interface MediaCard {
   date: string;
   isCurated?: boolean;
   views: number;
+  commentCount?: number;
   subgroupId?: string;
   subgroupName?: string;
   subgroupSlug?: string;
@@ -338,6 +340,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             date: post.created_at || new Date().toISOString(),
           isCurated: post.is_curated ?? false,
           views: post.views ?? 0,
+          commentCount: Number(post.comment_count ?? 0),
           subgroupId: post.subgroup_id ?? undefined,
           subgroupName: post.subgroup_id ? subgroupNames[post.subgroup_id] : undefined,
           subgroupSlug: post.subgroup_id ? subgroupSlugs[post.subgroup_id] : undefined,
@@ -427,7 +430,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    (async () => {
+    // Pitch mode parks the global feed — skip heavy get_feed_posts on every page.
+    if (isPitchMode()) return
+
+    ;(async () => {
       // 1. Load from local cache first for instant display
       try {
         const cached = await db.posts.orderBy('date').reverse().toArray()

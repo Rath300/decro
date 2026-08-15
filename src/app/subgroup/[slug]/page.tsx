@@ -33,6 +33,8 @@ export default function SubgroupDetail() {
   const [subgroupId, setSubgroupId] = useState<string | null>(null)
   const [subgroupData, setSubgroupData] = useState<any>(null)
   const [roomPosts, setRoomPosts] = useState<MediaCard[]>([])
+  const [postsHasMore, setPostsHasMore] = useState(false)
+  const [postsLoadingMore, setPostsLoadingMore] = useState(false)
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [followerCount, setFollowerCount] = useState(0)
@@ -93,10 +95,11 @@ export default function SubgroupDetail() {
         // Load this room’s posts directly — the global feed is capped and
         // often misses older posts that still belong here.
         try {
+          const PAGE = 24
           const { data: postsData, error: postsError } = await supabase.rpc(
             'get_feed_posts',
             {
-              page_size: 100,
+              page_size: PAGE,
               page_offset: 0,
               subgroup_filter: data.id,
               content_type_filter: null,
@@ -119,6 +122,7 @@ export default function SubgroupDetail() {
               date: post.created_at || new Date().toISOString(),
               isCurated: post.is_curated ?? false,
               views: post.views ?? 0,
+              commentCount: Number(post.comment_count ?? 0),
               subgroupId: post.subgroup_id ?? data.id,
               subgroupName: post.subgroup_name || data.name,
               subgroupSlug: post.subgroup_slug || data.slug,
@@ -127,9 +131,11 @@ export default function SubgroupDetail() {
                 : [],
             }))
           setRoomPosts(mapped)
+          setPostsHasMore(mapped.length >= PAGE)
         } catch (postsLoadError) {
           console.error('Failed to load subgroup posts:', postsLoadError)
           setRoomPosts([])
+          setPostsHasMore(false)
         }
 
         if (user?.id) {
@@ -209,6 +215,58 @@ export default function SubgroupDetail() {
         },
       })
     )
+  }
+
+  const loadMorePosts = async () => {
+    if (!subgroupData?.id || postsLoadingMore || !postsHasMore) return
+    const PAGE = 24
+    setPostsLoadingMore(true)
+    try {
+      const { data: postsData, error: postsError } = await supabase.rpc(
+        'get_feed_posts',
+        {
+          page_size: PAGE,
+          page_offset: roomPosts.length,
+          subgroup_filter: subgroupData.id,
+          content_type_filter: null,
+          sort_by: 'created_at',
+        }
+      )
+      if (postsError) throw postsError
+      const mapped: MediaCard[] = (postsData || [])
+        .filter((post: any) => post?.id)
+        .map((post: any) => ({
+          id: String(post.id),
+          type: post.content_type || 'image',
+          title: post.title || 'Untitled',
+          description: post.description ?? undefined,
+          imageUrl: post.media_url || '',
+          aspectRatio: 'square' as const,
+          audioUrl: post.audio_url ?? undefined,
+          videoUrl: post.video_url ?? undefined,
+          creator: post.creator_username || 'Anonymous',
+          date: post.created_at || new Date().toISOString(),
+          isCurated: post.is_curated ?? false,
+          views: post.views ?? 0,
+          commentCount: Number(post.comment_count ?? 0),
+          subgroupId: post.subgroup_id ?? subgroupData.id,
+          subgroupName: post.subgroup_name || subgroupData.name,
+          subgroupSlug: post.subgroup_slug || subgroupData.slug,
+          tags: Array.isArray(post.tags)
+            ? post.tags.filter((t: any) => t != null)
+            : [],
+        }))
+      setRoomPosts((prev) => {
+        const seen = new Set(prev.map((p) => p.id))
+        return [...prev, ...mapped.filter((p) => !seen.has(p.id))]
+      })
+      setPostsHasMore(mapped.length >= PAGE)
+    } catch (e: any) {
+      console.error('Failed to load more posts:', e)
+      toast.error('Could not load more posts')
+    } finally {
+      setPostsLoadingMore(false)
+    }
   }
 
   const hotScore = (card: MediaCard) => {
@@ -366,6 +424,18 @@ export default function SubgroupDetail() {
                 ))}
               </div>
               <CardGrid cards={cards} />
+              {postsHasMore && (
+                <div className="pt-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => void loadMorePosts()}
+                    disabled={postsLoadingMore}
+                    className="border border-black px-4 py-2 text-[10px] uppercase tracking-wide font-['Space_Mono'] hover:bg-black hover:text-white disabled:opacity-40"
+                  >
+                    {postsLoadingMore ? 'Loading…' : 'Load more'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -505,6 +575,18 @@ export default function SubgroupDetail() {
         ) : (
           <div className="space-y-4">
             <CardGrid cards={cards} />
+            {postsHasMore && (
+              <div className="pt-2 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => void loadMorePosts()}
+                  disabled={postsLoadingMore}
+                  className="border border-black px-4 py-2 text-xs uppercase tracking-wide hover:bg-black hover:text-white disabled:opacity-40"
+                >
+                  {postsLoadingMore ? 'Loading…' : 'Load more'}
+                </button>
+              </div>
+            )}
           </div>
         )}
 

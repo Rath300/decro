@@ -36,18 +36,18 @@ export default function SiteStatsCounter() {
 
   return (
     <div
-      className="pointer-events-none fixed top-14 left-0 z-[55] px-2 sm:px-4 py-1.5"
+      className="pointer-events-none fixed top-[7.25rem] left-0 z-[55] px-2 sm:px-4"
       aria-label="Site stats"
     >
-      <div className="pointer-events-none font-['Space_Mono'] text-[9px] sm:text-[10px] uppercase tracking-wide text-black/70 leading-tight text-left">
+      <div className="pointer-events-none font-['Space_Mono'] text-[9px] sm:text-[10px] uppercase tracking-wide text-neutral-500 leading-tight text-left">
         <div>
-          <span className="text-black">{formatCount(stats.posts)}</span> posts
+          <span className="text-neutral-500">{formatCount(stats.posts)}</span> posts
         </div>
         <div>
-          <span className="text-black">{formatCount(stats.subgroups)}</span> groups
+          <span className="text-neutral-500">{formatCount(stats.subgroups)}</span> groups
         </div>
         <div>
-          <span className="text-black">{formatCount(stats.users)}</span> users
+          <span className="text-neutral-500">{formatCount(stats.users)}</span> users
         </div>
       </div>
     </div>
