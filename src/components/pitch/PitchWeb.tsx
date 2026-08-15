@@ -100,6 +100,7 @@ export default function PitchWeb({
   const [selectedId, setSelectedId] = useState<string | null>(null)
   selectedIdRef.current = selectedId
   // Bump to force a canvas repaint — fg.refresh() often no-ops when the sim is cool
+  const [hoverTick, setHoverTick] = useState(0)
   const [pulse, setPulse] = useState(0)
   const [viewZoom, setViewZoom] = useState(1)
   const viewZoomRef = useRef(1)
@@ -716,7 +717,7 @@ export default function PitchWeb({
       ctx.fillText(label, x, y)
       ctx.restore()
     },
-    [tourStage, tourParentId, pulse]
+    [tourStage, tourParentId, pulse, hoverTick]
   )
 
   const tourActive = Boolean(
@@ -938,7 +939,8 @@ export default function PitchWeb({
             if (containerRef.current) {
               containerRef.current.style.cursor = node ? 'pointer' : 'grab'
             }
-            // Canvas-only refresh — avoid React re-renders on every hover
+            // Sim is often cool — refresh() alone can no-op; bump paint callback.
+            setHoverTick((t) => t + 1)
             try {
               fgRef.current?.refresh?.()
             } catch {
