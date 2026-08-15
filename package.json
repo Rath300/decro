@@ -14,6 +14,7 @@
     "seed:public-domain": "node scripts/seed-public-domain.mjs",
     "seed:ubu-archive": "node scripts/seed-ubu-archive.mjs",
     "seed:ubu-covers": "node scripts/seed-ubu-covers.mjs",
+    "seed:downloads": "node scripts/seed-downloads-anonymous.mjs",
     "build:ubu-catalog": "node scripts/build-ubu-catalog.mjs",
     "place:subgroups": "node scripts/place-existing-subgroups.mjs"
   },

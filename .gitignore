@@ -22,6 +22,11 @@
 scripts/.seed-public-domain-state.json
 scripts/.seed-ubu-archive-state.json
 scripts/.seed-ubu-covers-state.json
+scripts/.seed-downloads-anonymous-state.json
+
+# Local bulk image drops used for seeding (too large for git)
+/public/downloads/
+/public/downloads 2/
 
 # debug
 npm-debug.log*
