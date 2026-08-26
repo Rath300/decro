@@ -16,6 +16,7 @@ const PUBLIC_EXACT = new Set([
   '/search',
   '/trending',
   '/algorithm',
+  '/updates',
 ])
 
 const PUBLIC_PREFIXES = [

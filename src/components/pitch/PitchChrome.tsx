@@ -61,6 +61,12 @@ export default function PitchChrome({ onUpload, onHome, onTutorial }: Props) {
         >
           Tutorial
         </button>
+        <Link
+          href="/updates"
+          className="hidden md:inline text-xs font-['Space_Mono'] uppercase underline underline-offset-4"
+        >
+          Updates
+        </Link>
         {isAuthenticated && (
           <>
             <Link
@@ -128,6 +134,13 @@ export default function PitchChrome({ onUpload, onHome, onTutorial }: Props) {
               >
                 Tutorial
               </button>
+              <Link
+                href="/updates"
+                className="block px-3 py-2.5 text-[10px] uppercase tracking-wide font-['Space_Mono'] hover:bg-black hover:text-white border-b border-black"
+                onClick={() => setMenuOpen(false)}
+              >
+                Updates
+              </Link>
               {isAuthenticated ? (
                 <>
                   <Link
