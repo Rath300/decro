@@ -59,7 +59,7 @@ export default function UpdatesPage() {
                       key={i}
                       className="text-sm text-black/80 leading-relaxed pl-0"
                     >
-                      <span className="uppercase text-[10px] tracking-wide text-black font-bold mr-2">
+                      <span className="uppercase text-[10px] tracking-wide text-black/40 mr-2">
                         {KIND_LABEL[b.kind]}
                       </span>
                       {b.text}
