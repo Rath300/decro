@@ -32,10 +32,6 @@ export default function UpdatesPage() {
           <h1 className="mt-4 text-2xl sm:text-3xl uppercase tracking-tight">
             Updates
           </h1>
-          <p className="mt-3 text-sm text-black/60 max-w-lg">
-            A running record of what&rsquo;s shipped, pulled straight from our
-            own commit history. No marketing copy, just what changed and when.
-          </p>
         </div>
 
         <ol className="space-y-10 sm:space-y-12">
@@ -63,7 +59,7 @@ export default function UpdatesPage() {
                       key={i}
                       className="text-sm text-black/80 leading-relaxed pl-0"
                     >
-                      <span className="uppercase text-[10px] tracking-wide text-black/40 mr-2">
+                      <span className="uppercase text-[10px] tracking-wide text-black font-bold mr-2">
                         {KIND_LABEL[b.kind]}
                       </span>
                       {b.text}
