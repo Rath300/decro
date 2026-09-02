@@ -6,6 +6,7 @@ import { usePosts } from '@/context/post-context'
 import { useAuth } from '@/context/auth-context'
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments'
 import { PostStats } from '@/components/post-stats'
+import AudioVisualizer from '@/components/audio-visualizer'
 import supabase from '@/lib/supabase-client'
 import { callRpc } from '@/lib/rpc'
 import { useToast } from '@/hooks/use-toast'
@@ -38,6 +39,7 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
   const [commentsRefreshSignal, setCommentsRefreshSignal] = useState(0)
   const [optimisticComments, setOptimisticComments] = useState<RealtimeComment[]>([])
   const [guestUsername, setGuestUsername] = useState('')
+  const [audioPlaying, setAudioPlaying] = useState(false)
 
   const handlePortfolioClick = useCallback(async (creatorId: string) => {
     try {
@@ -176,7 +178,36 @@ export default function DetailModal({ refetchPosts: customRefetchPosts }: Detail
               </div>
 
               {/* Media Display - MUCH LARGER on desktop */}
-              {selectedCard.imageUrl || (['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl) ? (
+              {selectedCard.type === 'music' && selectedCard.audioUrl ? (
+                <div className="mb-4 border border-black">
+                  {selectedCard.imageUrl ? (
+                    <img
+                      src={selectedCard.imageUrl}
+                      alt={selectedCard.title}
+                      className="w-full max-h-[500px] object-cover"
+                    />
+                  ) : (
+                    <div className="px-6 py-10 sm:px-10 bg-black/[0.02]">
+                      <AudioVisualizer
+                        seed={selectedCard.id}
+                        playing={audioPlaying}
+                        bars={56}
+                        className="h-24 sm:h-28"
+                      />
+                    </div>
+                  )}
+                  <div className="p-4 border-t border-black">
+                    <audio
+                      controls
+                      className="w-full"
+                      src={selectedCard.audioUrl}
+                      onPlay={() => setAudioPlaying(true)}
+                      onPause={() => setAudioPlaying(false)}
+                      onEnded={() => setAudioPlaying(false)}
+                    />
+                  </div>
+                </div>
+              ) : selectedCard.imageUrl || (['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl) ? (
                 <div className="mb-4">
                   {['video', 'film'].includes(selectedCard.type) && selectedCard.videoUrl ? (
                     <video src={selectedCard.videoUrl} controls className="w-full max-h-[500px] sm:max-h-[700px] lg:max-h-[900px] rounded-lg" />

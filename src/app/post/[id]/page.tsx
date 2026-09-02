@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
 import { useRealtimeComments, type Comment as RealtimeComment } from '@/hooks/use-realtime-comments'
 import { PostStats } from '@/components/post-stats'
+import AudioVisualizer from '@/components/audio-visualizer'
 import supabase from '@/lib/supabase-client'
 import { callRpc } from '@/lib/rpc'
 import { useUserHistory } from '@/hooks/use-user-history'
@@ -50,6 +51,7 @@ export default function PostDetailPage() {
   const [guestUsername, setGuestUsername] = useState('')
   const [isOwner, setIsOwner] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [audioPlaying, setAudioPlaying] = useState(false)
   const pitchMode = isPitchMode()
   const canComment = isAuthenticated || pitchMode
 
@@ -376,11 +378,27 @@ export default function PostDetailPage() {
                     alt={post.title}
                     className="w-full max-h-[28rem] object-cover"
                   />
-                ) : null}
+                ) : (
+                  <div className="px-6 py-10 sm:px-10">
+                    <AudioVisualizer
+                      seed={post.id}
+                      playing={audioPlaying}
+                      bars={56}
+                      className="h-24 sm:h-28"
+                    />
+                  </div>
+                )}
                 <div className="p-4 border-t border-black">
                   {/* No explicit type: uploads can be ogg/wav/m4a, and a wrong
                       type attribute stops the browser from playing them. */}
-                  <audio controls className="w-full" src={post.audio_url} />
+                  <audio
+                    controls
+                    className="w-full"
+                    src={post.audio_url}
+                    onPlay={() => setAudioPlaying(true)}
+                    onPause={() => setAudioPlaying(false)}
+                    onEnded={() => setAudioPlaying(false)}
+                  />
                 </div>
               </div>
             ) : ['video', 'film'].includes(post.content_type) && post.video_url ? (

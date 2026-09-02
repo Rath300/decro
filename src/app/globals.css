@@ -21,6 +21,21 @@ body {
 /* Staggered menu overrides */
 @import '../components/StaggeredMenu.css';
 
+/* Audio post visualizer — bars pulse only while the clip is playing */
+@keyframes decroEq {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.decro-eq-bar {
+  animation: decroEq 0.9s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* Custom input field styling */
 .input-field {
   width: 400px;

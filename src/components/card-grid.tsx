@@ -7,6 +7,7 @@ import type { MediaCard } from '@/context/post-context'
 import { PostStats } from '@/components/post-stats'
 import { isPitchMode } from '@/lib/pitch-mode'
 import { seedPostOpen } from '@/lib/pitch-nav'
+import AudioVisualizer from '@/components/audio-visualizer'
 
 export default function CardGrid({ cards }: { cards: MediaCard[] }) {
   const {
@@ -128,7 +129,21 @@ export default function CardGrid({ cards }: { cards: MediaCard[] }) {
                   : 'relative aspect-square overflow-hidden'
               }
             >
-              {!card.imageUrl ? (
+              {card.type === 'music' && card.audioUrl && !card.imageUrl ? (
+                <div className="w-full h-full bg-white flex flex-col justify-between p-4 text-left">
+                  <p className="text-[10px] uppercase tracking-wide text-black/40 line-clamp-1">
+                    {card.subgroupName || 'Audio'}
+                  </p>
+                  <AudioVisualizer
+                    seed={card.id}
+                    playing={playingAudio === card.id}
+                    className="h-16 my-2"
+                  />
+                  <p className="text-[10px] uppercase tracking-wide text-black/40 self-end">
+                    Audio
+                  </p>
+                </div>
+              ) : !card.imageUrl ? (
                 <div className="w-full h-full bg-white flex flex-col justify-between p-4 text-left">
                   <div>
                     <p className="text-[10px] uppercase tracking-wide text-black/40">
