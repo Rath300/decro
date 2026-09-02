@@ -24,6 +24,10 @@ scripts/.seed-ubu-archive-state.json
 scripts/.seed-ubu-covers-state.json
 scripts/.seed-downloads-anonymous-state.json
 
+# Local-only scratch tooling, never committed
+scripts/*.local.mjs
+scripts/*.local.json
+
 # Local bulk image drops used for seeding (too large for git)
 /public/downloads/
 /public/downloads 2/

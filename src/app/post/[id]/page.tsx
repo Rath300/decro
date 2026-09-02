@@ -378,9 +378,9 @@ export default function PostDetailPage() {
                   />
                 ) : null}
                 <div className="p-4 border-t border-black">
-                  <audio controls className="w-full">
-                    <source src={post.audio_url} type="audio/mpeg" />
-                  </audio>
+                  {/* No explicit type: uploads can be ogg/wav/m4a, and a wrong
+                      type attribute stops the browser from playing them. */}
+                  <audio controls className="w-full" src={post.audio_url} />
                 </div>
               </div>
             ) : ['video', 'film'].includes(post.content_type) && post.video_url ? (
