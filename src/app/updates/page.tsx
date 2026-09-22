@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { UPDATES, type UpdateBulletKind } from '@/lib/updates'
+import { pageMeta } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: 'Updates',
   description:
     "A running record of what's shipped on Decro, straight from our own commit history.",
-}
+  path: '/updates',
+})
 
 const KIND_LABEL: Record<UpdateBulletKind, string> = {
   Added: 'Added',
