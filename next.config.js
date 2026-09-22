@@ -49,23 +49,6 @@ const nextConfig = {
       },
     ],
   },
-  async redirects() {
-    const hosts = ['www.decro.net', 'decro.vercel.app']
-    return hosts.flatMap((host) => [
-      {
-        source: '/',
-        has: [{ type: 'host', value: host }],
-        destination: 'https://decro.net/',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: host }],
-        destination: 'https://decro.net/:path*',
-        permanent: true,
-      },
-    ])
-  },
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },

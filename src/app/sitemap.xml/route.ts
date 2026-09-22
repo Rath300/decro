@@ -1,7 +1,8 @@
 import supabase from '@/lib/supabase-client'
 import { isPitchMode } from '@/lib/pitch-mode'
-import { siteOrigin } from '@/lib/seo'
 
+// Subgroup slugs and usernames are interpolated into XML, so a name containing
+// & or < would produce a document no crawler can parse.
 function escapeXml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -15,103 +16,108 @@ function urlPath(...segments: string[]) {
   return segments.map((s) => encodeURIComponent(s)).join('/')
 }
 
-function loc(href: string, lastmod?: string | null, changefreq = 'weekly', priority = '0.6') {
-  const mod = lastmod
-    ? `\n    <lastmod>${new Date(lastmod).toISOString()}</lastmod>`
-    : ''
-  return `  <url>
-    <loc>${escapeXml(href)}</loc>${mod}
-    <changefreq>${changefreq}</changefreq>
-    <priority>${priority}</priority>
-  </url>`
-}
-
-async function fetchAll<T>(
-  table: string,
-  columns: string,
-  pageSize = 1000
-): Promise<T[]> {
-  const rows: T[] = []
-  for (let from = 0; from < 50_000; from += pageSize) {
-    let query = supabase.from(table).select(columns).range(from, from + pageSize - 1)
-    if (table === 'posts') {
-      query = query.order('created_at', { ascending: false })
-    }
-    if (table === 'profiles') {
-      query = query.not('username', 'is', null)
-    }
-    const { data, error } = await query
-    if (error || !data?.length) break
-    rows.push(...(data as T[]))
-    if (data.length < pageSize) break
-  }
-  return rows
-}
-
 export async function GET() {
-  const baseUrl = siteOrigin()
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.decro.net'
   const pitch = isPitchMode()
 
   try {
-    const [posts, subgroups, profiles] = await Promise.all([
-      fetchAll<{ id: string; created_at: string; updated_at: string | null }>(
-        'posts',
-        'id, created_at, updated_at'
-      ),
-      fetchAll<{ slug: string; updated_at: string | null }>('subgroups', 'slug, updated_at'),
-      fetchAll<{ username: string; updated_at: string | null }>(
-        'profiles',
-        'username, updated_at'
-      ),
-    ])
+    const { data: posts } = await supabase
+      .from('posts')
+      .select('id, created_at, updated_at')
+      .order('created_at', { ascending: false })
+      .limit(1000)
 
-    const staticUrls = [
-      loc(`${baseUrl}/`, null, 'hourly', '1.0'),
-      loc(`${baseUrl}/updates`, null, 'weekly', '0.6'),
-      ...(pitch
-        ? []
-        : [
-            loc(`${baseUrl}/feed`, null, 'hourly', '0.9'),
-            loc(`${baseUrl}/trending`, null, 'hourly', '0.8'),
-            loc(`${baseUrl}/spotlight`, null, 'daily', '0.7'),
-            loc(`${baseUrl}/subgroup`, null, 'daily', '0.7'),
-            loc(`${baseUrl}/algorithm`, null, 'monthly', '0.4'),
-          ]),
-    ]
+    const { data: subgroups } = await supabase
+      .from('subgroups')
+      .select('slug, updated_at')
+      .limit(100)
+
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('username, updated_at')
+      .not('username', 'is', null)
+      .limit(1000)
+
+    const staticPitch = `
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/login</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/signup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/create</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`
+
+    const staticFull = `
+  <url>
+    <loc>${baseUrl}/feed</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/trending</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/spotlight</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/subgroup</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/create</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${staticUrls.join('\n')}
-${posts
-  .map((post) =>
-    loc(
-      `${baseUrl}/post/${post.id}`,
-      post.updated_at || post.created_at,
-      'weekly',
-      '0.8'
-    )
-  )
-  .join('\n')}
-${subgroups
-  .map((subgroup) =>
-    loc(
-      `${baseUrl}/${urlPath('subgroup', subgroup.slug)}`,
-      subgroup.updated_at,
-      'weekly',
-      '0.7'
-    )
-  )
-  .join('\n')}
-${profiles
-  .map((profile) =>
-    loc(
-      `${baseUrl}/${urlPath('profile', profile.username)}`,
-      profile.updated_at,
-      'weekly',
-      '0.5'
-    )
-  )
-  .join('\n')}
+  <!-- Static Pages -->
+  ${pitch ? staticPitch : staticFull}
+
+  <!-- Posts -->
+  ${posts?.map((post) => `
+  <url>
+    <loc>${baseUrl}/post/${post.id}</loc>
+    <lastmod>${new Date(post.updated_at || post.created_at).toISOString()}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`).join('') || ''}
+
+  <!-- Subgroups -->
+  ${subgroups?.map((subgroup) => `
+  <url>
+    <loc>${escapeXml(`${baseUrl}/${urlPath('subgroup', subgroup.slug)}`)}</loc>
+    <lastmod>${new Date(subgroup.updated_at).toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`).join('') || ''}
+
+  <!-- Profiles -->
+  ${profiles?.map((profile) => `
+  <url>
+    <loc>${escapeXml(`${baseUrl}/${urlPath('profile', profile.username)}`)}</loc>
+    <lastmod>${new Date(profile.updated_at).toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>`).join('') || ''}
 </urlset>`
 
     return new Response(sitemap, {

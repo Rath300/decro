@@ -8,48 +8,54 @@ import { ToastContainer } from '@/components/toast'
 import RootChrome from '@/components/RootChrome'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { ProfileInitializer } from '@/components/ProfileInitializer'
-import JsonLd from '@/components/json-ld'
-import {
-  brandJsonLd,
-  CANONICAL_ORIGIN,
-  DEFAULT_OG_IMAGE,
-  siteDescription,
-  siteOrigin,
-} from '@/lib/seo'
 
 const GA_ID = 'G-TS03JV5TNX'
-const description = siteDescription()
+
+const pitchMode = process.env.NEXT_PUBLIC_PITCH_MODE === 'true'
+const siteDescription = pitchMode
+  ? 'Explore Decro’s creative web — connect groups, upload work, and find your niche. No algorithm, just creators.'
+  : 'Share your creativity with the world. A social platform for artists, musicians, photographers, and creators. No algorithm, just authentic content.'
 
 export const metadata: Metadata = {
   title: {
-    default: 'Decro',
-    template: '%s | Decro',
+    default: pitchMode ? 'Decro — Creative web' : 'Decro',
+    template: '%s | Decro'
   },
-  description,
+  description: siteDescription,
+  keywords: ['social media', 'creative platform', 'art sharing', 'music sharing', 'photography', 'creators', 'portfolio', 'creative web'],
   authors: [{ name: 'Decro' }],
   creator: 'Decro',
   publisher: 'Decro',
-  applicationName: 'Decro',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(siteOrigin() || CANONICAL_ORIGIN),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.decro.net'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: '/',
     siteName: 'Decro',
-    title: 'Decro',
-    description,
-    images: [DEFAULT_OG_IMAGE],
+    title: pitchMode ? 'Decro — Creative web' : 'Decro',
+    description: siteDescription,
+    images: [
+      {
+        url: '/decky.png',
+        width: 1200,
+        height: 630,
+        alt: 'Decro',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Decro',
-    description,
-    images: [DEFAULT_OG_IMAGE.url],
+    title: pitchMode ? 'Decro — Creative web' : 'Decro',
+    description: siteDescription,
+    images: ['/decky.png'],
   },
   robots: {
     index: true,
@@ -72,7 +78,9 @@ export const metadata: Metadata = {
     apple: '/decky.png',
   },
   verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    // Add these when you have them:
+    // google: 'your-google-verification-code',
+    // yandex: 'your-yandex-verification-code',
   },
 }
 
@@ -101,7 +109,6 @@ export default function RootLayout({
         </Script>
       </head>
       <body>
-        <JsonLd data={brandJsonLd()} />
         <ErrorBoundary>
           <ClientProviders>
             <ProfileInitializer>
