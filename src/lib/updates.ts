@@ -25,15 +25,10 @@ export const UPDATES: UpdateEntry[] = [
   {
     id: 1,
     date: 'Sept 6, 2025',
-    intro:
-      'v0.01. The first commit. Everything else builds on what shipped today.',
+    intro: 'The first public build of Decro.',
     bullets: [
-      { kind: 'Added', text: 'authentication' },
-      {
-        kind: 'Added',
-        text: 'the first working feed, where people can post their stuff and more',
-      },
-      { kind: 'Added', text: 'first true working build of the app' },
+      { kind: 'Added', text: 'accounts and sign in' },
+      { kind: 'Added', text: 'a chronological feed for posting and browsing work' },
     ],
   },
   {
@@ -58,12 +53,10 @@ export const UPDATES: UpdateEntry[] = [
   {
     id: 3,
     date: 'Oct 11, 2025',
-    intro:
-      "A full day spent on one problem: your account wasn't always correctly linked to your own posts, likes, and comments.",
     bullets: [
       {
         kind: 'Fixed',
-        text: 'uploads, likes, and comments failing because your account and your content were not always properly connected behind the scenes',
+        text: 'uploads, likes, and comments now stay attached to the right account',
       },
     ],
   },
@@ -84,7 +77,7 @@ export const UPDATES: UpdateEntry[] = [
       },
       {
         kind: 'Added',
-        text: "stylized preview cards for text posts, so they don't look broken sitting in an image grid",
+        text: 'stylized preview cards for text posts in the grid',
       },
     ],
   },
@@ -107,10 +100,10 @@ export const UPDATES: UpdateEntry[] = [
     bullets: [
       {
         kind: 'Fixed',
-        text: 'Spotlight creation throwing an error on save, a stubborn column-mapping bug that took several tries to fully kill',
+        text: 'Spotlight creation failing on save',
       },
       { kind: 'Fixed', text: 'Spotlight posts not loading, subgroup post counts not updating' },
-      { kind: 'Changed', text: 'renamed subgroup URLs from r/ to d/ (Decro, not Reddit)' },
+      { kind: 'Changed', text: 'group URLs now use the d/ prefix' },
       { kind: 'Added', text: 'dual view modes and clickable posts in the Spotlight detail page' },
       { kind: 'Added', text: 'proper activity tracking on the menu and history page' },
       { kind: 'Fixed', text: 'comment like persistence, heart icon state, and a notifications bug' },
@@ -139,18 +132,12 @@ export const UPDATES: UpdateEntry[] = [
   {
     id: 9,
     date: 'Nov 24, 2025',
-    intro:
-      'v0.02 to v0.04. Our original auth provider never fully worked with our setup, and session handling kept breaking in slightly different ways. Migrated to NextAuth entirely.',
     bullets: [
-      { kind: 'Changed', text: 'migrated the whole app to NextAuth' },
-      {
-        kind: 'Fixed',
-        text: 'a batch of login errors and request mismatches that came with the old provider',
-      },
-      { kind: 'Added', text: 'username uniqueness validation on signup' },
-      { kind: 'Added', text: 'sign out button' },
-      { kind: 'Added', text: 'version badges' },
-      { kind: 'Fixed', text: 'favicon not appearing correctly across sizes and platforms' },
+      { kind: 'Changed', text: 'new authentication system for more reliable sessions' },
+      { kind: 'Fixed', text: 'login errors and session mismatches' },
+      { kind: 'Added', text: 'username uniqueness checks on signup' },
+      { kind: 'Added', text: 'sign out' },
+      { kind: 'Fixed', text: 'favicon across sizes and platforms' },
     ],
   },
   {
@@ -158,7 +145,7 @@ export const UPDATES: UpdateEntry[] = [
     date: 'Nov 29, 2025',
     bullets: [
       { kind: 'Added', text: 'every authenticated user now automatically gets a profile set up' },
-      { kind: 'Fixed', text: 'permission gaps left over from the auth migration' },
+      { kind: 'Fixed', text: 'account permission checks after the authentication update' },
       { kind: 'Fixed', text: 'a like button bug where double clicking could throw an error' },
       { kind: 'Fixed', text: 'reply nesting and a loading error affecting some pages' },
     ],
@@ -166,50 +153,44 @@ export const UPDATES: UpdateEntry[] = [
   {
     id: 11,
     date: 'Dec 1, 2025',
-    intro:
-      'First release! v0.1. The culmination of everything built so far, finally deployed.',
+    intro: 'Decro 0.1, the first numbered public release.',
     bullets: [],
   },
   {
     id: 12,
     date: 'Dec 10, 2025',
     bullets: [
-      { kind: 'Improved', text: 'one failed request no longer crashes the whole page' },
+      { kind: 'Improved', text: 'pages keep working if a single request fails' },
       {
         kind: 'Fixed',
-        text: "a deployment issue caused by a feature that needed a paid plan we weren't on",
+        text: 'a deployment configuration issue that was interrupting some page loads',
       },
     ],
   },
   {
     id: 13,
     date: 'Dec 11, 2025',
-    intro: 'v0.1.2 to v0.1.7. Our longest patch day.',
     bullets: [
       { kind: 'Fixed', text: 'header layout' },
-      { kind: 'Fixed', text: 'duplicate notifications and a like notification error' },
+      { kind: 'Fixed', text: 'duplicate notifications and like-notification errors' },
       { kind: 'Fixed', text: 'comment reply duplication' },
-      { kind: 'Added', text: 'Spotlight post delete' },
-      { kind: 'Fixed', text: 'comments not showing at all, plus a liked posts loading error' },
-      { kind: 'Fixed', text: 'the actual root cause of the comments outage' },
+      { kind: 'Added', text: 'delete posts from a Spotlight' },
+      { kind: 'Fixed', text: 'comments and liked posts failing to load for some users' },
     ],
   },
   {
     id: 14,
     date: 'Dec 20, 2025',
     bullets: [
-      { kind: 'Added', text: 'a full pre-release testing checklist' },
-      { kind: 'Added', text: 'documentation mapping out critical user flows before wider release' },
+      { kind: 'Improved', text: 'release checks across sign up, posting, and notifications' },
     ],
   },
   {
     id: 15,
     date: 'Dec 31, 2025',
-    intro:
-      "Found on New Year's Eve and fixed the same day: new accounts could fail to get set up correctly right after signing up.",
     bullets: [
-      { kind: 'Fixed', text: 'new sign-ups not getting fully set up' },
-      { kind: 'Fixed', text: 'a caching issue that was interacting badly with the fix' },
+      { kind: 'Fixed', text: 'new accounts not finishing setup right after sign up' },
+      { kind: 'Fixed', text: 'a caching issue that could leave a new profile in a half-created state' },
     ],
   },
   {
@@ -220,7 +201,7 @@ export const UPDATES: UpdateEntry[] = [
       { kind: 'Fixed', text: 'a timing bug causing errors on profile pages' },
       {
         kind: 'Added',
-        text: 'collaboration network with direct messaging, the first version of user to user DMs',
+        text: 'collaboration network with direct messaging',
       },
     ],
   },
@@ -230,7 +211,7 @@ export const UPDATES: UpdateEntry[] = [
     bullets: [
       {
         kind: 'Added',
-        text: 'Tumblr-style quick create, rebuilt as a clean popup after testing an earlier version',
+        text: 'quick-create popup for posting without leaving the page',
       },
       { kind: 'Removed', text: 'the trending page' },
       { kind: 'Added', text: 'clickable creator names throughout' },
@@ -238,7 +219,7 @@ export const UPDATES: UpdateEntry[] = [
       { kind: 'Fixed', text: 'a white text on white background bug in light mode' },
       {
         kind: 'Changed',
-        text: 'cleaned up old duplicate backend functions that were colliding with newer ones',
+        text: 'cleaned up overlapping backend functions that were colliding with newer ones',
       },
     ],
   },
@@ -271,9 +252,9 @@ export const UPDATES: UpdateEntry[] = [
         kind: 'Changed',
         text: 'mobile navigation now uses icons, with Create moved somewhere easier to reach',
       },
-      { kind: 'Added', text: 'custom icon set, replacing emoji placeholders across the app' },
+      { kind: 'Added', text: 'custom icon set across the app' },
       { kind: 'Fixed', text: 'comment duplication and layout issues, most visible on mobile' },
-      { kind: 'Fixed', text: 'a change that accidentally made certain screens inaccessible on mobile' },
+      { kind: 'Fixed', text: 'certain screens becoming unreachable on mobile' },
     ],
   },
   {
@@ -295,7 +276,7 @@ export const UPDATES: UpdateEntry[] = [
       },
       {
         kind: 'Fixed',
-        text: 'a batch of leftover permission gaps from the old auth system, including view tracking',
+        text: 'permission checks for view tracking and a few related account actions',
       },
     ],
   },
@@ -333,12 +314,12 @@ export const UPDATES: UpdateEntry[] = [
     bullets: [
       {
         kind: 'Changed',
-        text: 'user identity is now fully verified by the server, not just trusted from the client',
+        text: 'account actions now verify identity on the server',
       },
       { kind: 'Changed', text: '"Connect" is now a proper friend-request flow' },
       {
         kind: 'Fixed',
-        text: 'a stale cached version of the site that was still serving old, pre-security code to returning visitors',
+        text: 'returning visitors being served a stale cached copy of the site',
       },
     ],
   },
@@ -346,7 +327,7 @@ export const UPDATES: UpdateEntry[] = [
     id: 25,
     date: 'Aug 1, 2026',
     intro:
-      'Finally moved to our more complete creative vision, becoming a map of creative groups instead of a scrolling feed.',
+      'Moved to a map of creative groups instead of a scrolling feed.',
     bullets: [{ kind: 'Added', text: 'guest upload, no account required to post' }],
   },
   {
@@ -364,13 +345,7 @@ export const UPDATES: UpdateEntry[] = [
   {
     id: 27,
     date: 'Aug 4-5, 2026',
-    bullets: [
-      { kind: 'Added', text: 'Vercel Analytics' },
-      {
-        kind: 'Added',
-        text: 'real public domain museum art (Art Institute of Chicago, Cleveland Museum, the Met) seeded across the web, so new visitors have something to explore on day one',
-      },
-    ],
+    bullets: [{ kind: 'Added', text: 'Vercel Analytics' }],
   },
   {
     id: 28,
@@ -421,19 +396,11 @@ export const UPDATES: UpdateEntry[] = [
     bullets: [
       {
         kind: 'Added',
-        text: 'a new Avant-Garde Archive hub connecting film, music, writing, and visual art, split into six niches for experimental film, sound, and poetry',
+        text: 'an Avant-Garde Archive hub connecting film, music, writing, and visual art, with niches for experimental film, sound, and poetry',
       },
       {
         kind: 'Added',
-        text: 'around 400 curated links into a real public archive, with a working "Open" link on each post',
-      },
-      {
-        kind: 'Added',
-        text: 'cover art actually matched to each artist, with a clean fallback when no good photo exists',
-      },
-      {
-        kind: 'Removed',
-        text: 'an earlier batch of random stock covers that had nothing to do with the actual work',
+        text: 'a direct Open link on each archive work, with artist-matched cover art',
       },
       { kind: 'Added', text: 'a live counter showing total posts, groups, and users on the site' },
     ],
